@@ -24,15 +24,15 @@ self.onmessage = function(imgData) {
 function zbarProcessImageData(imgData) {
   var result = [];
   var Module = {};
-  Module['imageWidth'] = imgData.width;
-  Module['imageHeight'] = imgData.height;
-  Module['getImageData'] = function(grayData) {
+  Module["imageWidth"] = imgData.width;
+  Module["imageHeight"] = imgData.height;
+  Module["getImageData"] = function(grayData) {
     var d = imgData.data;
     for (var i = 0, j = 0; i < d.length; i += 4, j++) {
       grayData[j] = (d[i] * 66 + d[i + 1] * 129 + d[i + 2] * 25 + 4096) >> 8;
     }
   };
-  Module['outputResult'] = function(symbol, addon, data) {
+  Module["outputResult"] = function(symbol, addon, data) {
     result.push([symbol, addon, data]);
   };
 
@@ -53,7 +53,7 @@ function zbarProcessImageData(imgData) {
   // before the code. Then that object will be used in the code, and you
   // can continue to use Module afterwards as well.
   var Module;
-  if (!Module) Module = (typeof Module !== 'undefined' ? Module : null) || {};
+  if (!Module) Module = (typeof Module !== "undefined" ? Module : null) || {};
 
   // Sometimes an existing Module object exists with properties
   // meant to overwrite the default module functionality. Here
@@ -69,114 +69,116 @@ function zbarProcessImageData(imgData) {
 
   // The environment setup code below is customized to use Module.
   // *** Environment setup code ***
-  var ENVIRONMENT_IS_NODE = typeof process === 'object' && typeof require === 'function';
-  var ENVIRONMENT_IS_WEB = typeof window === 'object';
-  var ENVIRONMENT_IS_WORKER = typeof importScripts === 'function';
-  var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
+  var ENVIRONMENT_IS_NODE =
+    typeof process === "object" && typeof require === "function";
+  var ENVIRONMENT_IS_WEB = typeof window === "object";
+  var ENVIRONMENT_IS_WORKER = typeof importScripts === "function";
+  var ENVIRONMENT_IS_SHELL =
+    !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
 
   if (ENVIRONMENT_IS_NODE) {
     // Expose functionality in the same simple way that the shells work
     // Note that we pollute the global namespace here, otherwise we break in node
-    if (!Module['print'])
-      Module['print'] = function print(x) {
-        process['stdout'].write(x + '\n');
+    if (!Module["print"])
+      Module["print"] = function print(x) {
+        process["stdout"].write(x + "\n");
       };
-    if (!Module['printErr'])
-      Module['printErr'] = function printErr(x) {
-        process['stderr'].write(x + '\n');
+    if (!Module["printErr"])
+      Module["printErr"] = function printErr(x) {
+        process["stderr"].write(x + "\n");
       };
 
-    var nodeFS = require('fs');
-    var nodePath = require('path');
+    var nodeFS = require("fs");
+    var nodePath = require("path");
 
-    Module['read'] = function read(filename, binary) {
-      filename = nodePath['normalize'](filename);
-      var ret = nodeFS['readFileSync'](filename);
+    Module["read"] = function read(filename, binary) {
+      filename = nodePath["normalize"](filename);
+      var ret = nodeFS["readFileSync"](filename);
       // The path is absolute if the normalized version is the same as the resolved.
-      if (!ret && filename != nodePath['resolve'](filename)) {
-        filename = path.join(__dirname, '..', 'src', filename);
-        ret = nodeFS['readFileSync'](filename);
+      if (!ret && filename != nodePath["resolve"](filename)) {
+        filename = path.join(__dirname, "..", "src", filename);
+        ret = nodeFS["readFileSync"](filename);
       }
       if (ret && !binary) ret = ret.toString();
       return ret;
     };
 
-    Module['readBinary'] = function readBinary(filename) {
-      return Module['read'](filename, true);
+    Module["readBinary"] = function readBinary(filename) {
+      return Module["read"](filename, true);
     };
 
-    Module['load'] = function load(f) {
+    Module["load"] = function load(f) {
       globalEval(read(f));
     };
 
-    Module['thisProgram'] = process['argv'][1].replace(/\\/g, '/');
-    Module['arguments'] = process['argv'].slice(2);
+    Module["thisProgram"] = process["argv"][1].replace(/\\/g, "/");
+    Module["arguments"] = process["argv"].slice(2);
 
-    if (typeof module !== 'undefined') {
-      module['exports'] = Module;
+    if (typeof module !== "undefined") {
+      module["exports"] = Module;
     }
 
-    process['on']('uncaughtException', function(ex) {
+    process["on"]("uncaughtException", function(ex) {
       // suppress ExitStatus exceptions from showing an error
       if (!(ex instanceof ExitStatus)) {
         throw ex;
       }
     });
   } else if (ENVIRONMENT_IS_SHELL) {
-    if (!Module['print']) Module['print'] = print;
-    if (typeof printErr != 'undefined') Module['printErr'] = printErr; // not present in v8 or older sm
+    if (!Module["print"]) Module["print"] = print;
+    if (typeof printErr != "undefined") Module["printErr"] = printErr; // not present in v8 or older sm
 
-    if (typeof read != 'undefined') {
-      Module['read'] = read;
+    if (typeof read != "undefined") {
+      Module["read"] = read;
     } else {
-      Module['read'] = function read() {
-        throw 'no read() available (jsc?)';
+      Module["read"] = function read() {
+        throw "no read() available (jsc?)";
       };
     }
 
-    Module['readBinary'] = function readBinary(f) {
-      if (typeof readbuffer === 'function') {
+    Module["readBinary"] = function readBinary(f) {
+      if (typeof readbuffer === "function") {
         return new Uint8Array(readbuffer(f));
       }
-      var data = read(f, 'binary');
-      assert(typeof data === 'object');
+      var data = read(f, "binary");
+      assert(typeof data === "object");
       return data;
     };
 
-    if (typeof scriptArgs != 'undefined') {
-      Module['arguments'] = scriptArgs;
-    } else if (typeof arguments != 'undefined') {
-      Module['arguments'] = arguments;
+    if (typeof scriptArgs != "undefined") {
+      Module["arguments"] = scriptArgs;
+    } else if (typeof arguments != "undefined") {
+      Module["arguments"] = arguments;
     }
 
-    this['Module'] = Module;
+    this["Module"] = Module;
   } else if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
-    Module['read'] = function read(url) {
+    Module["read"] = function read(url) {
       var xhr = new XMLHttpRequest();
-      xhr.open('GET', url, false);
+      xhr.open("GET", url, false);
       xhr.send(null);
       return xhr.responseText;
     };
 
-    if (typeof arguments != 'undefined') {
-      Module['arguments'] = arguments;
+    if (typeof arguments != "undefined") {
+      Module["arguments"] = arguments;
     }
 
-    if (typeof console !== 'undefined') {
-      if (!Module['print'])
-        Module['print'] = function print(x) {
+    if (typeof console !== "undefined") {
+      if (!Module["print"])
+        Module["print"] = function print(x) {
           console.log(x);
         };
-      if (!Module['printErr'])
-        Module['printErr'] = function printErr(x) {
+      if (!Module["printErr"])
+        Module["printErr"] = function printErr(x) {
           console.log(x);
         };
     } else {
       // Probably a worker, and without console.log. We can do very little here...
       var TRY_USE_DUMP = false;
-      if (!Module['print'])
-        Module['print'] =
-          TRY_USE_DUMP && typeof dump !== 'undefined'
+      if (!Module["print"])
+        Module["print"] =
+          TRY_USE_DUMP && typeof dump !== "undefined"
             ? function(x) {
                 dump(x);
               }
@@ -186,45 +188,45 @@ function zbarProcessImageData(imgData) {
     }
 
     if (ENVIRONMENT_IS_WEB) {
-      window['Module'] = Module;
+      window["Module"] = Module;
     } else {
-      Module['load'] = importScripts;
+      Module["load"] = importScripts;
     }
   } else {
     // Unreachable because SHELL is dependant on the others
-    throw 'Unknown runtime environment. Where are we?';
+    throw "Unknown runtime environment. Where are we?";
   }
 
   function globalEval(x) {
     eval.call(null, x);
   }
-  if (!Module['load'] && Module['read']) {
-    Module['load'] = function load(f) {
-      globalEval(Module['read'](f));
+  if (!Module["load"] && Module["read"]) {
+    Module["load"] = function load(f) {
+      globalEval(Module["read"](f));
     };
   }
-  if (!Module['print']) {
-    Module['print'] = function() {};
+  if (!Module["print"]) {
+    Module["print"] = function() {};
   }
-  if (!Module['printErr']) {
-    Module['printErr'] = Module['print'];
+  if (!Module["printErr"]) {
+    Module["printErr"] = Module["print"];
   }
-  if (!Module['arguments']) {
-    Module['arguments'] = [];
+  if (!Module["arguments"]) {
+    Module["arguments"] = [];
   }
-  if (!Module['thisProgram']) {
-    Module['thisProgram'] = './this.program';
+  if (!Module["thisProgram"]) {
+    Module["thisProgram"] = "./this.program";
   }
 
   // *** Environment setup code ***
 
   // Closure helpers
-  Module.print = Module['print'];
-  Module.printErr = Module['printErr'];
+  Module.print = Module["print"];
+  Module.printErr = Module["printErr"];
 
   // Callbacks
-  Module['preRun'] = [];
-  Module['postRun'] = [];
+  Module["preRun"] = [];
+  Module["postRun"] = [];
 
   // Merge back in the overrides
   for (var key in moduleOverrides) {
@@ -262,23 +264,23 @@ function zbarProcessImageData(imgData) {
     },
     getNativeTypeSize: function(type) {
       switch (type) {
-        case 'i1':
-        case 'i8':
+        case "i1":
+        case "i8":
           return 1;
-        case 'i16':
+        case "i16":
           return 2;
-        case 'i32':
+        case "i32":
           return 4;
-        case 'i64':
+        case "i64":
           return 8;
-        case 'float':
+        case "float":
           return 4;
-        case 'double':
+        case "double":
           return 8;
         default: {
-          if (type[type.length - 1] === '*') {
+          if (type[type.length - 1] === "*") {
             return Runtime.QUANTUM_SIZE; // A pointer
-          } else if (type[0] === 'i') {
+          } else if (type[0] === "i") {
             var bits = parseInt(type.substr(1));
             assert(bits % 8 === 0);
             return bits / 8;
@@ -294,17 +296,20 @@ function zbarProcessImageData(imgData) {
     STACK_ALIGN: 16,
     getAlignSize: function(type, size, vararg) {
       // we align i64s and doubles on 64-bit boundaries, unlike x86
-      if (!vararg && (type == 'i64' || type == 'double')) return 8;
+      if (!vararg && (type == "i64" || type == "double")) return 8;
       if (!type) return Math.min(size, 8); // align structures internally to 64 bits
-      return Math.min(size || (type ? Runtime.getNativeFieldSize(type) : 0), Runtime.QUANTUM_SIZE);
+      return Math.min(
+        size || (type ? Runtime.getNativeFieldSize(type) : 0),
+        Runtime.QUANTUM_SIZE
+      );
     },
     dynCall: function(sig, ptr, args) {
       if (args && args.length) {
         if (!args.splice) args = Array.prototype.slice.call(args);
         args.splice(0, 0, ptr);
-        return Module['dynCall_' + sig].apply(null, args);
+        return Module["dynCall_" + sig].apply(null, args);
       } else {
-        return Module['dynCall_' + sig].call(null, ptr);
+        return Module["dynCall_" + sig].call(null, ptr);
       }
     },
     functionPointers: [],
@@ -315,7 +320,7 @@ function zbarProcessImageData(imgData) {
           return 2 * (1 + i);
         }
       }
-      throw 'Finished up all reserved function pointers. Use a higher value for RESERVED_FUNCTION_POINTERS.';
+      throw "Finished up all reserved function pointers. Use a higher value for RESERVED_FUNCTION_POINTERS.";
     },
     removeFunction: function(index) {
       Runtime.functionPointers[(index - 2) / 2] = null;
@@ -337,27 +342,30 @@ function zbarProcessImageData(imgData) {
         } else {
           // something invalid happened, e.g. EM_ASM("..code($0)..", input)
           abort(
-            'invalid EM_ASM input |' +
+            "invalid EM_ASM input |" +
               source +
-              '|. Please use EM_ASM(..code..) (no quotes) or EM_ASM({ ..code($0).. }, input) (to input values)'
+              "|. Please use EM_ASM(..code..) (no quotes) or EM_ASM({ ..code($0).. }, input) (to input values)"
           );
         }
       }
       try {
         // Module is the only 'upvar', which we provide directly. We also provide FS for legacy support.
-        var evalled = eval('(function(Module, FS) { return function(' + args.join(',') + '){ ' + source + ' } })')(
-          Module,
-          typeof FS !== 'undefined' ? FS : null
-        );
+        var evalled = eval(
+          "(function(Module, FS) { return function(" +
+            args.join(",") +
+            "){ " +
+            source +
+            " } })"
+        )(Module, typeof FS !== "undefined" ? FS : null);
       } catch (e) {
         Module.printErr(
-          'error in executing inline EM_ASM code: ' +
+          "error in executing inline EM_ASM code: " +
             e +
-            ' on: \n\n' +
+            " on: \n\n" +
             source +
-            '\n\nwith args |' +
+            "\n\nwith args |" +
             args +
-            '| (make sure to use the right one out of EM_ASM, EM_ASM_ARGS, etc.)'
+            "| (make sure to use the right one out of EM_ASM, EM_ASM_ARGS, etc.)"
         );
         throw e;
       }
@@ -406,13 +414,13 @@ function zbarProcessImageData(imgData) {
             // 11110xxx
             needed = 3;
           }
-          return '';
+          return "";
         }
 
         if (needed) {
           buffer.push(code);
           needed--;
-          if (needed > 0) return '';
+          if (needed > 0) return "";
         }
 
         var c1 = buffer[0];
@@ -423,11 +431,20 @@ function zbarProcessImageData(imgData) {
         if (buffer.length == 2) {
           ret = String.fromCharCode(((c1 & 0x1f) << 6) | (c2 & 0x3f));
         } else if (buffer.length == 3) {
-          ret = String.fromCharCode(((c1 & 0x0f) << 12) | ((c2 & 0x3f) << 6) | (c3 & 0x3f));
+          ret = String.fromCharCode(
+            ((c1 & 0x0f) << 12) | ((c2 & 0x3f) << 6) | (c3 & 0x3f)
+          );
         } else {
           // http://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
-          var codePoint = ((c1 & 0x07) << 18) | ((c2 & 0x3f) << 12) | ((c3 & 0x3f) << 6) | (c4 & 0x3f);
-          ret = String.fromCharCode((((codePoint - 0x10000) / 0x400) | 0) + 0xd800, ((codePoint - 0x10000) % 0x400) + 0xdc00);
+          var codePoint =
+            ((c1 & 0x07) << 18) |
+            ((c2 & 0x3f) << 12) |
+            ((c3 & 0x3f) << 6) |
+            (c4 & 0x3f);
+          ret = String.fromCharCode(
+            (((codePoint - 0x10000) / 0x400) | 0) + 0xd800,
+            ((codePoint - 0x10000) % 0x400) + 0xdc00
+          );
         }
         buffer.length = 0;
         return ret;
@@ -447,7 +464,7 @@ function zbarProcessImageData(imgData) {
       };
     },
     getCompilerSetting: function(name) {
-      throw 'You must build with -s RETAIN_COMPILER_SETTINGS=1 for Runtime.getCompilerSetting or emscripten_get_compiler_setting to work';
+      throw "You must build with -s RETAIN_COMPILER_SETTINGS=1 for Runtime.getCompilerSetting or emscripten_get_compiler_setting to work";
     },
     stackAlloc: function(size) {
       var ret = STACKTOP;
@@ -469,11 +486,14 @@ function zbarProcessImageData(imgData) {
       return ret;
     },
     alignMemory: function(size, quantum) {
-      var ret = (size = Math.ceil(size / (quantum ? quantum : 16)) * (quantum ? quantum : 16));
+      var ret = (size =
+        Math.ceil(size / (quantum ? quantum : 16)) * (quantum ? quantum : 16));
       return ret;
     },
     makeBigInt: function(low, high, unsigned) {
-      var ret = unsigned ? +(low >>> 0) + +(high >>> 0) * 4294967296.0 : +(low >>> 0) + +(high | 0) * 4294967296.0;
+      var ret = unsigned
+        ? +(low >>> 0) + +(high >>> 0) * 4294967296.0
+        : +(low >>> 0) + +(high | 0) * 4294967296.0;
       return ret;
     },
     GLOBAL_BASE: 8,
@@ -481,7 +501,7 @@ function zbarProcessImageData(imgData) {
     __dummy__: 0
   };
 
-  Module['Runtime'] = Runtime;
+  Module["Runtime"] = Runtime;
 
   //========================================
   // Runtime essentials
@@ -509,11 +529,20 @@ function zbarProcessImageData(imgData) {
     tempDouble,
     tempFloat;
   var tempI64, tempI64b;
-  var tempRet0, tempRet1, tempRet2, tempRet3, tempRet4, tempRet5, tempRet6, tempRet7, tempRet8, tempRet9;
+  var tempRet0,
+    tempRet1,
+    tempRet2,
+    tempRet3,
+    tempRet4,
+    tempRet5,
+    tempRet6,
+    tempRet7,
+    tempRet8,
+    tempRet9;
 
   function assert(condition, text) {
     if (!condition) {
-      abort('Assertion failed: ' + text);
+      abort("Assertion failed: " + text);
     }
   }
 
@@ -521,13 +550,18 @@ function zbarProcessImageData(imgData) {
 
   // Returns the C function with a specified identifier (for C++, you need to do manual name mangling)
   function getCFunc(ident) {
-    var func = Module['_' + ident]; // closure exported function
+    var func = Module["_" + ident]; // closure exported function
     if (!func) {
       try {
-        func = eval('_' + ident); // explicit lookup
+        func = eval("_" + ident); // explicit lookup
       } catch (e) {}
     }
-    assert(func, 'Cannot call unknown function ' + ident + ' (perhaps LLVM optimizations or closure removed it?)');
+    assert(
+      func,
+      "Cannot call unknown function " +
+        ident +
+        " (perhaps LLVM optimizations or closure removed it?)"
+    );
     return func;
   }
 
@@ -559,7 +593,7 @@ function zbarProcessImageData(imgData) {
       }
     };
     // For fast lookup of conversion functions
-    var toC = { string: JSfuncs['stringToC'], array: JSfuncs['arrayToC'] };
+    var toC = { string: JSfuncs["stringToC"], array: JSfuncs["arrayToC"] };
 
     // C calling interface.
     ccall = function ccallFunc(ident, returnType, argTypes, args) {
@@ -577,8 +611,8 @@ function zbarProcessImageData(imgData) {
         }
       }
       var ret = func.apply(null, cArgs);
-      if (returnType === 'string') ret = Pointer_stringify(ret);
-      if (stack !== 0) JSfuncs['stackRestore']();
+      if (returnType === "string") ret = Pointer_stringify(ret);
+      if (stack !== 0) JSfuncs["stackRestore"]();
       return ret;
     };
 
@@ -606,30 +640,30 @@ function zbarProcessImageData(imgData) {
       // When the function takes numbers and returns a number, we can just return
       // the original function
       var numericArgs = argTypes.every(function(type) {
-        return type === 'number';
+        return type === "number";
       });
-      var numericRet = returnType !== 'string';
+      var numericRet = returnType !== "string";
       if (numericRet && numericArgs) {
         return cfunc;
       }
       // Creation of the arguments list (["$1","$2",...,"$nargs"])
       var argNames = argTypes.map(function(x, i) {
-        return '$' + i;
+        return "$" + i;
       });
-      var funcstr = '(function(' + argNames.join(',') + ') {';
+      var funcstr = "(function(" + argNames.join(",") + ") {";
       var nargs = argTypes.length;
       if (!numericArgs) {
         // Generate the code needed to convert the arguments from javascript
         // values to pointers
-        funcstr += JSsource['stackSave'].body + ';';
+        funcstr += JSsource["stackSave"].body + ";";
         for (var i = 0; i < nargs; i++) {
           var arg = argNames[i],
             type = argTypes[i];
-          if (type === 'number') continue;
-          var convertCode = JSsource[type + 'ToC']; // [code, return]
-          funcstr += 'var ' + convertCode.arguments + ' = ' + arg + ';';
-          funcstr += convertCode.body + ';';
-          funcstr += arg + '=' + convertCode.returnValue + ';';
+          if (type === "number") continue;
+          var convertCode = JSsource[type + "ToC"]; // [code, return]
+          funcstr += "var " + convertCode.arguments + " = " + arg + ";";
+          funcstr += convertCode.body + ";";
+          funcstr += arg + "=" + convertCode.returnValue + ";";
         }
       }
 
@@ -638,102 +672,109 @@ function zbarProcessImageData(imgData) {
         return cfunc;
       }).returnValue;
       // Call the function
-      funcstr += 'var ret = ' + cfuncname + '(' + argNames.join(',') + ');';
+      funcstr += "var ret = " + cfuncname + "(" + argNames.join(",") + ");";
       if (!numericRet) {
         // Return type can only by 'string' or 'number'
         // Convert the result to a string
         var strgfy = parseJSFunc(function() {
           return Pointer_stringify;
         }).returnValue;
-        funcstr += 'ret = ' + strgfy + '(ret);';
+        funcstr += "ret = " + strgfy + "(ret);";
       }
       if (!numericArgs) {
         // If we had a stack, restore it
-        funcstr += JSsource['stackRestore'].body + ';';
+        funcstr += JSsource["stackRestore"].body + ";";
       }
-      funcstr += 'return ret})';
+      funcstr += "return ret})";
       return eval(funcstr);
     };
   })();
-  Module['cwrap'] = cwrap;
-  Module['ccall'] = ccall;
+  Module["cwrap"] = cwrap;
+  Module["ccall"] = ccall;
 
   function setValue(ptr, value, type, noSafe) {
-    type = type || 'i8';
-    if (type.charAt(type.length - 1) === '*') type = 'i32'; // pointers are 32-bit
+    type = type || "i8";
+    if (type.charAt(type.length - 1) === "*") type = "i32"; // pointers are 32-bit
     switch (type) {
-      case 'i1':
+      case "i1":
         HEAP8[ptr >> 0] = value;
         break;
-      case 'i8':
+      case "i8":
         HEAP8[ptr >> 0] = value;
         break;
-      case 'i16':
+      case "i16":
         HEAP16[ptr >> 1] = value;
         break;
-      case 'i32':
+      case "i32":
         HEAP32[ptr >> 2] = value;
         break;
-      case 'i64':
+      case "i64":
         (tempI64 = [
           value >>> 0,
           ((tempDouble = value),
           +Math_abs(tempDouble) >= 1.0
             ? tempDouble > 0.0
-              ? (Math_min(+Math_floor(tempDouble / 4294967296.0), 4294967295.0) | 0) >>> 0
-              : ~~+Math_ceil((tempDouble - +(~~tempDouble >>> 0)) / 4294967296.0) >>> 0
+              ? (Math_min(
+                  +Math_floor(tempDouble / 4294967296.0),
+                  4294967295.0
+                ) |
+                  0) >>>
+                0
+              : ~~+Math_ceil(
+                  (tempDouble - +(~~tempDouble >>> 0)) / 4294967296.0
+                ) >>> 0
             : 0)
         ]),
           (HEAP32[ptr >> 2] = tempI64[0]),
           (HEAP32[(ptr + 4) >> 2] = tempI64[1]);
         break;
-      case 'float':
+      case "float":
         HEAPF32[ptr >> 2] = value;
         break;
-      case 'double':
+      case "double":
         HEAPF64[ptr >> 3] = value;
         break;
       default:
-        abort('invalid type for setValue: ' + type);
+        abort("invalid type for setValue: " + type);
     }
   }
-  Module['setValue'] = setValue;
+  Module["setValue"] = setValue;
 
   function getValue(ptr, type, noSafe) {
-    type = type || 'i8';
-    if (type.charAt(type.length - 1) === '*') type = 'i32'; // pointers are 32-bit
+    type = type || "i8";
+    if (type.charAt(type.length - 1) === "*") type = "i32"; // pointers are 32-bit
     switch (type) {
-      case 'i1':
+      case "i1":
         return HEAP8[ptr >> 0];
-      case 'i8':
+      case "i8":
         return HEAP8[ptr >> 0];
-      case 'i16':
+      case "i16":
         return HEAP16[ptr >> 1];
-      case 'i32':
+      case "i32":
         return HEAP32[ptr >> 2];
-      case 'i64':
+      case "i64":
         return HEAP32[ptr >> 2];
-      case 'float':
+      case "float":
         return HEAPF32[ptr >> 2];
-      case 'double':
+      case "double":
         return HEAPF64[ptr >> 3];
       default:
-        abort('invalid type for setValue: ' + type);
+        abort("invalid type for setValue: " + type);
     }
     return null;
   }
-  Module['getValue'] = getValue;
+  Module["getValue"] = getValue;
 
   var ALLOC_NORMAL = 0; // Tries to use _malloc()
   var ALLOC_STACK = 1; // Lives for the duration of the current function call
   var ALLOC_STATIC = 2; // Cannot be freed
   var ALLOC_DYNAMIC = 3; // Cannot be freed except through sbrk
   var ALLOC_NONE = 4; // Do not allocate
-  Module['ALLOC_NORMAL'] = ALLOC_NORMAL;
-  Module['ALLOC_STACK'] = ALLOC_STACK;
-  Module['ALLOC_STATIC'] = ALLOC_STATIC;
-  Module['ALLOC_DYNAMIC'] = ALLOC_DYNAMIC;
-  Module['ALLOC_NONE'] = ALLOC_NONE;
+  Module["ALLOC_NORMAL"] = ALLOC_NORMAL;
+  Module["ALLOC_STACK"] = ALLOC_STACK;
+  Module["ALLOC_STATIC"] = ALLOC_STATIC;
+  Module["ALLOC_DYNAMIC"] = ALLOC_DYNAMIC;
+  Module["ALLOC_NONE"] = ALLOC_NONE;
 
   // allocate(): This is for internal use. You can use it yourself as well, but the interface
   //             is a little tricky (see docs right below). The reason is that it is optimized
@@ -750,7 +791,7 @@ function zbarProcessImageData(imgData) {
   // @allocator: How to allocate memory, see ALLOC_*
   function allocate(slab, types, allocator, ptr) {
     var zeroinit, size;
-    if (typeof slab === 'number') {
+    if (typeof slab === "number") {
       zeroinit = true;
       size = slab;
     } else {
@@ -758,13 +799,18 @@ function zbarProcessImageData(imgData) {
       size = slab.length;
     }
 
-    var singleType = typeof types === 'string' ? types : null;
+    var singleType = typeof types === "string" ? types : null;
 
     var ret;
     if (allocator == ALLOC_NONE) {
       ret = ptr;
     } else {
-      ret = [_malloc, Runtime.stackAlloc, Runtime.staticAlloc, Runtime.dynamicAlloc][allocator === undefined ? ALLOC_STATIC : allocator](
+      ret = [
+        _malloc,
+        Runtime.stackAlloc,
+        Runtime.staticAlloc,
+        Runtime.dynamicAlloc
+      ][allocator === undefined ? ALLOC_STATIC : allocator](
         Math.max(size, singleType ? 1 : types.length)
       );
     }
@@ -784,7 +830,7 @@ function zbarProcessImageData(imgData) {
       return ret;
     }
 
-    if (singleType === 'i8') {
+    if (singleType === "i8") {
       if (slab.subarray || slab.slice) {
         HEAPU8.set(slab, ret);
       } else {
@@ -800,7 +846,7 @@ function zbarProcessImageData(imgData) {
     while (i < size) {
       var curr = slab[i];
 
-      if (typeof curr === 'function') {
+      if (typeof curr === "function") {
         curr = Runtime.getFunctionIndex(curr);
       }
 
@@ -810,7 +856,7 @@ function zbarProcessImageData(imgData) {
         continue;
       }
 
-      if (type == 'i64') type = 'i32'; // special case: we have one i32 here, and one i32 later
+      if (type == "i64") type = "i32"; // special case: we have one i32 here, and one i32 later
 
       setValue(ret + i, curr, type);
 
@@ -824,10 +870,10 @@ function zbarProcessImageData(imgData) {
 
     return ret;
   }
-  Module['allocate'] = allocate;
+  Module["allocate"] = allocate;
 
   function Pointer_stringify(ptr, /* optional */ length) {
-    if (length === 0) return '';
+    if (length === 0) return "";
     // TODO: use TextDecoder
     // Find the length, and check for UTF while doing so
     var hasUtf = false;
@@ -842,13 +888,16 @@ function zbarProcessImageData(imgData) {
     }
     if (!length) length = i;
 
-    var ret = '';
+    var ret = "";
 
     if (!hasUtf) {
       var MAX_CHUNK = 1024; // split up into chunks, because .apply on a huge string can overflow the stack
       var curr;
       while (length > 0) {
-        curr = String.fromCharCode.apply(String, HEAPU8.subarray(ptr, ptr + Math.min(length, MAX_CHUNK)));
+        curr = String.fromCharCode.apply(
+          String,
+          HEAPU8.subarray(ptr, ptr + Math.min(length, MAX_CHUNK))
+        );
         ret = ret ? ret + curr : curr;
         ptr += MAX_CHUNK;
         length -= MAX_CHUNK;
@@ -863,12 +912,12 @@ function zbarProcessImageData(imgData) {
     }
     return ret;
   }
-  Module['Pointer_stringify'] = Pointer_stringify;
+  Module["Pointer_stringify"] = Pointer_stringify;
 
   function UTF16ToString(ptr) {
     var i = 0;
 
-    var str = '';
+    var str = "";
     while (1) {
       var codeUnit = HEAP16[(ptr + i * 2) >> 1];
       if (codeUnit == 0) return str;
@@ -877,7 +926,7 @@ function zbarProcessImageData(imgData) {
       str += String.fromCharCode(codeUnit);
     }
   }
-  Module['UTF16ToString'] = UTF16ToString;
+  Module["UTF16ToString"] = UTF16ToString;
 
   function stringToUTF16(str, outPtr) {
     for (var i = 0; i < str.length; ++i) {
@@ -888,12 +937,12 @@ function zbarProcessImageData(imgData) {
     // Null-terminate the pointer to the HEAP.
     HEAP16[(outPtr + str.length * 2) >> 1] = 0;
   }
-  Module['stringToUTF16'] = stringToUTF16;
+  Module["stringToUTF16"] = stringToUTF16;
 
   function UTF32ToString(ptr) {
     var i = 0;
 
-    var str = '';
+    var str = "";
     while (1) {
       var utf32 = HEAP32[(ptr + i * 4) >> 2];
       if (utf32 == 0) return str;
@@ -907,7 +956,7 @@ function zbarProcessImageData(imgData) {
       }
     }
   }
-  Module['UTF32ToString'] = UTF32ToString;
+  Module["UTF32ToString"] = UTF32ToString;
 
   function stringToUTF32(str, outPtr) {
     var iChar = 0;
@@ -916,7 +965,8 @@ function zbarProcessImageData(imgData) {
       var codeUnit = str.charCodeAt(iCodeUnit); // possibly a lead surrogate
       if (codeUnit >= 0xd800 && codeUnit <= 0xdfff) {
         var trailSurrogate = str.charCodeAt(++iCodeUnit);
-        codeUnit = (0x10000 + ((codeUnit & 0x3ff) << 10)) | (trailSurrogate & 0x3ff);
+        codeUnit =
+          (0x10000 + ((codeUnit & 0x3ff) << 10)) | (trailSurrogate & 0x3ff);
       }
       HEAP32[(outPtr + iChar * 4) >> 2] = codeUnit;
       ++iChar;
@@ -924,17 +974,17 @@ function zbarProcessImageData(imgData) {
     // Null-terminate the pointer to the HEAP.
     HEAP32[(outPtr + iChar * 4) >> 2] = 0;
   }
-  Module['stringToUTF32'] = stringToUTF32;
+  Module["stringToUTF32"] = stringToUTF32;
 
   function demangle(func) {
-    var hasLibcxxabi = !!Module['___cxa_demangle'];
+    var hasLibcxxabi = !!Module["___cxa_demangle"];
     if (hasLibcxxabi) {
       try {
         var buf = _malloc(func.length);
         writeStringToMemory(func.substr(1), buf);
         var status = _malloc(4);
-        var ret = Module['___cxa_demangle'](buf, 0, 0, status);
-        if (getValue(status, 'i32') === 0 && ret) {
+        var ret = Module["___cxa_demangle"](buf, 0, 0, status);
+        if (getValue(status, "i32") === 0 && ret) {
           return Pointer_stringify(ret);
         }
         // otherwise, libcxxabi failed, we can try ours which may return a partial result
@@ -949,23 +999,23 @@ function zbarProcessImageData(imgData) {
     var i = 3;
     // params, etc.
     var basicTypes = {
-      v: 'void',
-      b: 'bool',
-      c: 'char',
-      s: 'short',
-      i: 'int',
-      l: 'long',
-      f: 'float',
-      d: 'double',
-      w: 'wchar_t',
-      a: 'signed char',
-      h: 'unsigned char',
-      t: 'unsigned short',
-      j: 'unsigned int',
-      m: 'unsigned long',
-      x: 'long long',
-      y: 'unsigned long long',
-      z: '...'
+      v: "void",
+      b: "bool",
+      c: "char",
+      s: "short",
+      i: "int",
+      l: "long",
+      f: "float",
+      d: "double",
+      w: "wchar_t",
+      a: "signed char",
+      h: "unsigned char",
+      t: "unsigned short",
+      j: "unsigned int",
+      m: "unsigned long",
+      x: "long long",
+      y: "unsigned long long",
+      z: "..."
     };
     var subs = [];
     var first = true;
@@ -973,25 +1023,25 @@ function zbarProcessImageData(imgData) {
       //return;
       if (x) Module.print(x);
       Module.print(func);
-      var pre = '';
-      for (var a = 0; a < i; a++) pre += ' ';
-      Module.print(pre + '^');
+      var pre = "";
+      for (var a = 0; a < i; a++) pre += " ";
+      Module.print(pre + "^");
     }
     function parseNested() {
       i++;
-      if (func[i] === 'K') i++; // ignore const
+      if (func[i] === "K") i++; // ignore const
       var parts = [];
-      while (func[i] !== 'E') {
-        if (func[i] === 'S') {
+      while (func[i] !== "E") {
+        if (func[i] === "S") {
           // substitution
           i++;
-          var next = func.indexOf('_', i);
+          var next = func.indexOf("_", i);
           var num = func.substring(i, next) || 0;
-          parts.push(subs[num] || '?');
+          parts.push(subs[num] || "?");
           i = next + 1;
           continue;
         }
-        if (func[i] === 'C') {
+        if (func[i] === "C") {
           // constructor
           parts.push(parts[parts.length - 1]);
           i += 2;
@@ -1014,20 +1064,20 @@ function zbarProcessImageData(imgData) {
     function parse(rawList, limit, allowVoid) {
       // main parser
       limit = limit || Infinity;
-      var ret = '',
+      var ret = "",
         list = [];
       function flushList() {
-        return '(' + list.join(', ') + ')';
+        return "(" + list.join(", ") + ")";
       }
       var name;
-      if (func[i] === 'N') {
+      if (func[i] === "N") {
         // namespaced N-E
-        name = parseNested().join('::');
+        name = parseNested().join("::");
         limit--;
         if (limit === 0) return rawList ? [name] : name;
       } else {
         // not namespaced
-        if (func[i] === 'K' || (first && func[i] === 'L')) i++; // ignore const and first 'L'
+        if (func[i] === "K" || (first && func[i] === "L")) i++; // ignore const and first 'L'
         var size = parseInt(func.substr(i));
         if (size) {
           var pre = size.toString().length;
@@ -1036,11 +1086,11 @@ function zbarProcessImageData(imgData) {
         }
       }
       first = false;
-      if (func[i] === 'I') {
+      if (func[i] === "I") {
         i++;
         var iList = parse(true);
         var iRet = parse(true, 1, true);
-        ret += iRet[0] + ' ' + name + '<' + iList.join(', ') + '>';
+        ret += iRet[0] + " " + name + "<" + iList.join(", ") + ">";
       } else {
         ret = name;
       }
@@ -1051,42 +1101,42 @@ function zbarProcessImageData(imgData) {
           list.push(basicTypes[c]);
         } else {
           switch (c) {
-            case 'P':
-              list.push(parse(true, 1, true)[0] + '*');
+            case "P":
+              list.push(parse(true, 1, true)[0] + "*");
               break; // pointer
-            case 'R':
-              list.push(parse(true, 1, true)[0] + '&');
+            case "R":
+              list.push(parse(true, 1, true)[0] + "&");
               break; // reference
-            case 'L': {
+            case "L": {
               // literal
               i++; // skip basic type
-              var end = func.indexOf('E', i);
+              var end = func.indexOf("E", i);
               var size = end - i;
               list.push(func.substr(i, size));
               i += size + 2; // size + 'EE'
               break;
             }
-            case 'A': {
+            case "A": {
               // array
               var size = parseInt(func.substr(i));
               i += size.toString().length;
-              if (func[i] !== '_') throw '?';
+              if (func[i] !== "_") throw "?";
               i++; // skip _
-              list.push(parse(true, 1, true)[0] + ' [' + size + ']');
+              list.push(parse(true, 1, true)[0] + " [" + size + "]");
               break;
             }
-            case 'E':
+            case "E":
               break paramLoop;
             default:
-              ret += '?' + c;
+              ret += "?" + c;
               break paramLoop;
           }
         }
       }
-      if (!allowVoid && list.length === 1 && list[0] === 'void') list = []; // avoid (void)
+      if (!allowVoid && list.length === 1 && list[0] === "void") list = []; // avoid (void)
       if (rawList) {
         if (ret) {
-          list.push(ret + '?');
+          list.push(ret + "?");
         }
         return list;
       } else {
@@ -1096,26 +1146,26 @@ function zbarProcessImageData(imgData) {
     var final = func;
     try {
       // Special-case the entry point, since its name differs from other name mangling.
-      if (func == 'Object._main' || func == '_main') {
-        return 'main()';
+      if (func == "Object._main" || func == "_main") {
+        return "main()";
       }
-      if (typeof func === 'number') func = Pointer_stringify(func);
-      if (func[0] !== '_') return func;
-      if (func[1] !== '_') return func; // C function
-      if (func[2] !== 'Z') return func;
+      if (typeof func === "number") func = Pointer_stringify(func);
+      if (func[0] !== "_") return func;
+      if (func[1] !== "_") return func; // C function
+      if (func[2] !== "Z") return func;
       switch (func[3]) {
-        case 'n':
-          return 'operator new()';
-        case 'd':
-          return 'operator delete()';
+        case "n":
+          return "operator new()";
+        case "d":
+          return "operator delete()";
       }
       final = parse();
     } catch (e) {
-      final += '?';
+      final += "?";
     }
-    if (final.indexOf('?') >= 0 && !hasLibcxxabi) {
+    if (final.indexOf("?") >= 0 && !hasLibcxxabi) {
       Runtime.warnOnce(
-        'warning: a problem occurred in builtin C++ name demangling; build with  -s DEMANGLE_SUPPORT=1  to link in libcxxabi demangling'
+        "warning: a problem occurred in builtin C++ name demangling; build with  -s DEMANGLE_SUPPORT=1  to link in libcxxabi demangling"
       );
     }
     return final;
@@ -1124,7 +1174,7 @@ function zbarProcessImageData(imgData) {
   function demangleAll(text) {
     return text.replace(/__Z[\w\d_]+/g, function(x) {
       var y = demangle(x);
-      return x === y ? x : x + ' [' + y + ']';
+      return x === y ? x : x + " [" + y + "]";
     });
   }
 
@@ -1139,7 +1189,7 @@ function zbarProcessImageData(imgData) {
         err = e;
       }
       if (!err.stack) {
-        return '(no stack trace available)';
+        return "(no stack trace available)";
       }
     }
     return err.stack.toString();
@@ -1148,7 +1198,7 @@ function zbarProcessImageData(imgData) {
   function stackTrace() {
     return demangleAll(jsStackTrace());
   }
-  Module['stackTrace'] = stackTrace;
+  Module["stackTrace"] = stackTrace;
 
   // Memory management
 
@@ -1171,15 +1221,15 @@ function zbarProcessImageData(imgData) {
 
   function enlargeMemory() {
     abort(
-      'Cannot enlarge memory arrays. Either (1) compile with -s TOTAL_MEMORY=X with X higher than the current value ' +
+      "Cannot enlarge memory arrays. Either (1) compile with -s TOTAL_MEMORY=X with X higher than the current value " +
         TOTAL_MEMORY +
-        ', (2) compile with ALLOW_MEMORY_GROWTH which adjusts the size at runtime but prevents some optimizations, or (3) set Module.TOTAL_MEMORY before the program runs.'
+        ", (2) compile with ALLOW_MEMORY_GROWTH which adjusts the size at runtime but prevents some optimizations, or (3) set Module.TOTAL_MEMORY before the program runs."
     );
   }
 
-  var TOTAL_STACK = Module['TOTAL_STACK'] || 5242880;
-  var TOTAL_MEMORY = Module['TOTAL_MEMORY'] || 16777216;
-  var FAST_MEMORY = Module['FAST_MEMORY'] || 2097152;
+  var TOTAL_STACK = Module["TOTAL_STACK"] || 5242880;
+  var TOTAL_MEMORY = Module["TOTAL_MEMORY"] || 16777216;
+  var FAST_MEMORY = Module["FAST_MEMORY"] || 2097152;
 
   var totalMemory = 64 * 1024;
   while (totalMemory < TOTAL_MEMORY || totalMemory < 2 * TOTAL_STACK) {
@@ -1190,18 +1240,22 @@ function zbarProcessImageData(imgData) {
     }
   }
   if (totalMemory !== TOTAL_MEMORY) {
-    Module.printErr('increasing TOTAL_MEMORY to ' + totalMemory + ' to be compliant with the asm.js spec');
+    Module.printErr(
+      "increasing TOTAL_MEMORY to " +
+        totalMemory +
+        " to be compliant with the asm.js spec"
+    );
     TOTAL_MEMORY = totalMemory;
   }
 
   // Initialize the runtime's memory
   // check for full engine support (use string 'subarray' to avoid closure compiler confusion)
   assert(
-    typeof Int32Array !== 'undefined' &&
-      typeof Float64Array !== 'undefined' &&
-      !!new Int32Array(1)['subarray'] &&
-      !!new Int32Array(1)['set'],
-    'JS engine does not provide full typed array support'
+    typeof Int32Array !== "undefined" &&
+      typeof Float64Array !== "undefined" &&
+      !!new Int32Array(1)["subarray"] &&
+      !!new Int32Array(1)["set"],
+    "JS engine does not provide full typed array support"
   );
 
   var buffer = new ArrayBuffer(TOTAL_MEMORY);
@@ -1216,32 +1270,35 @@ function zbarProcessImageData(imgData) {
 
   // Endianness check (note: assumes compiler arch was little-endian)
   HEAP32[0] = 255;
-  assert(HEAPU8[0] === 255 && HEAPU8[3] === 0, 'Typed arrays 2 must be run on a little-endian system');
+  assert(
+    HEAPU8[0] === 255 && HEAPU8[3] === 0,
+    "Typed arrays 2 must be run on a little-endian system"
+  );
 
-  Module['HEAP'] = HEAP;
-  Module['buffer'] = buffer;
-  Module['HEAP8'] = HEAP8;
-  Module['HEAP16'] = HEAP16;
-  Module['HEAP32'] = HEAP32;
-  Module['HEAPU8'] = HEAPU8;
-  Module['HEAPU16'] = HEAPU16;
-  Module['HEAPU32'] = HEAPU32;
-  Module['HEAPF32'] = HEAPF32;
-  Module['HEAPF64'] = HEAPF64;
+  Module["HEAP"] = HEAP;
+  Module["buffer"] = buffer;
+  Module["HEAP8"] = HEAP8;
+  Module["HEAP16"] = HEAP16;
+  Module["HEAP32"] = HEAP32;
+  Module["HEAPU8"] = HEAPU8;
+  Module["HEAPU16"] = HEAPU16;
+  Module["HEAPU32"] = HEAPU32;
+  Module["HEAPF32"] = HEAPF32;
+  Module["HEAPF64"] = HEAPF64;
 
   function callRuntimeCallbacks(callbacks) {
     while (callbacks.length > 0) {
       var callback = callbacks.shift();
-      if (typeof callback == 'function') {
+      if (typeof callback == "function") {
         callback();
         continue;
       }
       var func = callback.func;
-      if (typeof func === 'number') {
+      if (typeof func === "number") {
         if (callback.arg === undefined) {
-          Runtime.dynCall('v', func);
+          Runtime.dynCall("v", func);
         } else {
-          Runtime.dynCall('vi', func, [callback.arg]);
+          Runtime.dynCall("vi", func, [callback.arg]);
         }
       } else {
         func(callback.arg === undefined ? null : callback.arg);
@@ -1260,10 +1317,11 @@ function zbarProcessImageData(imgData) {
 
   function preRun() {
     // compatibility - merge in anything from Module['preRun'] at this time
-    if (Module['preRun']) {
-      if (typeof Module['preRun'] == 'function') Module['preRun'] = [Module['preRun']];
-      while (Module['preRun'].length) {
-        addOnPreRun(Module['preRun'].shift());
+    if (Module["preRun"]) {
+      if (typeof Module["preRun"] == "function")
+        Module["preRun"] = [Module["preRun"]];
+      while (Module["preRun"].length) {
+        addOnPreRun(Module["preRun"].shift());
       }
     }
     callRuntimeCallbacks(__ATPRERUN__);
@@ -1286,10 +1344,11 @@ function zbarProcessImageData(imgData) {
 
   function postRun() {
     // compatibility - merge in anything from Module['postRun'] at this time
-    if (Module['postRun']) {
-      if (typeof Module['postRun'] == 'function') Module['postRun'] = [Module['postRun']];
-      while (Module['postRun'].length) {
-        addOnPostRun(Module['postRun'].shift());
+    if (Module["postRun"]) {
+      if (typeof Module["postRun"] == "function")
+        Module["postRun"] = [Module["postRun"]];
+      while (Module["postRun"].length) {
+        addOnPostRun(Module["postRun"].shift());
       }
     }
     callRuntimeCallbacks(__ATPOSTRUN__);
@@ -1298,27 +1357,27 @@ function zbarProcessImageData(imgData) {
   function addOnPreRun(cb) {
     __ATPRERUN__.unshift(cb);
   }
-  Module['addOnPreRun'] = Module.addOnPreRun = addOnPreRun;
+  Module["addOnPreRun"] = Module.addOnPreRun = addOnPreRun;
 
   function addOnInit(cb) {
     __ATINIT__.unshift(cb);
   }
-  Module['addOnInit'] = Module.addOnInit = addOnInit;
+  Module["addOnInit"] = Module.addOnInit = addOnInit;
 
   function addOnPreMain(cb) {
     __ATMAIN__.unshift(cb);
   }
-  Module['addOnPreMain'] = Module.addOnPreMain = addOnPreMain;
+  Module["addOnPreMain"] = Module.addOnPreMain = addOnPreMain;
 
   function addOnExit(cb) {
     __ATEXIT__.unshift(cb);
   }
-  Module['addOnExit'] = Module.addOnExit = addOnExit;
+  Module["addOnExit"] = Module.addOnExit = addOnExit;
 
   function addOnPostRun(cb) {
     __ATPOSTRUN__.unshift(cb);
   }
-  Module['addOnPostRun'] = Module.addOnPostRun = addOnPostRun;
+  Module["addOnPostRun"] = Module.addOnPostRun = addOnPostRun;
 
   // Tools
 
@@ -1332,7 +1391,7 @@ function zbarProcessImageData(imgData) {
     }
     return ret;
   }
-  Module['intArrayFromString'] = intArrayFromString;
+  Module["intArrayFromString"] = intArrayFromString;
 
   function intArrayToString(array) {
     var ret = [];
@@ -1343,9 +1402,9 @@ function zbarProcessImageData(imgData) {
       }
       ret.push(String.fromCharCode(chr));
     }
-    return ret.join('');
+    return ret.join("");
   }
-  Module['intArrayToString'] = intArrayToString;
+  Module["intArrayToString"] = intArrayToString;
 
   function writeStringToMemory(string, buffer, dontAddNull) {
     var array = intArrayFromString(string, dontAddNull);
@@ -1356,14 +1415,14 @@ function zbarProcessImageData(imgData) {
       i = i + 1;
     }
   }
-  Module['writeStringToMemory'] = writeStringToMemory;
+  Module["writeStringToMemory"] = writeStringToMemory;
 
   function writeArrayToMemory(array, buffer) {
     for (var i = 0; i < array.length; i++) {
       HEAP8[(buffer + i) >> 0] = array[i];
     }
   }
-  Module['writeArrayToMemory'] = writeArrayToMemory;
+  Module["writeArrayToMemory"] = writeArrayToMemory;
 
   function writeAsciiToMemory(str, buffer, dontAddNull) {
     for (var i = 0; i < str.length; i++) {
@@ -1371,7 +1430,7 @@ function zbarProcessImageData(imgData) {
     }
     if (!dontAddNull) HEAP8[(buffer + str.length) >> 0] = 0;
   }
-  Module['writeAsciiToMemory'] = writeAsciiToMemory;
+  Module["writeAsciiToMemory"] = writeAsciiToMemory;
 
   function unSign(value, bits, ignore) {
     if (value >= 0) {
@@ -1399,15 +1458,15 @@ function zbarProcessImageData(imgData) {
   }
 
   // check for imul support, and also for correctness ( https://bugs.webkit.org/show_bug.cgi?id=126345 )
-  if (!Math['imul'] || Math['imul'](0xffffffff, 5) !== -5)
-    Math['imul'] = function imul(a, b) {
+  if (!Math["imul"] || Math["imul"](0xffffffff, 5) !== -5)
+    Math["imul"] = function imul(a, b) {
       var ah = a >>> 16;
       var al = a & 0xffff;
       var bh = b >>> 16;
       var bl = b & 0xffff;
       return (al * bl + ((ah * bl + al * bh) << 16)) | 0;
     };
-  Math.imul = Math['imul'];
+  Math.imul = Math["imul"];
 
   var Math_abs = Math.abs;
   var Math_cos = Math.cos;
@@ -1440,15 +1499,15 @@ function zbarProcessImageData(imgData) {
 
   function addRunDependency(id) {
     runDependencies++;
-    if (Module['monitorRunDependencies']) {
-      Module['monitorRunDependencies'](runDependencies);
+    if (Module["monitorRunDependencies"]) {
+      Module["monitorRunDependencies"](runDependencies);
     }
   }
-  Module['addRunDependency'] = addRunDependency;
+  Module["addRunDependency"] = addRunDependency;
   function removeRunDependency(id) {
     runDependencies--;
-    if (Module['monitorRunDependencies']) {
-      Module['monitorRunDependencies'](runDependencies);
+    if (Module["monitorRunDependencies"]) {
+      Module["monitorRunDependencies"](runDependencies);
     }
     if (runDependencies == 0) {
       if (runDependencyWatcher !== null) {
@@ -1462,10 +1521,10 @@ function zbarProcessImageData(imgData) {
       }
     }
   }
-  Module['removeRunDependency'] = removeRunDependency;
+  Module["removeRunDependency"] = removeRunDependency;
 
-  Module['preloadedImages'] = {}; // maps url to image data
-  Module['preloadedAudios'] = {}; // maps url to audio data
+  Module["preloadedImages"] = {}; // maps url to image data
+  Module["preloadedAudios"] = {}; // maps url to audio data
 
   var memoryInitializer = null;
 
@@ -11719,7 +11778,7 @@ function zbarProcessImageData(imgData) {
       0,
       33
     ],
-    'i8',
+    "i8",
     ALLOC_NONE,
     Runtime.GLOBAL_BASE
   );
@@ -15138,7 +15197,7 @@ function zbarProcessImageData(imgData) {
       66,
       37
     ],
-    'i8',
+    "i8",
     ALLOC_NONE,
     Runtime.GLOBAL_BASE + 10240
   );
@@ -25385,7 +25444,7 @@ function zbarProcessImageData(imgData) {
       220,
       152
     ],
-    'i8',
+    "i8",
     ALLOC_NONE,
     Runtime.GLOBAL_BASE + 15092
   );
@@ -35632,7 +35691,7 @@ function zbarProcessImageData(imgData) {
       157,
       101
     ],
-    'i8',
+    "i8",
     ALLOC_NONE,
     Runtime.GLOBAL_BASE + 25332
   );
@@ -45879,7 +45938,7 @@ function zbarProcessImageData(imgData) {
       251,
       225
     ],
-    'i8',
+    "i8",
     ALLOC_NONE,
     Runtime.GLOBAL_BASE + 35572
   );
@@ -56126,7 +56185,7 @@ function zbarProcessImageData(imgData) {
       203,
       89
     ],
-    'i8',
+    "i8",
     ALLOC_NONE,
     Runtime.GLOBAL_BASE + 45812
   );
@@ -66373,7 +66432,7 @@ function zbarProcessImageData(imgData) {
       128,
       91
     ],
-    'i8',
+    "i8",
     ALLOC_NONE,
     Runtime.GLOBAL_BASE + 56052
   );
@@ -76492,7 +76551,7 @@ function zbarProcessImageData(imgData) {
       219,
       35
     ],
-    'i8',
+    "i8",
     ALLOC_NONE,
     Runtime.GLOBAL_BASE + 66292
   );
@@ -86739,7 +86798,7 @@ function zbarProcessImageData(imgData) {
       23,
       255
     ],
-    'i8',
+    "i8",
     ALLOC_NONE,
     Runtime.GLOBAL_BASE + 76572
   );
@@ -96986,7 +97045,7 @@ function zbarProcessImageData(imgData) {
       200,
       155
     ],
-    'i8',
+    "i8",
     ALLOC_NONE,
     Runtime.GLOBAL_BASE + 86812
   );
@@ -107233,7 +107292,7 @@ function zbarProcessImageData(imgData) {
       64,
       135
     ],
-    'i8',
+    "i8",
     ALLOC_NONE,
     Runtime.GLOBAL_BASE + 97052
   );
@@ -117480,7 +117539,7 @@ function zbarProcessImageData(imgData) {
       8,
       175
     ],
-    'i8',
+    "i8",
     ALLOC_NONE,
     Runtime.GLOBAL_BASE + 107292
   );
@@ -127727,7 +127786,7 @@ function zbarProcessImageData(imgData) {
       187,
       249
     ],
-    'i8',
+    "i8",
     ALLOC_NONE,
     Runtime.GLOBAL_BASE + 117532
   );
@@ -134370,12 +134429,12 @@ function zbarProcessImageData(imgData) {
       0,
       0
     ],
-    'i8',
+    "i8",
     ALLOC_NONE,
     Runtime.GLOBAL_BASE + 127772
   );
 
-  var tempDoublePtr = Runtime.alignMemory(allocate(12, 'i8', ALLOC_STATIC), 8);
+  var tempDoublePtr = Runtime.alignMemory(allocate(12, "i8", ALLOC_STATIC), 8);
 
   assert(tempDoublePtr % 8 == 0);
 
@@ -134413,14 +134472,18 @@ function zbarProcessImageData(imgData) {
     if (!_emscripten_get_now.actual) {
       if (ENVIRONMENT_IS_NODE) {
         _emscripten_get_now.actual = function _emscripten_get_now_actual() {
-          var t = process['hrtime']();
+          var t = process["hrtime"]();
           return t[0] * 1e3 + t[1] / 1e6;
         };
-      } else if (typeof dateNow !== 'undefined') {
+      } else if (typeof dateNow !== "undefined") {
         _emscripten_get_now.actual = dateNow;
-      } else if (ENVIRONMENT_IS_WEB && window['performance'] && window['performance']['now']) {
+      } else if (
+        ENVIRONMENT_IS_WEB &&
+        window["performance"] &&
+        window["performance"]["now"]
+      ) {
         _emscripten_get_now.actual = function _emscripten_get_now_actual() {
-          return window['performance']['now']();
+          return window["performance"]["now"]();
         };
       } else {
         _emscripten_get_now.actual = Date.now;
@@ -134433,7 +134496,11 @@ function zbarProcessImageData(imgData) {
     // return whether emscripten_get_now is guaranteed monotonic; the Date.now
     // implementation is not :(
     return (
-      ENVIRONMENT_IS_NODE || typeof dateNow !== 'undefined' || (ENVIRONMENT_IS_WEB && window['performance'] && window['performance']['now'])
+      ENVIRONMENT_IS_NODE ||
+      typeof dateNow !== "undefined" ||
+      (ENVIRONMENT_IS_WEB &&
+        window["performance"] &&
+        window["performance"]["now"])
     );
   }
 
@@ -134583,140 +134650,144 @@ function zbarProcessImageData(imgData) {
     return 0;
   }
 
-  Module['_i64Subtract'] = _i64Subtract;
+  Module["_i64Subtract"] = _i64Subtract;
 
   function ___assert_fail(condition, filename, line, func) {
     ABORT = true;
-    throw 'Assertion failed: ' +
+    throw "Assertion failed: " +
       Pointer_stringify(condition) +
-      ', at: ' +
-      [filename ? Pointer_stringify(filename) : 'unknown filename', line, func ? Pointer_stringify(func) : 'unknown function'] +
-      ' at ' +
+      ", at: " +
+      [
+        filename ? Pointer_stringify(filename) : "unknown filename",
+        line,
+        func ? Pointer_stringify(func) : "unknown function"
+      ] +
+      " at " +
       stackTrace();
   }
 
-  Module['_memset'] = _memset;
+  Module["_memset"] = _memset;
 
   var ERRNO_MESSAGES = {
-    0: 'Success',
-    1: 'Not super-user',
-    2: 'No such file or directory',
-    3: 'No such process',
-    4: 'Interrupted system call',
-    5: 'I/O error',
-    6: 'No such device or address',
-    7: 'Arg list too long',
-    8: 'Exec format error',
-    9: 'Bad file number',
-    10: 'No children',
-    11: 'No more processes',
-    12: 'Not enough core',
-    13: 'Permission denied',
-    14: 'Bad address',
-    15: 'Block device required',
-    16: 'Mount device busy',
-    17: 'File exists',
-    18: 'Cross-device link',
-    19: 'No such device',
-    20: 'Not a directory',
-    21: 'Is a directory',
-    22: 'Invalid argument',
-    23: 'Too many open files in system',
-    24: 'Too many open files',
-    25: 'Not a typewriter',
-    26: 'Text file busy',
-    27: 'File too large',
-    28: 'No space left on device',
-    29: 'Illegal seek',
-    30: 'Read only file system',
-    31: 'Too many links',
-    32: 'Broken pipe',
-    33: 'Math arg out of domain of func',
-    34: 'Math result not representable',
-    35: 'File locking deadlock error',
-    36: 'File or path name too long',
-    37: 'No record locks available',
-    38: 'Function not implemented',
-    39: 'Directory not empty',
-    40: 'Too many symbolic links',
-    42: 'No message of desired type',
-    43: 'Identifier removed',
-    44: 'Channel number out of range',
-    45: 'Level 2 not synchronized',
-    46: 'Level 3 halted',
-    47: 'Level 3 reset',
-    48: 'Link number out of range',
-    49: 'Protocol driver not attached',
-    50: 'No CSI structure available',
-    51: 'Level 2 halted',
-    52: 'Invalid exchange',
-    53: 'Invalid request descriptor',
-    54: 'Exchange full',
-    55: 'No anode',
-    56: 'Invalid request code',
-    57: 'Invalid slot',
-    59: 'Bad font file fmt',
-    60: 'Device not a stream',
-    61: 'No data (for no delay io)',
-    62: 'Timer expired',
-    63: 'Out of streams resources',
-    64: 'Machine is not on the network',
-    65: 'Package not installed',
-    66: 'The object is remote',
-    67: 'The link has been severed',
-    68: 'Advertise error',
-    69: 'Srmount error',
-    70: 'Communication error on send',
-    71: 'Protocol error',
-    72: 'Multihop attempted',
-    73: 'Cross mount point (not really error)',
-    74: 'Trying to read unreadable message',
-    75: 'Value too large for defined data type',
-    76: 'Given log. name not unique',
-    77: 'f.d. invalid for this operation',
-    78: 'Remote address changed',
-    79: 'Can   access a needed shared lib',
-    80: 'Accessing a corrupted shared lib',
-    81: '.lib section in a.out corrupted',
-    82: 'Attempting to link in too many libs',
-    83: 'Attempting to exec a shared library',
-    84: 'Illegal byte sequence',
-    86: 'Streams pipe error',
-    87: 'Too many users',
-    88: 'Socket operation on non-socket',
-    89: 'Destination address required',
-    90: 'Message too long',
-    91: 'Protocol wrong type for socket',
-    92: 'Protocol not available',
-    93: 'Unknown protocol',
-    94: 'Socket type not supported',
-    95: 'Not supported',
-    96: 'Protocol family not supported',
-    97: 'Address family not supported by protocol family',
-    98: 'Address already in use',
-    99: 'Address not available',
-    100: 'Network interface is not configured',
-    101: 'Network is unreachable',
-    102: 'Connection reset by network',
-    103: 'Connection aborted',
-    104: 'Connection reset by peer',
-    105: 'No buffer space available',
-    106: 'Socket is already connected',
-    107: 'Socket is not connected',
+    0: "Success",
+    1: "Not super-user",
+    2: "No such file or directory",
+    3: "No such process",
+    4: "Interrupted system call",
+    5: "I/O error",
+    6: "No such device or address",
+    7: "Arg list too long",
+    8: "Exec format error",
+    9: "Bad file number",
+    10: "No children",
+    11: "No more processes",
+    12: "Not enough core",
+    13: "Permission denied",
+    14: "Bad address",
+    15: "Block device required",
+    16: "Mount device busy",
+    17: "File exists",
+    18: "Cross-device link",
+    19: "No such device",
+    20: "Not a directory",
+    21: "Is a directory",
+    22: "Invalid argument",
+    23: "Too many open files in system",
+    24: "Too many open files",
+    25: "Not a typewriter",
+    26: "Text file busy",
+    27: "File too large",
+    28: "No space left on device",
+    29: "Illegal seek",
+    30: "Read only file system",
+    31: "Too many links",
+    32: "Broken pipe",
+    33: "Math arg out of domain of func",
+    34: "Math result not representable",
+    35: "File locking deadlock error",
+    36: "File or path name too long",
+    37: "No record locks available",
+    38: "Function not implemented",
+    39: "Directory not empty",
+    40: "Too many symbolic links",
+    42: "No message of desired type",
+    43: "Identifier removed",
+    44: "Channel number out of range",
+    45: "Level 2 not synchronized",
+    46: "Level 3 halted",
+    47: "Level 3 reset",
+    48: "Link number out of range",
+    49: "Protocol driver not attached",
+    50: "No CSI structure available",
+    51: "Level 2 halted",
+    52: "Invalid exchange",
+    53: "Invalid request descriptor",
+    54: "Exchange full",
+    55: "No anode",
+    56: "Invalid request code",
+    57: "Invalid slot",
+    59: "Bad font file fmt",
+    60: "Device not a stream",
+    61: "No data (for no delay io)",
+    62: "Timer expired",
+    63: "Out of streams resources",
+    64: "Machine is not on the network",
+    65: "Package not installed",
+    66: "The object is remote",
+    67: "The link has been severed",
+    68: "Advertise error",
+    69: "Srmount error",
+    70: "Communication error on send",
+    71: "Protocol error",
+    72: "Multihop attempted",
+    73: "Cross mount point (not really error)",
+    74: "Trying to read unreadable message",
+    75: "Value too large for defined data type",
+    76: "Given log. name not unique",
+    77: "f.d. invalid for this operation",
+    78: "Remote address changed",
+    79: "Can   access a needed shared lib",
+    80: "Accessing a corrupted shared lib",
+    81: ".lib section in a.out corrupted",
+    82: "Attempting to link in too many libs",
+    83: "Attempting to exec a shared library",
+    84: "Illegal byte sequence",
+    86: "Streams pipe error",
+    87: "Too many users",
+    88: "Socket operation on non-socket",
+    89: "Destination address required",
+    90: "Message too long",
+    91: "Protocol wrong type for socket",
+    92: "Protocol not available",
+    93: "Unknown protocol",
+    94: "Socket type not supported",
+    95: "Not supported",
+    96: "Protocol family not supported",
+    97: "Address family not supported by protocol family",
+    98: "Address already in use",
+    99: "Address not available",
+    100: "Network interface is not configured",
+    101: "Network is unreachable",
+    102: "Connection reset by network",
+    103: "Connection aborted",
+    104: "Connection reset by peer",
+    105: "No buffer space available",
+    106: "Socket is already connected",
+    107: "Socket is not connected",
     108: "Can't send after socket shutdown",
-    109: 'Too many references',
-    110: 'Connection timed out',
-    111: 'Connection refused',
-    112: 'Host is down',
-    113: 'Host is unreachable',
-    114: 'Socket already connected',
-    115: 'Connection already in progress',
-    116: 'Stale file handle',
-    122: 'Quota exceeded',
-    123: 'No medium (in tape drive)',
-    125: 'Operation canceled',
-    130: 'Previous owner died',
-    131: 'State not recoverable'
+    109: "Too many references",
+    110: "Connection timed out",
+    111: "Connection refused",
+    112: "Host is down",
+    113: "Host is unreachable",
+    114: "Socket already connected",
+    115: "Connection already in progress",
+    116: "Stale file handle",
+    122: "Quota exceeded",
+    123: "No medium (in tape drive)",
+    125: "Operation canceled",
+    130: "Previous owner died",
+    131: "State not recoverable"
   };
 
   var PATH = {
@@ -134729,9 +134800,9 @@ function zbarProcessImageData(imgData) {
       var up = 0;
       for (var i = parts.length - 1; i >= 0; i--) {
         var last = parts[i];
-        if (last === '.') {
+        if (last === ".") {
           parts.splice(i, 1);
-        } else if (last === '..') {
+        } else if (last === "..") {
           parts.splice(i, 1);
           up++;
         } else if (up) {
@@ -134742,28 +134813,28 @@ function zbarProcessImageData(imgData) {
       // if the path is allowed to go above the root, restore leading ..s
       if (allowAboveRoot) {
         for (; up--; up) {
-          parts.unshift('..');
+          parts.unshift("..");
         }
       }
       return parts;
     },
     normalize: function(path) {
-      var isAbsolute = path.charAt(0) === '/',
-        trailingSlash = path.substr(-1) === '/';
+      var isAbsolute = path.charAt(0) === "/",
+        trailingSlash = path.substr(-1) === "/";
       // Normalize the path
       path = PATH.normalizeArray(
-        path.split('/').filter(function(p) {
+        path.split("/").filter(function(p) {
           return !!p;
         }),
         !isAbsolute
-      ).join('/');
+      ).join("/");
       if (!path && !isAbsolute) {
-        path = '.';
+        path = ".";
       }
       if (path && trailingSlash) {
-        path += '/';
+        path += "/";
       }
-      return (isAbsolute ? '/' : '') + path;
+      return (isAbsolute ? "/" : "") + path;
     },
     dirname: function(path) {
       var result = PATH.splitPath(path),
@@ -134771,7 +134842,7 @@ function zbarProcessImageData(imgData) {
         dir = result[1];
       if (!root && !dir) {
         // No dirname whatsoever
-        return '.';
+        return ".";
       }
       if (dir) {
         // It has a dirname, strip trailing slash
@@ -134781,8 +134852,8 @@ function zbarProcessImageData(imgData) {
     },
     basename: function(path) {
       // EMSCRIPTEN return '/'' for '/', not an empty string
-      if (path === '/') return '/';
-      var lastSlash = path.lastIndexOf('/');
+      if (path === "/") return "/";
+      var lastSlash = path.lastIndexOf("/");
       if (lastSlash === -1) return path;
       return path.substr(lastSlash + 1);
     },
@@ -134791,34 +134862,34 @@ function zbarProcessImageData(imgData) {
     },
     join: function() {
       var paths = Array.prototype.slice.call(arguments, 0);
-      return PATH.normalize(paths.join('/'));
+      return PATH.normalize(paths.join("/"));
     },
     join2: function(l, r) {
-      return PATH.normalize(l + '/' + r);
+      return PATH.normalize(l + "/" + r);
     },
     resolve: function() {
-      var resolvedPath = '',
+      var resolvedPath = "",
         resolvedAbsolute = false;
       for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
         var path = i >= 0 ? arguments[i] : FS.cwd();
         // Skip empty and invalid entries
-        if (typeof path !== 'string') {
-          throw new TypeError('Arguments to path.resolve must be strings');
+        if (typeof path !== "string") {
+          throw new TypeError("Arguments to path.resolve must be strings");
         } else if (!path) {
-          return ''; // an invalid portion invalidates the whole thing
+          return ""; // an invalid portion invalidates the whole thing
         }
-        resolvedPath = path + '/' + resolvedPath;
-        resolvedAbsolute = path.charAt(0) === '/';
+        resolvedPath = path + "/" + resolvedPath;
+        resolvedAbsolute = path.charAt(0) === "/";
       }
       // At this point the path should be resolved to a full absolute path, but
       // handle relative paths to be safe (might happen when process.cwd() fails)
       resolvedPath = PATH.normalizeArray(
-        resolvedPath.split('/').filter(function(p) {
+        resolvedPath.split("/").filter(function(p) {
           return !!p;
         }),
         !resolvedAbsolute
-      ).join('/');
-      return (resolvedAbsolute ? '/' : '') + resolvedPath || '.';
+      ).join("/");
+      return (resolvedAbsolute ? "/" : "") + resolvedPath || ".";
     },
     relative: function(from, to) {
       from = PATH.resolve(from).substr(1);
@@ -134826,17 +134897,17 @@ function zbarProcessImageData(imgData) {
       function trim(arr) {
         var start = 0;
         for (; start < arr.length; start++) {
-          if (arr[start] !== '') break;
+          if (arr[start] !== "") break;
         }
         var end = arr.length - 1;
         for (; end >= 0; end--) {
-          if (arr[end] !== '') break;
+          if (arr[end] !== "") break;
         }
         if (start > end) return [];
         return arr.slice(start, end - start + 1);
       }
-      var fromParts = trim(from.split('/'));
-      var toParts = trim(to.split('/'));
+      var fromParts = trim(from.split("/"));
+      var toParts = trim(to.split("/"));
       var length = Math.min(fromParts.length, toParts.length);
       var samePartsLength = length;
       for (var i = 0; i < length; i++) {
@@ -134847,10 +134918,10 @@ function zbarProcessImageData(imgData) {
       }
       var outputParts = [];
       for (var i = samePartsLength; i < fromParts.length; i++) {
-        outputParts.push('..');
+        outputParts.push("..");
       }
       outputParts = outputParts.concat(toParts.slice(samePartsLength));
-      return outputParts.join('/');
+      return outputParts.join("/");
     }
   };
 
@@ -134942,24 +135013,30 @@ function zbarProcessImageData(imgData) {
         if (!tty.input.length) {
           var result = null;
           if (ENVIRONMENT_IS_NODE) {
-            result = process['stdin']['read']();
+            result = process["stdin"]["read"]();
             if (!result) {
-              if (process['stdin']['_readableState'] && process['stdin']['_readableState']['ended']) {
+              if (
+                process["stdin"]["_readableState"] &&
+                process["stdin"]["_readableState"]["ended"]
+              ) {
                 return null; // EOF
               }
               return undefined; // no data available
             }
-          } else if (typeof window != 'undefined' && typeof window.prompt == 'function') {
+          } else if (
+            typeof window != "undefined" &&
+            typeof window.prompt == "function"
+          ) {
             // Browser.
-            result = window.prompt('Input: '); // returns null on cancel
+            result = window.prompt("Input: "); // returns null on cancel
             if (result !== null) {
-              result += '\n';
+              result += "\n";
             }
-          } else if (typeof readline == 'function') {
+          } else if (typeof readline == "function") {
             // Command line.
             result = readline();
             if (result !== null) {
-              result += '\n';
+              result += "\n";
             }
           }
           if (!result) {
@@ -134971,7 +135048,7 @@ function zbarProcessImageData(imgData) {
       },
       put_char: function(tty, val) {
         if (val === null || val === 10) {
-          Module['print'](tty.output.join(''));
+          Module["print"](tty.output.join(""));
           tty.output = [];
         } else {
           tty.output.push(TTY.utf8.processCChar(val));
@@ -134981,7 +135058,7 @@ function zbarProcessImageData(imgData) {
     default_tty1_ops: {
       put_char: function(tty, val) {
         if (val === null || val === 10) {
-          Module['printErr'](tty.output.join(''));
+          Module["printErr"](tty.output.join(""));
           tty.output = [];
         } else {
           tty.output.push(TTY.utf8.processCChar(val));
@@ -134993,7 +135070,7 @@ function zbarProcessImageData(imgData) {
   var MEMFS = {
     ops_table: null,
     mount: function(mount) {
-      return MEMFS.createNode(null, '/', 16384 | 511 /* 0777 */, 0);
+      return MEMFS.createNode(null, "/", 16384 | 511 /* 0777 */, 0);
     },
     createNode: function(parent, name, mode, dev) {
       if (FS.isBlkdev(mode) || FS.isFIFO(mode)) {
@@ -135085,14 +135162,19 @@ function zbarProcessImageData(imgData) {
     },
     getFileDataAsTypedArray: function(node) {
       if (!node.contents) return new Uint8Array();
-      if (node.contents.subarray) return node.contents.subarray(0, node.usedBytes); // Make sure to not return excess unused bytes.
+      if (node.contents.subarray)
+        return node.contents.subarray(0, node.usedBytes); // Make sure to not return excess unused bytes.
       return new Uint8Array(node.contents);
     },
     expandFileStorage: function(node, newCapacity) {
       // If we are asked to expand the size of a file that already exists, revert to using a standard JS array to store the file
       // instead of a typed array. This makes resizing the array more flexible because we can just .push() elements at the back to
       // increase the size.
-      if (node.contents && node.contents.subarray && newCapacity > node.contents.length) {
+      if (
+        node.contents &&
+        node.contents.subarray &&
+        newCapacity > node.contents.length
+      ) {
         node.contents = MEMFS.getFileDataAsRegularArray(node);
         node.usedBytes = node.contents.length; // We might be writing to a lazy-loaded file which had overridden this property, so force-reset it.
       }
@@ -135105,11 +135187,17 @@ function zbarProcessImageData(imgData) {
         // For small filesizes (<1MB), perform size*2 geometric increase, but for large sizes, do a much more conservative size*1.125 increase to
         // avoid overshooting the allocation cap by a very large margin.
         var CAPACITY_DOUBLING_MAX = 1024 * 1024;
-        newCapacity = Math.max(newCapacity, (prevCapacity * (prevCapacity < CAPACITY_DOUBLING_MAX ? 2.0 : 1.125)) | 0);
+        newCapacity = Math.max(
+          newCapacity,
+          (prevCapacity *
+            (prevCapacity < CAPACITY_DOUBLING_MAX ? 2.0 : 1.125)) |
+            0
+        );
         if (prevCapacity != 0) newCapacity = Math.max(newCapacity, 256); // At minimum allocate 256b for each file when expanding.
         var oldContents = node.contents;
         node.contents = new Uint8Array(newCapacity); // Allocate new storage.
-        if (node.usedBytes > 0) node.contents.set(oldContents.subarray(0, node.usedBytes), 0); // Copy old data over to the new storage.
+        if (node.usedBytes > 0)
+          node.contents.set(oldContents.subarray(0, node.usedBytes), 0); // Copy old data over to the new storage.
         return;
       }
       // Not using a typed array to back the file storage. Use a standard JS array instead.
@@ -135129,7 +135217,9 @@ function zbarProcessImageData(imgData) {
         var oldContents = node.contents;
         node.contents = new Uint8Array(new ArrayBuffer(newSize)); // Allocate new storage.
         if (oldContents) {
-          node.contents.set(oldContents.subarray(0, Math.min(newSize, node.usedBytes))); // Copy old data over to the new storage.
+          node.contents.set(
+            oldContents.subarray(0, Math.min(newSize, node.usedBytes))
+          ); // Copy old data over to the new storage.
         }
         node.usedBytes = newSize;
         return;
@@ -135216,7 +135306,7 @@ function zbarProcessImageData(imgData) {
         delete parent.contents[name];
       },
       readdir: function(node) {
-        var entries = ['.', '..'];
+        var entries = [".", ".."];
         for (var key in node.contents) {
           if (!node.contents.hasOwnProperty(key)) {
             continue;
@@ -135247,7 +135337,8 @@ function zbarProcessImageData(imgData) {
           // non-trivial, and typed array
           buffer.set(contents.subarray(position, position + size), offset);
         } else {
-          for (var i = 0; i < size; i++) buffer[offset + i] = contents[position + i];
+          for (var i = 0; i < size; i++)
+            buffer[offset + i] = contents[position + i];
         }
         return size;
       },
@@ -135265,18 +135356,24 @@ function zbarProcessImageData(imgData) {
             return length;
           } else if (node.usedBytes === 0 && position === 0) {
             // If this is a simple first write to an empty file, do a fast set since we don't need to care about old data.
-            node.contents = new Uint8Array(buffer.subarray(offset, offset + length));
+            node.contents = new Uint8Array(
+              buffer.subarray(offset, offset + length)
+            );
             node.usedBytes = length;
             return length;
           } else if (position + length <= node.usedBytes) {
             // Writing to an already allocated and used subrange of the file?
-            node.contents.set(buffer.subarray(offset, offset + length), position);
+            node.contents.set(
+              buffer.subarray(offset, offset + length),
+              position
+            );
             return length;
           }
         }
         // Appending to an existing file and we need to reallocate, or source data did not come as a typed array.
         MEMFS.expandFileStorage(node, position + length);
-        if (node.contents.subarray && buffer.subarray) node.contents.set(buffer.subarray(offset, offset + length), position);
+        if (node.contents.subarray && buffer.subarray)
+          node.contents.set(buffer.subarray(offset, offset + length), position);
         // Use typed array write if available.
         else
           for (var i = 0; i < length; i++) {
@@ -135305,7 +135402,10 @@ function zbarProcessImageData(imgData) {
       },
       allocate: function(stream, offset, length) {
         MEMFS.expandFileStorage(stream.node, offset + length);
-        stream.node.usedBytes = Math.max(stream.node.usedBytes, offset + length);
+        stream.node.usedBytes = Math.max(
+          stream.node.usedBytes,
+          offset + length
+        );
       },
       mmap: function(stream, buffer, offset, length, position, prot, flags) {
         if (!FS.isFile(stream.node.mode)) {
@@ -135315,7 +135415,10 @@ function zbarProcessImageData(imgData) {
         var allocated;
         var contents = stream.node.contents;
         // Only make a new copy when MAP_PRIVATE is specified.
-        if (!(flags & 2) && (contents.buffer === buffer || contents.buffer === buffer.buffer)) {
+        if (
+          !(flags & 2) &&
+          (contents.buffer === buffer || contents.buffer === buffer.buffer)
+        ) {
           // We can't emulate MAP_SHARED when the file is not backed by the buffer
           // we're mapping to (e.g. the HEAP buffer).
           allocated = false;
@@ -135326,7 +135429,11 @@ function zbarProcessImageData(imgData) {
             if (contents.subarray) {
               contents = contents.subarray(position, position + length);
             } else {
-              contents = Array.prototype.slice.call(contents, position, position + length);
+              contents = Array.prototype.slice.call(
+                contents,
+                position,
+                position + length
+              );
             }
           }
           allocated = true;
@@ -135344,14 +135451,19 @@ function zbarProcessImageData(imgData) {
   var IDBFS = {
     dbs: {},
     indexedDB: function() {
-      if (typeof indexedDB !== 'undefined') return indexedDB;
+      if (typeof indexedDB !== "undefined") return indexedDB;
       var ret = null;
-      if (typeof window === 'object') ret = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-      assert(ret, 'IDBFS used, but indexedDB not supported');
+      if (typeof window === "object")
+        ret =
+          window.indexedDB ||
+          window.mozIndexedDB ||
+          window.webkitIndexedDB ||
+          window.msIndexedDB;
+      assert(ret, "IDBFS used, but indexedDB not supported");
       return ret;
     },
     DB_VERSION: 21,
-    DB_STORE_NAME: 'FILE_DATA',
+    DB_STORE_NAME: "FILE_DATA",
     mount: function(mount) {
       // reuse all of the core MEMFS functionality
       return MEMFS.mount.apply(null, arguments);
@@ -135395,7 +135507,7 @@ function zbarProcessImageData(imgData) {
           fileStore = db.createObjectStore(IDBFS.DB_STORE_NAME);
         }
 
-        fileStore.createIndex('timestamp', 'timestamp', { unique: false });
+        fileStore.createIndex("timestamp", "timestamp", { unique: false });
       };
       req.onsuccess = function() {
         db = req.result;
@@ -135412,7 +135524,7 @@ function zbarProcessImageData(imgData) {
       var entries = {};
 
       function isRealDir(p) {
-        return p !== '.' && p !== '..';
+        return p !== "." && p !== "..";
       }
       function toAbsolute(root) {
         return function(p) {
@@ -135446,7 +135558,7 @@ function zbarProcessImageData(imgData) {
         entries[path] = { timestamp: stat.mtime };
       }
 
-      return callback(null, { type: 'local', entries: entries });
+      return callback(null, { type: "local", entries: entries });
     },
     getRemoteSet: function(mount, callback) {
       var entries = {};
@@ -135454,19 +135566,19 @@ function zbarProcessImageData(imgData) {
       IDBFS.getDB(mount.mountpoint, function(err, db) {
         if (err) return callback(err);
 
-        var transaction = db.transaction([IDBFS.DB_STORE_NAME], 'readonly');
+        var transaction = db.transaction([IDBFS.DB_STORE_NAME], "readonly");
         transaction.onerror = function() {
           callback(this.error);
         };
 
         var store = transaction.objectStore(IDBFS.DB_STORE_NAME);
-        var index = store.index('timestamp');
+        var index = store.index("timestamp");
 
         index.openKeyCursor().onsuccess = function(event) {
           var cursor = event.target.result;
 
           if (!cursor) {
-            return callback(null, { type: 'remote', db: db, entries: entries });
+            return callback(null, { type: "remote", db: db, entries: entries });
           }
 
           entries[cursor.primaryKey] = { timestamp: cursor.key };
@@ -135492,9 +135604,13 @@ function zbarProcessImageData(imgData) {
         // Performance consideration: storing a normal JavaScript array to a IndexedDB is much slower than storing a typed array.
         // Therefore always convert the file contents to a typed array first before writing the data to IndexedDB.
         node.contents = MEMFS.getFileDataAsTypedArray(node);
-        return callback(null, { timestamp: stat.mtime, mode: stat.mode, contents: node.contents });
+        return callback(null, {
+          timestamp: stat.mtime,
+          mode: stat.mode,
+          contents: node.contents
+        });
       } else {
-        return callback(new Error('node type not supported'));
+        return callback(new Error("node type not supported"));
       }
     },
     storeLocalEntry: function(path, entry, callback) {
@@ -135502,9 +135618,12 @@ function zbarProcessImageData(imgData) {
         if (FS.isDir(entry.mode)) {
           FS.mkdir(path, entry.mode);
         } else if (FS.isFile(entry.mode)) {
-          FS.writeFile(path, entry.contents, { encoding: 'binary', canOwn: true });
+          FS.writeFile(path, entry.contents, {
+            encoding: "binary",
+            canOwn: true
+          });
         } else {
-          return callback(new Error('node type not supported'));
+          return callback(new Error("node type not supported"));
         }
 
         FS.chmod(path, entry.mode);
@@ -135587,8 +135706,8 @@ function zbarProcessImageData(imgData) {
 
       var errored = false;
       var completed = 0;
-      var db = src.type === 'remote' ? src.db : dst.db;
-      var transaction = db.transaction([IDBFS.DB_STORE_NAME], 'readwrite');
+      var db = src.type === "remote" ? src.db : dst.db;
+      var transaction = db.transaction([IDBFS.DB_STORE_NAME], "readwrite");
       var store = transaction.objectStore(IDBFS.DB_STORE_NAME);
 
       function done(err) {
@@ -135611,7 +135730,7 @@ function zbarProcessImageData(imgData) {
       // sort paths in ascending order so directory entries are created
       // before the files inside them
       create.sort().forEach(function(path) {
-        if (dst.type === 'local') {
+        if (dst.type === "local") {
           IDBFS.loadRemoteEntry(store, path, function(err, entry) {
             if (err) return done(err);
             IDBFS.storeLocalEntry(path, entry, done);
@@ -135630,7 +135749,7 @@ function zbarProcessImageData(imgData) {
         .sort()
         .reverse()
         .forEach(function(path) {
-          if (dst.type === 'local') {
+          if (dst.type === "local") {
             IDBFS.removeLocalEntry(path, done);
           } else {
             IDBFS.removeRemoteEntry(store, path, done);
@@ -135646,7 +135765,7 @@ function zbarProcessImageData(imgData) {
     },
     mount: function(mount) {
       assert(ENVIRONMENT_IS_NODE);
-      return NODEFS.createNode(null, '/', NODEFS.getMode(mount.opts.root), 0);
+      return NODEFS.createNode(null, "/", NODEFS.getMode(mount.opts.root), 0);
     },
     createNode: function(parent, name, mode, dev) {
       if (!FS.isDir(mode) && !FS.isFile(mode) && !FS.isLink(mode)) {
@@ -135683,30 +135802,30 @@ function zbarProcessImageData(imgData) {
       return PATH.join.apply(null, parts);
     },
     flagsToPermissionStringMap: {
-      0: 'r',
-      1: 'r+',
-      2: 'r+',
-      64: 'r',
-      65: 'r+',
-      66: 'r+',
-      129: 'rx+',
-      193: 'rx+',
-      514: 'w+',
-      577: 'w',
-      578: 'w+',
-      705: 'wx',
-      706: 'wx+',
-      1024: 'a',
-      1025: 'a',
-      1026: 'a+',
-      1089: 'a',
-      1090: 'a+',
-      1153: 'ax',
-      1154: 'ax+',
-      1217: 'ax',
-      1218: 'ax+',
-      4096: 'rs',
-      4098: 'rs+'
+      0: "r",
+      1: "r+",
+      2: "r+",
+      64: "r",
+      65: "r+",
+      66: "r+",
+      129: "rx+",
+      193: "rx+",
+      514: "w+",
+      577: "w",
+      578: "w+",
+      705: "wx",
+      706: "wx+",
+      1024: "a",
+      1025: "a",
+      1026: "a+",
+      1089: "a",
+      1090: "a+",
+      1153: "ax",
+      1154: "ax+",
+      1217: "ax",
+      1218: "ax+",
+      4096: "rs",
+      4098: "rs+"
     },
     flagsToPermissionString: function(flags) {
       if (flags in NODEFS.flagsToPermissionStringMap) {
@@ -135782,7 +135901,7 @@ function zbarProcessImageData(imgData) {
           if (FS.isDir(node.mode)) {
             fs.mkdirSync(path, node.mode);
           } else {
-            fs.writeFileSync(path, '', { mode: node.mode });
+            fs.writeFileSync(path, "", { mode: node.mode });
           }
         } catch (e) {
           if (!e.code) throw e;
@@ -135851,7 +135970,10 @@ function zbarProcessImageData(imgData) {
         var path = NODEFS.realPath(stream.node);
         try {
           if (FS.isFile(stream.node.mode)) {
-            stream.nfd = fs.openSync(path, NODEFS.flagsToPermissionString(stream.flags));
+            stream.nfd = fs.openSync(
+              path,
+              NODEFS.flagsToPermissionString(stream.flags)
+            );
           }
         } catch (e) {
           if (!e.code) throw e;
@@ -135922,11 +136044,11 @@ function zbarProcessImageData(imgData) {
     }
   };
 
-  var _stdin = allocate(1, 'i32*', ALLOC_STATIC);
+  var _stdin = allocate(1, "i32*", ALLOC_STATIC);
 
-  var _stdout = allocate(1, 'i32*', ALLOC_STATIC);
+  var _stdout = allocate(1, "i32*", ALLOC_STATIC);
 
-  var _stderr = allocate(1, 'i32*', ALLOC_STATIC);
+  var _stderr = allocate(1, "i32*", ALLOC_STATIC);
 
   function _fflush(stream) {
     // int fflush(FILE *stream);
@@ -135940,7 +136062,7 @@ function zbarProcessImageData(imgData) {
     streams: [],
     nextInode: 1,
     nameTable: null,
-    currentPath: '/',
+    currentPath: "/",
     initialized: false,
     ignorePermissions: true,
     trackingDelegate: {},
@@ -135948,14 +136070,14 @@ function zbarProcessImageData(imgData) {
     ErrnoError: null,
     genericErrors: {},
     handleFSError: function(e) {
-      if (!(e instanceof FS.ErrnoError)) throw e + ' : ' + stackTrace();
+      if (!(e instanceof FS.ErrnoError)) throw e + " : " + stackTrace();
       return ___setErrNo(e.errno);
     },
     lookupPath: function(path, opts) {
       path = PATH.resolve(FS.cwd(), path);
       opts = opts || {};
 
-      if (!path) return { path: '', node: null };
+      if (!path) return { path: "", node: null };
 
       var defaults = {
         follow_mount: true,
@@ -135974,7 +136096,7 @@ function zbarProcessImageData(imgData) {
 
       // split the path
       var parts = PATH.normalizeArray(
-        path.split('/').filter(function(p) {
+        path.split("/").filter(function(p) {
           return !!p;
         }),
         false
@@ -135982,7 +136104,7 @@ function zbarProcessImageData(imgData) {
 
       // start at the root
       var current = FS.root;
-      var current_path = '/';
+      var current_path = "/";
 
       for (var i = 0; i < parts.length; i++) {
         var islast = i === parts.length - 1;
@@ -136009,7 +136131,9 @@ function zbarProcessImageData(imgData) {
             var link = FS.readlink(current_path);
             current_path = PATH.resolve(PATH.dirname(current_path), link);
 
-            var lookup = FS.lookupPath(current_path, { recurse_count: opts.recurse_count });
+            var lookup = FS.lookupPath(current_path, {
+              recurse_count: opts.recurse_count
+            });
             current = lookup.node;
 
             if (count++ > 40) {
@@ -136028,9 +136152,11 @@ function zbarProcessImageData(imgData) {
         if (FS.isRoot(node)) {
           var mount = node.mount.mountpoint;
           if (!path) return mount;
-          return mount[mount.length - 1] !== '/' ? mount + '/' + path : mount + path;
+          return mount[mount.length - 1] !== "/"
+            ? mount + "/" + path
+            : mount + path;
         }
-        path = path ? node.name + '/' + path : node.name;
+        path = path ? node.name + "/" + path : node.name;
         node = node.parent;
       }
     },
@@ -136171,32 +136297,32 @@ function zbarProcessImageData(imgData) {
     flagModes: {
       r: 0,
       rs: 1052672,
-      'r+': 2,
+      "r+": 2,
       w: 577,
       wx: 705,
       xw: 705,
-      'w+': 578,
-      'wx+': 706,
-      'xw+': 706,
+      "w+": 578,
+      "wx+": 706,
+      "xw+": 706,
       a: 1089,
       ax: 1217,
       xa: 1217,
-      'a+': 1090,
-      'ax+': 1218,
-      'xa+': 1218
+      "a+": 1090,
+      "ax+": 1218,
+      "xa+": 1218
     },
     modeStringToFlags: function(str) {
       var flags = FS.flagModes[str];
-      if (typeof flags === 'undefined') {
-        throw new Error('Unknown file open mode: ' + str);
+      if (typeof flags === "undefined") {
+        throw new Error("Unknown file open mode: " + str);
       }
       return flags;
     },
     flagsToPermissionString: function(flag) {
       var accmode = flag & 2097155;
-      var perms = ['r', 'w', 'rw'][accmode];
+      var perms = ["r", "w", "rw"][accmode];
       if (flag & 512) {
-        perms += 'w';
+        perms += "w";
       }
       return perms;
     },
@@ -136205,17 +136331,17 @@ function zbarProcessImageData(imgData) {
         return 0;
       }
       // return 0 if any user, group or owner bits are set.
-      if (perms.indexOf('r') !== -1 && !(node.mode & 292)) {
+      if (perms.indexOf("r") !== -1 && !(node.mode & 292)) {
         return ERRNO_CODES.EACCES;
-      } else if (perms.indexOf('w') !== -1 && !(node.mode & 146)) {
+      } else if (perms.indexOf("w") !== -1 && !(node.mode & 146)) {
         return ERRNO_CODES.EACCES;
-      } else if (perms.indexOf('x') !== -1 && !(node.mode & 73)) {
+      } else if (perms.indexOf("x") !== -1 && !(node.mode & 73)) {
         return ERRNO_CODES.EACCES;
       }
       return 0;
     },
     mayLookup: function(dir) {
-      var err = FS.nodePermissions(dir, 'x');
+      var err = FS.nodePermissions(dir, "x");
       if (err) return err;
       if (!dir.node_ops.lookup) return ERRNO_CODES.EACCES;
       return 0;
@@ -136225,7 +136351,7 @@ function zbarProcessImageData(imgData) {
         var node = FS.lookupNode(dir, name);
         return ERRNO_CODES.EEXIST;
       } catch (e) {}
-      return FS.nodePermissions(dir, 'wx');
+      return FS.nodePermissions(dir, "wx");
     },
     mayDelete: function(dir, name, isdir) {
       var node;
@@ -136234,7 +136360,7 @@ function zbarProcessImageData(imgData) {
       } catch (e) {
         return e.errno;
       }
-      var err = FS.nodePermissions(dir, 'wx');
+      var err = FS.nodePermissions(dir, "wx");
       if (err) {
         return err;
       }
@@ -136377,7 +136503,7 @@ function zbarProcessImageData(imgData) {
       return mounts;
     },
     syncfs: function(populate, callback) {
-      if (typeof populate === 'function') {
+      if (typeof populate === "function") {
         callback = populate;
         populate = false;
       }
@@ -136407,7 +136533,7 @@ function zbarProcessImageData(imgData) {
       });
     },
     mount: function(type, opts, mountpoint) {
-      var root = mountpoint === '/';
+      var root = mountpoint === "/";
       var pseudo = !mountpoint;
       var node;
 
@@ -136495,7 +136621,7 @@ function zbarProcessImageData(imgData) {
       var lookup = FS.lookupPath(path, { parent: true });
       var parent = lookup.node;
       var name = PATH.basename(path);
-      if (!name || name === '.' || name === '..') {
+      if (!name || name === "." || name === "..") {
         throw new FS.ErrnoError(ERRNO_CODES.EINVAL);
       }
       var err = FS.mayCreate(parent, name);
@@ -136520,7 +136646,7 @@ function zbarProcessImageData(imgData) {
       return FS.mknod(path, mode, 0);
     },
     mkdev: function(path, mode, dev) {
-      if (typeof dev === 'undefined') {
+      if (typeof dev === "undefined") {
         dev = mode;
         mode = 438 /* 0666 */;
       }
@@ -136570,12 +136696,12 @@ function zbarProcessImageData(imgData) {
       var old_node = FS.lookupNode(old_dir, old_name);
       // old path should not be an ancestor of the new path
       var relative = PATH.relative(old_path, new_dirname);
-      if (relative.charAt(0) !== '.') {
+      if (relative.charAt(0) !== ".") {
         throw new FS.ErrnoError(ERRNO_CODES.EINVAL);
       }
       // new path should not be an ancestor of the old path
       relative = PATH.relative(new_path, old_dirname);
-      if (relative.charAt(0) !== '.') {
+      if (relative.charAt(0) !== ".") {
         throw new FS.ErrnoError(ERRNO_CODES.ENOTEMPTY);
       }
       // see if the new path already exists
@@ -136597,29 +136723,41 @@ function zbarProcessImageData(imgData) {
       }
       // need delete permissions if we'll be overwriting.
       // need create permissions if new doesn't already exist.
-      err = new_node ? FS.mayDelete(new_dir, new_name, isdir) : FS.mayCreate(new_dir, new_name);
+      err = new_node
+        ? FS.mayDelete(new_dir, new_name, isdir)
+        : FS.mayCreate(new_dir, new_name);
       if (err) {
         throw new FS.ErrnoError(err);
       }
       if (!old_dir.node_ops.rename) {
         throw new FS.ErrnoError(ERRNO_CODES.EPERM);
       }
-      if (FS.isMountpoint(old_node) || (new_node && FS.isMountpoint(new_node))) {
+      if (
+        FS.isMountpoint(old_node) ||
+        (new_node && FS.isMountpoint(new_node))
+      ) {
         throw new FS.ErrnoError(ERRNO_CODES.EBUSY);
       }
       // if we are going to change the parent, check write permissions
       if (new_dir !== old_dir) {
-        err = FS.nodePermissions(old_dir, 'w');
+        err = FS.nodePermissions(old_dir, "w");
         if (err) {
           throw new FS.ErrnoError(err);
         }
       }
       try {
-        if (FS.trackingDelegate['willMovePath']) {
-          FS.trackingDelegate['willMovePath'](old_path, new_path);
+        if (FS.trackingDelegate["willMovePath"]) {
+          FS.trackingDelegate["willMovePath"](old_path, new_path);
         }
       } catch (e) {
-        console.log("FS.trackingDelegate['willMovePath']('" + old_path + "', '" + new_path + "') threw an exception: " + e.message);
+        console.log(
+          "FS.trackingDelegate['willMovePath']('" +
+            old_path +
+            "', '" +
+            new_path +
+            "') threw an exception: " +
+            e.message
+        );
       }
       // remove the node from the lookup hash
       FS.hashRemoveNode(old_node);
@@ -136634,9 +136772,17 @@ function zbarProcessImageData(imgData) {
         FS.hashAddNode(old_node);
       }
       try {
-        if (FS.trackingDelegate['onMovePath']) FS.trackingDelegate['onMovePath'](old_path, new_path);
+        if (FS.trackingDelegate["onMovePath"])
+          FS.trackingDelegate["onMovePath"](old_path, new_path);
       } catch (e) {
-        console.log("FS.trackingDelegate['onMovePath']('" + old_path + "', '" + new_path + "') threw an exception: " + e.message);
+        console.log(
+          "FS.trackingDelegate['onMovePath']('" +
+            old_path +
+            "', '" +
+            new_path +
+            "') threw an exception: " +
+            e.message
+        );
       }
     },
     rmdir: function(path) {
@@ -136655,18 +136801,29 @@ function zbarProcessImageData(imgData) {
         throw new FS.ErrnoError(ERRNO_CODES.EBUSY);
       }
       try {
-        if (FS.trackingDelegate['willDeletePath']) {
-          FS.trackingDelegate['willDeletePath'](path);
+        if (FS.trackingDelegate["willDeletePath"]) {
+          FS.trackingDelegate["willDeletePath"](path);
         }
       } catch (e) {
-        console.log("FS.trackingDelegate['willDeletePath']('" + path + "') threw an exception: " + e.message);
+        console.log(
+          "FS.trackingDelegate['willDeletePath']('" +
+            path +
+            "') threw an exception: " +
+            e.message
+        );
       }
       parent.node_ops.rmdir(parent, name);
       FS.destroyNode(node);
       try {
-        if (FS.trackingDelegate['onDeletePath']) FS.trackingDelegate['onDeletePath'](path);
+        if (FS.trackingDelegate["onDeletePath"])
+          FS.trackingDelegate["onDeletePath"](path);
       } catch (e) {
-        console.log("FS.trackingDelegate['onDeletePath']('" + path + "') threw an exception: " + e.message);
+        console.log(
+          "FS.trackingDelegate['onDeletePath']('" +
+            path +
+            "') threw an exception: " +
+            e.message
+        );
       }
     },
     readdir: function(path) {
@@ -136695,18 +136852,29 @@ function zbarProcessImageData(imgData) {
         throw new FS.ErrnoError(ERRNO_CODES.EBUSY);
       }
       try {
-        if (FS.trackingDelegate['willDeletePath']) {
-          FS.trackingDelegate['willDeletePath'](path);
+        if (FS.trackingDelegate["willDeletePath"]) {
+          FS.trackingDelegate["willDeletePath"](path);
         }
       } catch (e) {
-        console.log("FS.trackingDelegate['willDeletePath']('" + path + "') threw an exception: " + e.message);
+        console.log(
+          "FS.trackingDelegate['willDeletePath']('" +
+            path +
+            "') threw an exception: " +
+            e.message
+        );
       }
       parent.node_ops.unlink(parent, name);
       FS.destroyNode(node);
       try {
-        if (FS.trackingDelegate['onDeletePath']) FS.trackingDelegate['onDeletePath'](path);
+        if (FS.trackingDelegate["onDeletePath"])
+          FS.trackingDelegate["onDeletePath"](path);
       } catch (e) {
-        console.log("FS.trackingDelegate['onDeletePath']('" + path + "') threw an exception: " + e.message);
+        console.log(
+          "FS.trackingDelegate['onDeletePath']('" +
+            path +
+            "') threw an exception: " +
+            e.message
+        );
       }
     },
     readlink: function(path) {
@@ -136736,7 +136904,7 @@ function zbarProcessImageData(imgData) {
     },
     chmod: function(path, mode, dontFollow) {
       var node;
-      if (typeof path === 'string') {
+      if (typeof path === "string") {
         var lookup = FS.lookupPath(path, { follow: !dontFollow });
         node = lookup.node;
       } else {
@@ -136762,7 +136930,7 @@ function zbarProcessImageData(imgData) {
     },
     chown: function(path, uid, gid, dontFollow) {
       var node;
-      if (typeof path === 'string') {
+      if (typeof path === "string") {
         var lookup = FS.lookupPath(path, { follow: !dontFollow });
         node = lookup.node;
       } else {
@@ -136791,7 +136959,7 @@ function zbarProcessImageData(imgData) {
         throw new FS.ErrnoError(ERRNO_CODES.EINVAL);
       }
       var node;
-      if (typeof path === 'string') {
+      if (typeof path === "string") {
         var lookup = FS.lookupPath(path, { follow: true });
         node = lookup.node;
       } else {
@@ -136806,7 +136974,7 @@ function zbarProcessImageData(imgData) {
       if (!FS.isFile(node.mode)) {
         throw new FS.ErrnoError(ERRNO_CODES.EINVAL);
       }
-      var err = FS.nodePermissions(node, 'w');
+      var err = FS.nodePermissions(node, "w");
       if (err) {
         throw new FS.ErrnoError(err);
       }
@@ -136833,18 +137001,18 @@ function zbarProcessImageData(imgData) {
       });
     },
     open: function(path, flags, mode, fd_start, fd_end) {
-      if (path === '') {
+      if (path === "") {
         throw new FS.ErrnoError(ERRNO_CODES.ENOENT);
       }
-      flags = typeof flags === 'string' ? FS.modeStringToFlags(flags) : flags;
-      mode = typeof mode === 'undefined' ? 438 /* 0666 */ : mode;
+      flags = typeof flags === "string" ? FS.modeStringToFlags(flags) : flags;
+      mode = typeof mode === "undefined" ? 438 /* 0666 */ : mode;
       if (flags & 64) {
         mode = (mode & 4095) | 32768;
       } else {
         mode = 0;
       }
       var node;
-      if (typeof path === 'object') {
+      if (typeof path === "object") {
         node = path;
       } else {
         path = PATH.normalize(path);
@@ -136914,15 +137082,15 @@ function zbarProcessImageData(imgData) {
       if (stream.stream_ops.open) {
         stream.stream_ops.open(stream);
       }
-      if (Module['logReadFiles'] && !(flags & 1)) {
+      if (Module["logReadFiles"] && !(flags & 1)) {
         if (!FS.readFiles) FS.readFiles = {};
         if (!(path in FS.readFiles)) {
           FS.readFiles[path] = 1;
-          Module['printErr']('read file: ' + path);
+          Module["printErr"]("read file: " + path);
         }
       }
       try {
-        if (FS.trackingDelegate['onOpenFile']) {
+        if (FS.trackingDelegate["onOpenFile"]) {
           var trackingFlags = 0;
           if ((flags & 2097155) !== 1) {
             trackingFlags |= FS.tracking.openFlags.READ;
@@ -136930,10 +137098,15 @@ function zbarProcessImageData(imgData) {
           if ((flags & 2097155) !== 0) {
             trackingFlags |= FS.tracking.openFlags.WRITE;
           }
-          FS.trackingDelegate['onOpenFile'](path, trackingFlags);
+          FS.trackingDelegate["onOpenFile"](path, trackingFlags);
         }
       } catch (e) {
-        console.log("FS.trackingDelegate['onOpenFile']('" + path + "', flags) threw an exception: " + e.message);
+        console.log(
+          "FS.trackingDelegate['onOpenFile']('" +
+            path +
+            "', flags) threw an exception: " +
+            e.message
+        );
       }
       return stream;
     },
@@ -136968,13 +137141,19 @@ function zbarProcessImageData(imgData) {
         throw new FS.ErrnoError(ERRNO_CODES.EINVAL);
       }
       var seeking = true;
-      if (typeof position === 'undefined') {
+      if (typeof position === "undefined") {
         position = stream.position;
         seeking = false;
       } else if (!stream.seekable) {
         throw new FS.ErrnoError(ERRNO_CODES.ESPIPE);
       }
-      var bytesRead = stream.stream_ops.read(stream, buffer, offset, length, position);
+      var bytesRead = stream.stream_ops.read(
+        stream,
+        buffer,
+        offset,
+        length,
+        position
+      );
       if (!seeking) stream.position += bytesRead;
       return bytesRead;
     },
@@ -136996,18 +137175,31 @@ function zbarProcessImageData(imgData) {
         FS.llseek(stream, 0, 2);
       }
       var seeking = true;
-      if (typeof position === 'undefined') {
+      if (typeof position === "undefined") {
         position = stream.position;
         seeking = false;
       } else if (!stream.seekable) {
         throw new FS.ErrnoError(ERRNO_CODES.ESPIPE);
       }
-      var bytesWritten = stream.stream_ops.write(stream, buffer, offset, length, position, canOwn);
+      var bytesWritten = stream.stream_ops.write(
+        stream,
+        buffer,
+        offset,
+        length,
+        position,
+        canOwn
+      );
       if (!seeking) stream.position += bytesWritten;
       try {
-        if (stream.path && FS.trackingDelegate['onWriteToFile']) FS.trackingDelegate['onWriteToFile'](stream.path);
+        if (stream.path && FS.trackingDelegate["onWriteToFile"])
+          FS.trackingDelegate["onWriteToFile"](stream.path);
       } catch (e) {
-        console.log("FS.trackingDelegate['onWriteToFile']('" + path + "') threw an exception: " + e.message);
+        console.log(
+          "FS.trackingDelegate['onWriteToFile']('" +
+            path +
+            "') threw an exception: " +
+            e.message
+        );
       }
       return bytesWritten;
     },
@@ -137034,7 +137226,15 @@ function zbarProcessImageData(imgData) {
       if (!stream.stream_ops.mmap) {
         throw new FS.ErrnoError(ERRNO_CODES.ENODEV);
       }
-      return stream.stream_ops.mmap(stream, buffer, offset, length, position, prot, flags);
+      return stream.stream_ops.mmap(
+        stream,
+        buffer,
+        offset,
+        length,
+        position,
+        prot,
+        flags
+      );
     },
     ioctl: function(stream, cmd, arg) {
       if (!stream.stream_ops.ioctl) {
@@ -137044,9 +137244,9 @@ function zbarProcessImageData(imgData) {
     },
     readFile: function(path, opts) {
       opts = opts || {};
-      opts.flags = opts.flags || 'r';
-      opts.encoding = opts.encoding || 'binary';
-      if (opts.encoding !== 'utf8' && opts.encoding !== 'binary') {
+      opts.flags = opts.flags || "r";
+      opts.encoding = opts.encoding || "binary";
+      if (opts.encoding !== "utf8" && opts.encoding !== "binary") {
         throw new Error('Invalid encoding type "' + opts.encoding + '"');
       }
       var ret;
@@ -137055,13 +137255,13 @@ function zbarProcessImageData(imgData) {
       var length = stat.size;
       var buf = new Uint8Array(length);
       FS.read(stream, buf, 0, length, 0);
-      if (opts.encoding === 'utf8') {
-        ret = '';
+      if (opts.encoding === "utf8") {
+        ret = "";
         var utf8 = new Runtime.UTF8Processor();
         for (var i = 0; i < length; i++) {
           ret += utf8.processCChar(buf[i]);
         }
-      } else if (opts.encoding === 'binary') {
+      } else if (opts.encoding === "binary") {
         ret = buf;
       }
       FS.close(stream);
@@ -137069,17 +137269,17 @@ function zbarProcessImageData(imgData) {
     },
     writeFile: function(path, data, opts) {
       opts = opts || {};
-      opts.flags = opts.flags || 'w';
-      opts.encoding = opts.encoding || 'utf8';
-      if (opts.encoding !== 'utf8' && opts.encoding !== 'binary') {
+      opts.flags = opts.flags || "w";
+      opts.encoding = opts.encoding || "utf8";
+      if (opts.encoding !== "utf8" && opts.encoding !== "binary") {
         throw new Error('Invalid encoding type "' + opts.encoding + '"');
       }
       var stream = FS.open(path, opts.flags, opts.mode);
-      if (opts.encoding === 'utf8') {
+      if (opts.encoding === "utf8") {
         var utf8 = new Runtime.UTF8Processor();
         var buf = new Uint8Array(utf8.processJSString(data));
         FS.write(stream, buf, 0, buf.length, 0, opts.canOwn);
-      } else if (opts.encoding === 'binary') {
+      } else if (opts.encoding === "binary") {
         FS.write(stream, data, 0, data.length, 0, opts.canOwn);
       }
       FS.close(stream);
@@ -137092,20 +137292,20 @@ function zbarProcessImageData(imgData) {
       if (!FS.isDir(lookup.node.mode)) {
         throw new FS.ErrnoError(ERRNO_CODES.ENOTDIR);
       }
-      var err = FS.nodePermissions(lookup.node, 'x');
+      var err = FS.nodePermissions(lookup.node, "x");
       if (err) {
         throw new FS.ErrnoError(err);
       }
       FS.currentPath = lookup.path;
     },
     createDefaultDirectories: function() {
-      FS.mkdir('/tmp');
-      FS.mkdir('/home');
-      FS.mkdir('/home/web_user');
+      FS.mkdir("/tmp");
+      FS.mkdir("/home");
+      FS.mkdir("/home/web_user");
     },
     createDefaultDevices: function() {
       // create /dev
-      FS.mkdir('/dev');
+      FS.mkdir("/dev");
       // setup /dev/null
       FS.registerDevice(FS.makedev(1, 3), {
         read: function() {
@@ -137115,17 +137315,17 @@ function zbarProcessImageData(imgData) {
           return 0;
         }
       });
-      FS.mkdev('/dev/null', FS.makedev(1, 3));
+      FS.mkdev("/dev/null", FS.makedev(1, 3));
       // setup /dev/tty and /dev/tty1
       // stderr needs to print output using Module['printErr']
       // so we register a second tty just for it.
       TTY.register(FS.makedev(5, 0), TTY.default_tty_ops);
       TTY.register(FS.makedev(6, 0), TTY.default_tty1_ops);
-      FS.mkdev('/dev/tty', FS.makedev(5, 0));
-      FS.mkdev('/dev/tty1', FS.makedev(6, 0));
+      FS.mkdev("/dev/tty", FS.makedev(5, 0));
+      FS.mkdev("/dev/tty1", FS.makedev(6, 0));
       // setup /dev/[u]random
       var random_device;
-      if (typeof crypto !== 'undefined') {
+      if (typeof crypto !== "undefined") {
         // for modern web browsers
         var randomBuffer = new Uint8Array(1);
         random_device = function() {
@@ -137135,7 +137335,7 @@ function zbarProcessImageData(imgData) {
       } else if (ENVIRONMENT_IS_NODE) {
         // for nodejs
         random_device = function() {
-          return require('crypto').randomBytes(1)[0];
+          return require("crypto").randomBytes(1)[0];
         };
       } else {
         // default for ES5 platforms
@@ -137143,12 +137343,12 @@ function zbarProcessImageData(imgData) {
           return (Math.random() * 256) | 0;
         };
       }
-      FS.createDevice('/dev', 'random', random_device);
-      FS.createDevice('/dev', 'urandom', random_device);
+      FS.createDevice("/dev", "random", random_device);
+      FS.createDevice("/dev", "urandom", random_device);
       // we're not going to emulate the actual shm device,
       // just create the tmp dirs that reside in it commonly
-      FS.mkdir('/dev/shm');
-      FS.mkdir('/dev/shm/tmp');
+      FS.mkdir("/dev/shm");
+      FS.mkdir("/dev/shm/tmp");
     },
     createStandardStreams: function() {
       // TODO deprecate the old functionality of a single
@@ -137159,34 +137359,34 @@ function zbarProcessImageData(imgData) {
       // default tty devices. however, if the standard streams
       // have been overwritten we create a unique device for
       // them instead.
-      if (Module['stdin']) {
-        FS.createDevice('/dev', 'stdin', Module['stdin']);
+      if (Module["stdin"]) {
+        FS.createDevice("/dev", "stdin", Module["stdin"]);
       } else {
-        FS.symlink('/dev/tty', '/dev/stdin');
+        FS.symlink("/dev/tty", "/dev/stdin");
       }
-      if (Module['stdout']) {
-        FS.createDevice('/dev', 'stdout', null, Module['stdout']);
+      if (Module["stdout"]) {
+        FS.createDevice("/dev", "stdout", null, Module["stdout"]);
       } else {
-        FS.symlink('/dev/tty', '/dev/stdout');
+        FS.symlink("/dev/tty", "/dev/stdout");
       }
-      if (Module['stderr']) {
-        FS.createDevice('/dev', 'stderr', null, Module['stderr']);
+      if (Module["stderr"]) {
+        FS.createDevice("/dev", "stderr", null, Module["stderr"]);
       } else {
-        FS.symlink('/dev/tty1', '/dev/stderr');
+        FS.symlink("/dev/tty1", "/dev/stderr");
       }
 
       // open default streams for the stdin, stdout and stderr devices
-      var stdin = FS.open('/dev/stdin', 'r');
+      var stdin = FS.open("/dev/stdin", "r");
       HEAP32[_stdin >> 2] = FS.getPtrForStream(stdin);
-      assert(stdin.fd === 0, 'invalid handle for stdin (' + stdin.fd + ')');
+      assert(stdin.fd === 0, "invalid handle for stdin (" + stdin.fd + ")");
 
-      var stdout = FS.open('/dev/stdout', 'w');
+      var stdout = FS.open("/dev/stdout", "w");
       HEAP32[_stdout >> 2] = FS.getPtrForStream(stdout);
-      assert(stdout.fd === 1, 'invalid handle for stdout (' + stdout.fd + ')');
+      assert(stdout.fd === 1, "invalid handle for stdout (" + stdout.fd + ")");
 
-      var stderr = FS.open('/dev/stderr', 'w');
+      var stderr = FS.open("/dev/stderr", "w");
       HEAP32[_stderr >> 2] = FS.getPtrForStream(stderr);
-      assert(stderr.fd === 2, 'invalid handle for stderr (' + stderr.fd + ')');
+      assert(stderr.fd === 2, "invalid handle for stderr (" + stderr.fd + ")");
     },
     ensureErrnoError: function() {
       if (FS.ErrnoError) return;
@@ -137209,7 +137409,7 @@ function zbarProcessImageData(imgData) {
       // Some errors may happen quite a bit, to avoid overhead we reuse them (and suffer a lack of stack info)
       [ERRNO_CODES.ENOENT].forEach(function(code) {
         FS.genericErrors[code] = new FS.ErrnoError(code);
-        FS.genericErrors[code].stack = '<generic error, no stack>';
+        FS.genericErrors[code].stack = "<generic error, no stack>";
       });
     },
     staticInit: function() {
@@ -137217,7 +137417,7 @@ function zbarProcessImageData(imgData) {
 
       FS.nameTable = new Array(4096);
 
-      FS.mount(MEMFS, {}, '/');
+      FS.mount(MEMFS, {}, "/");
 
       FS.createDefaultDirectories();
       FS.createDefaultDevices();
@@ -137225,16 +137425,16 @@ function zbarProcessImageData(imgData) {
     init: function(input, output, error) {
       assert(
         !FS.init.initialized,
-        'FS.init was previously called. If you want to initialize later with custom parameters, remove any earlier calls (note that one is automatically added to the generated code)'
+        "FS.init was previously called. If you want to initialize later with custom parameters, remove any earlier calls (note that one is automatically added to the generated code)"
       );
       FS.init.initialized = true;
 
       FS.ensureErrnoError();
 
       // Allow Module.stdin etc. to provide defaults, if none explicitly passed to us here
-      Module['stdin'] = input || Module['stdin'];
-      Module['stdout'] = output || Module['stdout'];
-      Module['stderr'] = error || Module['stderr'];
+      Module["stdin"] = input || Module["stdin"];
+      Module["stdout"] = output || Module["stdout"];
+      Module["stderr"] = error || Module["stderr"];
 
       FS.createStandardStreams();
     },
@@ -137256,7 +137456,7 @@ function zbarProcessImageData(imgData) {
     },
     joinPath: function(parts, forceRelative) {
       var path = PATH.join.apply(null, parts);
-      if (forceRelative && path[0] == '/') path = path.substr(1);
+      if (forceRelative && path[0] == "/") path = path.substr(1);
       return path;
     },
     absolutePath: function(relative, base) {
@@ -137302,20 +137502,23 @@ function zbarProcessImageData(imgData) {
         ret.path = lookup.path;
         ret.object = lookup.node;
         ret.name = lookup.node.name;
-        ret.isRoot = lookup.path === '/';
+        ret.isRoot = lookup.path === "/";
       } catch (e) {
         ret.error = e.errno;
       }
       return ret;
     },
     createFolder: function(parent, name, canRead, canWrite) {
-      var path = PATH.join2(typeof parent === 'string' ? parent : FS.getPath(parent), name);
+      var path = PATH.join2(
+        typeof parent === "string" ? parent : FS.getPath(parent),
+        name
+      );
       var mode = FS.getMode(canRead, canWrite);
       return FS.mkdir(path, mode);
     },
     createPath: function(parent, path, canRead, canWrite) {
-      parent = typeof parent === 'string' ? parent : FS.getPath(parent);
-      var parts = path.split('/').reverse();
+      parent = typeof parent === "string" ? parent : FS.getPath(parent);
+      var parts = path.split("/").reverse();
       while (parts.length) {
         var part = parts.pop();
         if (!part) continue;
@@ -137330,23 +137533,32 @@ function zbarProcessImageData(imgData) {
       return current;
     },
     createFile: function(parent, name, properties, canRead, canWrite) {
-      var path = PATH.join2(typeof parent === 'string' ? parent : FS.getPath(parent), name);
+      var path = PATH.join2(
+        typeof parent === "string" ? parent : FS.getPath(parent),
+        name
+      );
       var mode = FS.getMode(canRead, canWrite);
       return FS.create(path, mode);
     },
     createDataFile: function(parent, name, data, canRead, canWrite, canOwn) {
-      var path = name ? PATH.join2(typeof parent === 'string' ? parent : FS.getPath(parent), name) : parent;
+      var path = name
+        ? PATH.join2(
+            typeof parent === "string" ? parent : FS.getPath(parent),
+            name
+          )
+        : parent;
       var mode = FS.getMode(canRead, canWrite);
       var node = FS.create(path, mode);
       if (data) {
-        if (typeof data === 'string') {
+        if (typeof data === "string") {
           var arr = new Array(data.length);
-          for (var i = 0, len = data.length; i < len; ++i) arr[i] = data.charCodeAt(i);
+          for (var i = 0, len = data.length; i < len; ++i)
+            arr[i] = data.charCodeAt(i);
           data = arr;
         }
         // make sure we can write to the file
         FS.chmod(node, mode | 146);
-        var stream = FS.open(node, 'w');
+        var stream = FS.open(node, "w");
         FS.write(stream, data, 0, data.length, 0, canOwn);
         FS.close(stream);
         FS.chmod(node, mode);
@@ -137354,7 +137566,10 @@ function zbarProcessImageData(imgData) {
       return node;
     },
     createDevice: function(parent, name, input, output) {
-      var path = PATH.join2(typeof parent === 'string' ? parent : FS.getPath(parent), name);
+      var path = PATH.join2(
+        typeof parent === "string" ? parent : FS.getPath(parent),
+        name
+      );
       var mode = FS.getMode(!!input, !!output);
       if (!FS.createDevice.major) FS.createDevice.major = 64;
       var dev = FS.makedev(FS.createDevice.major++, 0);
@@ -137408,28 +137623,31 @@ function zbarProcessImageData(imgData) {
       return FS.mkdev(path, mode, dev);
     },
     createLink: function(parent, name, target, canRead, canWrite) {
-      var path = PATH.join2(typeof parent === 'string' ? parent : FS.getPath(parent), name);
+      var path = PATH.join2(
+        typeof parent === "string" ? parent : FS.getPath(parent),
+        name
+      );
       return FS.symlink(target, path);
     },
     forceLoadFile: function(obj) {
       if (obj.isDevice || obj.isFolder || obj.link || obj.contents) return true;
       var success = true;
-      if (typeof XMLHttpRequest !== 'undefined') {
+      if (typeof XMLHttpRequest !== "undefined") {
         throw new Error(
-          'Lazy loading should have been performed (contents set) in createLazyFile, but it was not. Lazy loading only works in web workers. Use --embed-file or --preload-file in emcc on the main thread.'
+          "Lazy loading should have been performed (contents set) in createLazyFile, but it was not. Lazy loading only works in web workers. Use --embed-file or --preload-file in emcc on the main thread."
         );
-      } else if (Module['read']) {
+      } else if (Module["read"]) {
         // Command-line.
         try {
           // WARNING: Can't read binary files in V8's d8 or tracemonkey's js, as
           //          read() will try to parse UTF8.
-          obj.contents = intArrayFromString(Module['read'](obj.url), true);
+          obj.contents = intArrayFromString(Module["read"](obj.url), true);
           obj.usedBytes = obj.contents.length;
         } catch (e) {
           success = false;
         }
       } else {
-        throw new Error('Cannot load without read() or XMLHttpRequest.');
+        throw new Error("Cannot load without read() or XMLHttpRequest.");
       }
       if (!success) ___setErrNo(ERRNO_CODES.EIO);
       return success;
@@ -137448,46 +137666,58 @@ function zbarProcessImageData(imgData) {
         var chunkNum = (idx / this.chunkSize) | 0;
         return this.getter(chunkNum)[chunkOffset];
       };
-      LazyUint8Array.prototype.setDataGetter = function LazyUint8Array_setDataGetter(getter) {
+      LazyUint8Array.prototype.setDataGetter = function LazyUint8Array_setDataGetter(
+        getter
+      ) {
         this.getter = getter;
       };
       LazyUint8Array.prototype.cacheLength = function LazyUint8Array_cacheLength() {
         // Find length
         var xhr = new XMLHttpRequest();
-        xhr.open('HEAD', url, false);
+        xhr.open("HEAD", url, false);
         xhr.send(null);
         if (!((xhr.status >= 200 && xhr.status < 300) || xhr.status === 304))
-          throw new Error("Couldn't load " + url + '. Status: ' + xhr.status);
-        var datalength = Number(xhr.getResponseHeader('Content-length'));
+          throw new Error("Couldn't load " + url + ". Status: " + xhr.status);
+        var datalength = Number(xhr.getResponseHeader("Content-length"));
         var header;
-        var hasByteServing = (header = xhr.getResponseHeader('Accept-Ranges')) && header === 'bytes';
+        var hasByteServing =
+          (header = xhr.getResponseHeader("Accept-Ranges")) &&
+          header === "bytes";
         var chunkSize = 1024 * 1024; // Chunk size in bytes
 
         if (!hasByteServing) chunkSize = datalength;
 
         // Function to get a range from the remote URL.
         var doXHR = function(from, to) {
-          if (from > to) throw new Error('invalid range (' + from + ', ' + to + ') or no bytes requested!');
-          if (to > datalength - 1) throw new Error('only ' + datalength + ' bytes available! programmer error!');
+          if (from > to)
+            throw new Error(
+              "invalid range (" + from + ", " + to + ") or no bytes requested!"
+            );
+          if (to > datalength - 1)
+            throw new Error(
+              "only " + datalength + " bytes available! programmer error!"
+            );
 
           // TODO: Use mozResponseArrayBuffer, responseStream, etc. if available.
           var xhr = new XMLHttpRequest();
-          xhr.open('GET', url, false);
-          if (datalength !== chunkSize) xhr.setRequestHeader('Range', 'bytes=' + from + '-' + to);
+          xhr.open("GET", url, false);
+          if (datalength !== chunkSize)
+            xhr.setRequestHeader("Range", "bytes=" + from + "-" + to);
 
           // Some hints to the browser that we want binary data.
-          if (typeof Uint8Array != 'undefined') xhr.responseType = 'arraybuffer';
+          if (typeof Uint8Array != "undefined")
+            xhr.responseType = "arraybuffer";
           if (xhr.overrideMimeType) {
-            xhr.overrideMimeType('text/plain; charset=x-user-defined');
+            xhr.overrideMimeType("text/plain; charset=x-user-defined");
           }
 
           xhr.send(null);
           if (!((xhr.status >= 200 && xhr.status < 300) || xhr.status === 304))
-            throw new Error("Couldn't load " + url + '. Status: ' + xhr.status);
+            throw new Error("Couldn't load " + url + ". Status: " + xhr.status);
           if (xhr.response !== undefined) {
             return new Uint8Array(xhr.response || []);
           } else {
-            return intArrayFromString(xhr.responseText || '', true);
+            return intArrayFromString(xhr.responseText || "", true);
           }
         };
         var lazyArray = this;
@@ -137495,10 +137725,11 @@ function zbarProcessImageData(imgData) {
           var start = chunkNum * chunkSize;
           var end = (chunkNum + 1) * chunkSize - 1; // including this byte
           end = Math.min(end, datalength - 1); // if datalength-1 is selected, this is the last block
-          if (typeof lazyArray.chunks[chunkNum] === 'undefined') {
+          if (typeof lazyArray.chunks[chunkNum] === "undefined") {
             lazyArray.chunks[chunkNum] = doXHR(start, end);
           }
-          if (typeof lazyArray.chunks[chunkNum] === 'undefined') throw new Error('doXHR failed!');
+          if (typeof lazyArray.chunks[chunkNum] === "undefined")
+            throw new Error("doXHR failed!");
           return lazyArray.chunks[chunkNum];
         });
 
@@ -137506,11 +137737,11 @@ function zbarProcessImageData(imgData) {
         this._chunkSize = chunkSize;
         this.lengthKnown = true;
       };
-      if (typeof XMLHttpRequest !== 'undefined') {
+      if (typeof XMLHttpRequest !== "undefined") {
         if (!ENVIRONMENT_IS_WORKER)
-          throw 'Cannot do synchronous binary XHRs outside webworkers in modern browsers. Use --embed-file or --preload-file in emcc';
+          throw "Cannot do synchronous binary XHRs outside webworkers in modern browsers. Use --embed-file or --preload-file in emcc";
         var lazyArray = new LazyUint8Array();
-        Object.defineProperty(lazyArray, 'length', {
+        Object.defineProperty(lazyArray, "length", {
           get: function() {
             if (!this.lengthKnown) {
               this.cacheLength();
@@ -137518,7 +137749,7 @@ function zbarProcessImageData(imgData) {
             return this._length;
           }
         });
-        Object.defineProperty(lazyArray, 'chunkSize', {
+        Object.defineProperty(lazyArray, "chunkSize", {
           get: function() {
             if (!this.lengthKnown) {
               this.cacheLength();
@@ -137543,7 +137774,7 @@ function zbarProcessImageData(imgData) {
         node.url = properties.url;
       }
       // Add a function that defers querying the file size until it is asked the first time.
-      Object.defineProperty(node, 'usedBytes', {
+      Object.defineProperty(node, "usedBytes", {
         get: function() {
           return this.contents.length;
         }
@@ -137561,7 +137792,13 @@ function zbarProcessImageData(imgData) {
         };
       });
       // use a custom read function
-      stream_ops.read = function stream_ops_read(stream, buffer, offset, length, position) {
+      stream_ops.read = function stream_ops_read(
+        stream,
+        buffer,
+        offset,
+        length,
+        position
+      ) {
         if (!FS.forceLoadFile(node)) {
           throw new FS.ErrnoError(ERRNO_CODES.EIO);
         }
@@ -137585,7 +137822,17 @@ function zbarProcessImageData(imgData) {
       node.stream_ops = stream_ops;
       return node;
     },
-    createPreloadedFile: function(parent, name, url, canRead, canWrite, onload, onerror, dontCreateFile, canOwn) {
+    createPreloadedFile: function(
+      parent,
+      name,
+      url,
+      canRead,
+      canWrite,
+      onload,
+      onerror,
+      dontCreateFile,
+      canOwn
+    ) {
       Browser.init();
       // TODO we should allow people to just pass in a complete filename instead
       // of parent and name being that we just join them anyways
@@ -137593,26 +137840,33 @@ function zbarProcessImageData(imgData) {
       function processData(byteArray) {
         function finish(byteArray) {
           if (!dontCreateFile) {
-            FS.createDataFile(parent, name, byteArray, canRead, canWrite, canOwn);
+            FS.createDataFile(
+              parent,
+              name,
+              byteArray,
+              canRead,
+              canWrite,
+              canOwn
+            );
           }
           if (onload) onload();
-          removeRunDependency('cp ' + fullname);
+          removeRunDependency("cp " + fullname);
         }
         var handled = false;
-        Module['preloadPlugins'].forEach(function(plugin) {
+        Module["preloadPlugins"].forEach(function(plugin) {
           if (handled) return;
-          if (plugin['canHandle'](fullname)) {
-            plugin['handle'](byteArray, fullname, finish, function() {
+          if (plugin["canHandle"](fullname)) {
+            plugin["handle"](byteArray, fullname, finish, function() {
               if (onerror) onerror();
-              removeRunDependency('cp ' + fullname);
+              removeRunDependency("cp " + fullname);
             });
             handled = true;
           }
         });
         if (!handled) finish(byteArray);
       }
-      addRunDependency('cp ' + fullname);
-      if (typeof url == 'string') {
+      addRunDependency("cp " + fullname);
+      if (typeof url == "string") {
         Browser.asyncLoad(
           url,
           function(byteArray) {
@@ -137625,13 +137879,18 @@ function zbarProcessImageData(imgData) {
       }
     },
     indexedDB: function() {
-      return window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+      return (
+        window.indexedDB ||
+        window.mozIndexedDB ||
+        window.webkitIndexedDB ||
+        window.msIndexedDB
+      );
     },
     DB_NAME: function() {
-      return 'EM_FS_' + window.location.pathname;
+      return "EM_FS_" + window.location.pathname;
     },
     DB_VERSION: 20,
-    DB_STORE_NAME: 'FILE_DATA',
+    DB_STORE_NAME: "FILE_DATA",
     saveFilesToDB: function(paths, onload, onerror) {
       onload = onload || function() {};
       onerror = onerror || function() {};
@@ -137642,13 +137901,13 @@ function zbarProcessImageData(imgData) {
         return onerror(e);
       }
       openRequest.onupgradeneeded = function openRequest_onupgradeneeded() {
-        console.log('creating db');
+        console.log("creating db");
         var db = openRequest.result;
         db.createObjectStore(FS.DB_STORE_NAME);
       };
       openRequest.onsuccess = function openRequest_onsuccess() {
         var db = openRequest.result;
-        var transaction = db.transaction([FS.DB_STORE_NAME], 'readwrite');
+        var transaction = db.transaction([FS.DB_STORE_NAME], "readwrite");
         var files = transaction.objectStore(FS.DB_STORE_NAME);
         var ok = 0,
           fail = 0,
@@ -137658,7 +137917,10 @@ function zbarProcessImageData(imgData) {
           else onerror();
         }
         paths.forEach(function(path) {
-          var putRequest = files.put(FS.analyzePath(path).object.contents, path);
+          var putRequest = files.put(
+            FS.analyzePath(path).object.contents,
+            path
+          );
           putRequest.onsuccess = function putRequest_onsuccess() {
             ok++;
             if (ok + fail == total) finish();
@@ -137685,7 +137947,7 @@ function zbarProcessImageData(imgData) {
       openRequest.onsuccess = function openRequest_onsuccess() {
         var db = openRequest.result;
         try {
-          var transaction = db.transaction([FS.DB_STORE_NAME], 'readonly');
+          var transaction = db.transaction([FS.DB_STORE_NAME], "readonly");
         } catch (e) {
           onerror(e);
           return;
@@ -137704,7 +137966,14 @@ function zbarProcessImageData(imgData) {
             if (FS.analyzePath(path).exists) {
               FS.unlink(path);
             }
-            FS.createDataFile(PATH.dirname(path), PATH.basename(path), getRequest.result, true, true, true);
+            FS.createDataFile(
+              PATH.dirname(path),
+              PATH.basename(path),
+              getRequest.result,
+              true,
+              true,
+              true
+            );
             ok++;
             if (ok + fail == total) finish();
           };
@@ -137782,41 +138051,44 @@ function zbarProcessImageData(imgData) {
     return _strerror.buffer;
   }
 
-  Module['_bitshift64Shl'] = _bitshift64Shl;
+  Module["_bitshift64Shl"] = _bitshift64Shl;
 
   function _abort() {
-    Module['abort']();
+    Module["abort"]();
   }
 
   function _mkport() {
-    throw 'TODO';
+    throw "TODO";
   }
   var SOCKFS = {
     mount: function(mount) {
       // If Module['websocket'] has already been defined (e.g. for configuring
       // the subprotocol/url) use that, if not initialise it to a new object.
-      Module['websocket'] = Module['websocket'] && 'object' === typeof Module['websocket'] ? Module['websocket'] : {};
+      Module["websocket"] =
+        Module["websocket"] && "object" === typeof Module["websocket"]
+          ? Module["websocket"]
+          : {};
 
       // Add the Event registration mechanism to the exported websocket configuration
       // object so we can register network callbacks from native JavaScript too.
       // For more documentation see system/include/emscripten/emscripten.h
-      Module['websocket']._callbacks = {};
-      Module['websocket']['on'] = function(event, callback) {
-        if ('function' === typeof callback) {
+      Module["websocket"]._callbacks = {};
+      Module["websocket"]["on"] = function(event, callback) {
+        if ("function" === typeof callback) {
           this._callbacks[event] = callback;
         }
         return this;
       };
 
-      Module['websocket'].emit = function(event, param) {
-        if ('function' === typeof this._callbacks[event]) {
+      Module["websocket"].emit = function(event, param) {
+        if ("function" === typeof this._callbacks[event]) {
           this._callbacks[event].call(this, param);
         }
       };
 
       // If debug is enabled register simple default logging callbacks for each Event.
 
-      return FS.createNode(null, '/', 16384 | 511 /* 0777 */, 0);
+      return FS.createNode(null, "/", 16384 | 511 /* 0777 */, 0);
     },
     createSocket: function(family, type, protocol) {
       var streaming = type == 1;
@@ -137847,7 +138119,7 @@ function zbarProcessImageData(imgData) {
       var stream = FS.createStream({
         path: name,
         node: node,
-        flags: FS.modeStringToFlags('r+'),
+        flags: FS.modeStringToFlags("r+"),
         seekable: false,
         stream_ops: SOCKFS.stream_ops
       });
@@ -137897,13 +138169,13 @@ function zbarProcessImageData(imgData) {
       if (!SOCKFS.nextname.current) {
         SOCKFS.nextname.current = 0;
       }
-      return 'socket[' + SOCKFS.nextname.current++ + ']';
+      return "socket[" + SOCKFS.nextname.current++ + "]";
     },
     websocket_sock_ops: {
       createPeer: function(sock, addr, port) {
         var ws;
 
-        if (typeof addr === 'object') {
+        if (typeof addr === "object") {
           ws = addr;
           addr = null;
           port = null;
@@ -137921,7 +138193,9 @@ function zbarProcessImageData(imgData) {
           else {
             var result = /ws[s]?:\/\/([^:]+):(\d+)/.exec(ws.url);
             if (!result) {
-              throw new Error('WebSocket URL must be in the format ws(s)://address:port');
+              throw new Error(
+                "WebSocket URL must be in the format ws(s)://address:port"
+              );
             }
             addr = result[1];
             port = parseInt(result[2], 10);
@@ -137930,44 +138204,50 @@ function zbarProcessImageData(imgData) {
           // create the actual websocket object and connect
           try {
             // runtimeConfig gets set to true if WebSocket runtime configuration is available.
-            var runtimeConfig = Module['websocket'] && 'object' === typeof Module['websocket'];
+            var runtimeConfig =
+              Module["websocket"] && "object" === typeof Module["websocket"];
 
             // The default value is 'ws://' the replace is needed because the compiler replaces '//' comments with '#'
             // comments without checking context, so we'd end up with ws:#, the replace swaps the '#' for '//' again.
-            var url = 'ws:#'.replace('#', '//');
+            var url = "ws:#".replace("#", "//");
 
             if (runtimeConfig) {
-              if ('string' === typeof Module['websocket']['url']) {
-                url = Module['websocket']['url']; // Fetch runtime WebSocket URL config.
+              if ("string" === typeof Module["websocket"]["url"]) {
+                url = Module["websocket"]["url"]; // Fetch runtime WebSocket URL config.
               }
             }
 
-            if (url === 'ws://' || url === 'wss://') {
+            if (url === "ws://" || url === "wss://") {
               // Is the supplied URL config just a prefix, if so complete it.
-              var parts = addr.split('/');
-              url = url + parts[0] + ':' + port + '/' + parts.slice(1).join('/');
+              var parts = addr.split("/");
+              url =
+                url + parts[0] + ":" + port + "/" + parts.slice(1).join("/");
             }
 
             // Make the WebSocket subprotocol (Sec-WebSocket-Protocol) default to binary if no configuration is set.
-            var subProtocols = 'binary'; // The default value is 'binary'
+            var subProtocols = "binary"; // The default value is 'binary'
 
             if (runtimeConfig) {
-              if ('string' === typeof Module['websocket']['subprotocol']) {
-                subProtocols = Module['websocket']['subprotocol']; // Fetch runtime WebSocket subprotocol config.
+              if ("string" === typeof Module["websocket"]["subprotocol"]) {
+                subProtocols = Module["websocket"]["subprotocol"]; // Fetch runtime WebSocket subprotocol config.
               }
             }
 
             // The regex trims the string (removes spaces at the beginning and end, then splits the string by
             // <any space>,<any space> into an Array. Whitespace removal is important for Websockify and ws.
-            subProtocols = subProtocols.replace(/^ +| +$/g, '').split(/ *, */);
+            subProtocols = subProtocols.replace(/^ +| +$/g, "").split(/ *, */);
 
             // The node ws library API for specifying optional subprotocol is slightly different than the browser's.
-            var opts = ENVIRONMENT_IS_NODE ? { protocol: subProtocols.toString() } : subProtocols;
+            var opts = ENVIRONMENT_IS_NODE
+              ? { protocol: subProtocols.toString() }
+              : subProtocols;
 
             // If node we use the ws library.
-            var WebSocket = ENVIRONMENT_IS_NODE ? require('ws') : window['WebSocket'];
+            var WebSocket = ENVIRONMENT_IS_NODE
+              ? require("ws")
+              : window["WebSocket"];
             ws = new WebSocket(url, opts);
-            ws.binaryType = 'arraybuffer';
+            ws.binaryType = "arraybuffer";
           } catch (e) {
             throw new FS.ErrnoError(ERRNO_CODES.EHOSTUNREACH);
           }
@@ -137986,17 +138266,17 @@ function zbarProcessImageData(imgData) {
         // if this is a bound dgram socket, send the port number first to allow
         // us to override the ephemeral port reported to us by remotePort on the
         // remote end.
-        if (sock.type === 2 && typeof sock.sport !== 'undefined') {
+        if (sock.type === 2 && typeof sock.sport !== "undefined") {
           peer.dgram_send_queue.push(
             new Uint8Array([
               255,
               255,
               255,
               255,
-              'p'.charCodeAt(0),
-              'o'.charCodeAt(0),
-              'r'.charCodeAt(0),
-              't'.charCodeAt(0),
+              "p".charCodeAt(0),
+              "o".charCodeAt(0),
+              "r".charCodeAt(0),
+              "t".charCodeAt(0),
               (sock.sport & 0xff00) >> 8,
               sock.sport & 0xff
             ])
@@ -138006,19 +138286,19 @@ function zbarProcessImageData(imgData) {
         return peer;
       },
       getPeer: function(sock, addr, port) {
-        return sock.peers[addr + ':' + port];
+        return sock.peers[addr + ":" + port];
       },
       addPeer: function(sock, peer) {
-        sock.peers[peer.addr + ':' + peer.port] = peer;
+        sock.peers[peer.addr + ":" + peer.port] = peer;
       },
       removePeer: function(sock, peer) {
-        delete sock.peers[peer.addr + ':' + peer.port];
+        delete sock.peers[peer.addr + ":" + peer.port];
       },
       handlePeerEvents: function(sock, peer) {
         var first = true;
 
         var handleOpen = function() {
-          Module['websocket'].emit('open', sock.stream.fd);
+          Module["websocket"].emit("open", sock.stream.fd);
 
           try {
             var queued = peer.dgram_send_queue.shift();
@@ -138034,7 +138314,7 @@ function zbarProcessImageData(imgData) {
         };
 
         function handleMessage(data) {
-          assert(typeof data !== 'string' && data.byteLength !== undefined); // must receive an ArrayBuffer
+          assert(typeof data !== "string" && data.byteLength !== undefined); // must receive an ArrayBuffer
           data = new Uint8Array(data); // make a typed array view on the array buffer
 
           // if this is the port message, override the peer's port with it
@@ -138047,10 +138327,10 @@ function zbarProcessImageData(imgData) {
             data[1] === 255 &&
             data[2] === 255 &&
             data[3] === 255 &&
-            data[4] === 'p'.charCodeAt(0) &&
-            data[5] === 'o'.charCodeAt(0) &&
-            data[6] === 'r'.charCodeAt(0) &&
-            data[7] === 't'.charCodeAt(0)
+            data[4] === "p".charCodeAt(0) &&
+            data[5] === "o".charCodeAt(0) &&
+            data[6] === "r".charCodeAt(0) &&
+            data[7] === "t".charCodeAt(0)
           ) {
             // update the peer's port and it's key in the peer map
             var newport = (data[8] << 8) | data[9];
@@ -138060,34 +138340,42 @@ function zbarProcessImageData(imgData) {
             return;
           }
 
-          sock.recv_queue.push({ addr: peer.addr, port: peer.port, data: data });
-          Module['websocket'].emit('message', sock.stream.fd);
+          sock.recv_queue.push({
+            addr: peer.addr,
+            port: peer.port,
+            data: data
+          });
+          Module["websocket"].emit("message", sock.stream.fd);
         }
 
         if (ENVIRONMENT_IS_NODE) {
-          peer.socket.on('open', handleOpen);
-          peer.socket.on('message', function(data, flags) {
+          peer.socket.on("open", handleOpen);
+          peer.socket.on("message", function(data, flags) {
             if (!flags.binary) {
               return;
             }
             handleMessage(new Uint8Array(data).buffer); // copy from node Buffer -> ArrayBuffer
           });
-          peer.socket.on('close', function() {
-            Module['websocket'].emit('close', sock.stream.fd);
+          peer.socket.on("close", function() {
+            Module["websocket"].emit("close", sock.stream.fd);
           });
-          peer.socket.on('error', function(error) {
+          peer.socket.on("error", function(error) {
             // Although the ws library may pass errors that may be more descriptive than
             // ECONNREFUSED they are not necessarily the expected error code e.g.
             // ENOTFOUND on getaddrinfo seems to be node.js specific, so using ECONNREFUSED
             // is still probably the most useful thing to do.
             sock.error = ERRNO_CODES.ECONNREFUSED; // Used in getsockopt for SOL_SOCKET/SO_ERROR test.
-            Module['websocket'].emit('error', [sock.stream.fd, sock.error, 'ECONNREFUSED: Connection refused']);
+            Module["websocket"].emit("error", [
+              sock.stream.fd,
+              sock.error,
+              "ECONNREFUSED: Connection refused"
+            ]);
             // don't throw
           });
         } else {
           peer.socket.onopen = handleOpen;
           peer.socket.onclose = function() {
-            Module['websocket'].emit('close', sock.stream.fd);
+            Module["websocket"].emit("close", sock.stream.fd);
           };
           peer.socket.onmessage = function peer_socket_onmessage(event) {
             handleMessage(event.data);
@@ -138096,7 +138384,11 @@ function zbarProcessImageData(imgData) {
             // The WebSocket spec only allows a 'simple event' to be thrown on error,
             // so we only really know as much as ECONNREFUSED.
             sock.error = ERRNO_CODES.ECONNREFUSED; // Used in getsockopt for SOL_SOCKET/SO_ERROR test.
-            Module['websocket'].emit('error', [sock.stream.fd, sock.error, 'ECONNREFUSED: Connection refused']);
+            Module["websocket"].emit("error", [
+              sock.stream.fd,
+              sock.error,
+              "ECONNREFUSED: Connection refused"
+            ]);
           };
         }
       },
@@ -138130,7 +138422,10 @@ function zbarProcessImageData(imgData) {
           mask |= 4;
         }
 
-        if ((dest && dest.socket.readyState === dest.socket.CLOSING) || (dest && dest.socket.readyState === dest.socket.CLOSED)) {
+        if (
+          (dest && dest.socket.readyState === dest.socket.CLOSING) ||
+          (dest && dest.socket.readyState === dest.socket.CLOSED)
+        ) {
           mask |= 16;
         }
 
@@ -138169,7 +138464,10 @@ function zbarProcessImageData(imgData) {
         return 0;
       },
       bind: function(sock, addr, port) {
-        if (typeof sock.saddr !== 'undefined' || typeof sock.sport !== 'undefined') {
+        if (
+          typeof sock.saddr !== "undefined" ||
+          typeof sock.sport !== "undefined"
+        ) {
           throw new FS.ErrnoError(ERRNO_CODES.EINVAL); // already bound
         }
         sock.saddr = addr;
@@ -138203,8 +138501,15 @@ function zbarProcessImageData(imgData) {
         // }
 
         // early out if we're already connected / in the middle of connecting
-        if (typeof sock.daddr !== 'undefined' && typeof sock.dport !== 'undefined') {
-          var dest = SOCKFS.websocket_sock_ops.getPeer(sock, sock.daddr, sock.dport);
+        if (
+          typeof sock.daddr !== "undefined" &&
+          typeof sock.dport !== "undefined"
+        ) {
+          var dest = SOCKFS.websocket_sock_ops.getPeer(
+            sock,
+            sock.daddr,
+            sock.dport
+          );
           if (dest) {
             if (dest.socket.readyState === dest.socket.CONNECTING) {
               throw new FS.ErrnoError(ERRNO_CODES.EALREADY);
@@ -138230,18 +138535,22 @@ function zbarProcessImageData(imgData) {
         if (sock.server) {
           throw new FS.ErrnoError(ERRNO_CODES.EINVAL); // already listening
         }
-        var WebSocketServer = require('ws').Server;
+        var WebSocketServer = require("ws").Server;
         var host = sock.saddr;
         sock.server = new WebSocketServer({
           host: host,
           port: sock.sport
           // TODO support backlog
         });
-        Module['websocket'].emit('listen', sock.stream.fd); // Send Event with listen fd.
+        Module["websocket"].emit("listen", sock.stream.fd); // Send Event with listen fd.
 
-        sock.server.on('connection', function(ws) {
+        sock.server.on("connection", function(ws) {
           if (sock.type === 1) {
-            var newsock = SOCKFS.createSocket(sock.family, sock.type, sock.protocol);
+            var newsock = SOCKFS.createSocket(
+              sock.family,
+              sock.type,
+              sock.protocol
+            );
 
             // create a peer on the new socket
             var peer = SOCKFS.websocket_sock_ops.createPeer(newsock, ws);
@@ -138250,20 +138559,20 @@ function zbarProcessImageData(imgData) {
 
             // push to queue for accept to pick up
             sock.pending.push(newsock);
-            Module['websocket'].emit('connection', newsock.stream.fd);
+            Module["websocket"].emit("connection", newsock.stream.fd);
           } else {
             // create a peer on the listen socket so calling sendto
             // with the listen socket and an address will resolve
             // to the correct client
             SOCKFS.websocket_sock_ops.createPeer(sock, ws);
-            Module['websocket'].emit('connection', sock.stream.fd);
+            Module["websocket"].emit("connection", sock.stream.fd);
           }
         });
-        sock.server.on('closed', function() {
-          Module['websocket'].emit('close', sock.stream.fd);
+        sock.server.on("closed", function() {
+          Module["websocket"].emit("close", sock.stream.fd);
           sock.server = null;
         });
-        sock.server.on('error', function(error) {
+        sock.server.on("error", function(error) {
           // Although the ws library may pass errors that may be more descriptive than
           // ECONNREFUSED they are not necessarily the expected error code e.g.
           // ENOTFOUND on getaddrinfo seems to be node.js specific, so using EHOSTUNREACH
@@ -138271,7 +138580,11 @@ function zbarProcessImageData(imgData) {
           // occur in a well written app as errors should get trapped in the compiled
           // app's own getaddrinfo call.
           sock.error = ERRNO_CODES.EHOSTUNREACH; // Used in getsockopt for SOL_SOCKET/SO_ERROR test.
-          Module['websocket'].emit('error', [sock.stream.fd, sock.error, 'EHOSTUNREACH: Host is unreachable']);
+          Module["websocket"].emit("error", [
+            sock.stream.fd,
+            sock.error,
+            "EHOSTUNREACH: Host is unreachable"
+          ]);
           // don't throw
         });
       },
@@ -138322,7 +138635,11 @@ function zbarProcessImageData(imgData) {
 
         // early out if not connected with a connection-based socket
         if (sock.type === 1) {
-          if (!dest || dest.socket.readyState === dest.socket.CLOSING || dest.socket.readyState === dest.socket.CLOSED) {
+          if (
+            !dest ||
+            dest.socket.readyState === dest.socket.CLOSING ||
+            dest.socket.readyState === dest.socket.CLOSED
+          ) {
             throw new FS.ErrnoError(ERRNO_CODES.ENOTCONN);
           } else if (dest.socket.readyState === dest.socket.CONNECTING) {
             throw new FS.ErrnoError(ERRNO_CODES.EAGAIN);
@@ -138337,7 +138654,10 @@ function zbarProcessImageData(imgData) {
           data = buffer.slice(offset, offset + length);
         } else {
           // ArrayBufferView
-          data = buffer.buffer.slice(buffer.byteOffset + offset, buffer.byteOffset + offset + length);
+          data = buffer.buffer.slice(
+            buffer.byteOffset + offset,
+            buffer.byteOffset + offset + length
+          );
         }
 
         // if we're emulating a connection-less dgram socket and don't have
@@ -138346,7 +138666,11 @@ function zbarProcessImageData(imgData) {
         if (sock.type === 2) {
           if (!dest || dest.socket.readyState !== dest.socket.OPEN) {
             // if we're not connected, open a new connection
-            if (!dest || dest.socket.readyState === dest.socket.CLOSING || dest.socket.readyState === dest.socket.CLOSED) {
+            if (
+              !dest ||
+              dest.socket.readyState === dest.socket.CLOSING ||
+              dest.socket.readyState === dest.socket.CLOSED
+            ) {
               dest = SOCKFS.websocket_sock_ops.createPeer(sock, addr, port);
             }
             dest.dgram_send_queue.push(data);
@@ -138372,12 +138696,19 @@ function zbarProcessImageData(imgData) {
         var queued = sock.recv_queue.shift();
         if (!queued) {
           if (sock.type === 1) {
-            var dest = SOCKFS.websocket_sock_ops.getPeer(sock, sock.daddr, sock.dport);
+            var dest = SOCKFS.websocket_sock_ops.getPeer(
+              sock,
+              sock.daddr,
+              sock.dport
+            );
 
             if (!dest) {
               // if we have a destination address but are not connected, error out
               throw new FS.ErrnoError(ERRNO_CODES.ENOTCONN);
-            } else if (dest.socket.readyState === dest.socket.CLOSING || dest.socket.readyState === dest.socket.CLOSED) {
+            } else if (
+              dest.socket.readyState === dest.socket.CLOSING ||
+              dest.socket.readyState === dest.socket.CLOSED
+            ) {
               // return null if the socket has closed
               return null;
             } else {
@@ -138404,7 +138735,11 @@ function zbarProcessImageData(imgData) {
         // push back any unread data for TCP connections
         if (sock.type === 1 && bytesRead < queuedLength) {
           var bytesRemaining = queuedLength - bytesRead;
-          queued.data = new Uint8Array(queuedBuffer, queuedOffset + bytesRead, bytesRemaining);
+          queued.data = new Uint8Array(
+            queuedBuffer,
+            queuedOffset + bytesRead,
+            bytesRemaining
+          );
           sock.recv_queue.unshift(queued);
         }
 
@@ -138471,7 +138806,7 @@ function zbarProcessImageData(imgData) {
     }
   }
 
-  Module['_strlen'] = _strlen;
+  Module["_strlen"] = _strlen;
 
   function __reallyNegative(x) {
     return x < 0 || (x === 0 && 1 / x === -Infinity);
@@ -138483,14 +138818,19 @@ function zbarProcessImageData(imgData) {
       // NOTE: Explicitly ignoring type safety. Otherwise this fails:
       //       int x = 4; printf("%c\n", (char)x);
       var ret;
-      if (type === 'double') {
-        ret = ((HEAP32[tempDoublePtr >> 2] = HEAP32[(varargs + argIndex) >> 2]),
-        (HEAP32[(tempDoublePtr + 4) >> 2] = HEAP32[(varargs + (argIndex + 4)) >> 2]),
-        +HEAPF64[tempDoublePtr >> 3]);
-      } else if (type == 'i64') {
-        ret = [HEAP32[(varargs + argIndex) >> 2], HEAP32[(varargs + (argIndex + 4)) >> 2]];
+      if (type === "double") {
+        ret =
+          ((HEAP32[tempDoublePtr >> 2] = HEAP32[(varargs + argIndex) >> 2]),
+          (HEAP32[(tempDoublePtr + 4) >> 2] =
+            HEAP32[(varargs + (argIndex + 4)) >> 2]),
+          +HEAPF64[tempDoublePtr >> 3]);
+      } else if (type == "i64") {
+        ret = [
+          HEAP32[(varargs + argIndex) >> 2],
+          HEAP32[(varargs + (argIndex + 4)) >> 2]
+        ];
       } else {
-        type = 'i32'; // varargs are always i32, i64, or double
+        type = "i32"; // varargs are always i32, i64, or double
         ret = HEAP32[(varargs + argIndex) >> 2];
       }
       argIndex += Runtime.getNativeFieldSize(type);
@@ -138542,7 +138882,7 @@ function zbarProcessImageData(imgData) {
         // Handle width.
         var width = 0;
         if (next == 42) {
-          width = getNextArg('i32');
+          width = getNextArg("i32");
           textIndex++;
           next = HEAP8[(textIndex + 1) >> 0];
         } else {
@@ -138562,7 +138902,7 @@ function zbarProcessImageData(imgData) {
           textIndex++;
           next = HEAP8[(textIndex + 1) >> 0];
           if (next == 42) {
-            precision = getNextArg('i32');
+            precision = getNextArg("i32");
             textIndex++;
           } else {
             while (1) {
@@ -138582,7 +138922,7 @@ function zbarProcessImageData(imgData) {
         // Handle integer sizes. WARNING: These assume a 32-bit architecture!
         var argSize;
         switch (String.fromCharCode(next)) {
-          case 'h':
+          case "h":
             var nextNext = HEAP8[(textIndex + 2) >> 0];
             if (nextNext == 104) {
               textIndex++;
@@ -138591,7 +138931,7 @@ function zbarProcessImageData(imgData) {
               argSize = 2; // short (actually i32 in varargs)
             }
             break;
-          case 'l':
+          case "l":
             var nextNext = HEAP8[(textIndex + 2) >> 0];
             if (nextNext == 108) {
               textIndex++;
@@ -138600,14 +138940,14 @@ function zbarProcessImageData(imgData) {
               argSize = 4; // long
             }
             break;
-          case 'L': // long long
-          case 'q': // int64_t
-          case 'j': // intmax_t
+          case "L": // long long
+          case "q": // int64_t
+          case "j": // intmax_t
             argSize = 8;
             break;
-          case 'z': // size_t
-          case 't': // ptrdiff_t
-          case 'I': // signed ptrdiff_t or unsigned size_t
+          case "z": // size_t
+          case "t": // ptrdiff_t
+          case "I": // signed ptrdiff_t or unsigned size_t
             argSize = 4;
             break;
           default:
@@ -138618,17 +138958,17 @@ function zbarProcessImageData(imgData) {
 
         // Handle type specifier.
         switch (String.fromCharCode(next)) {
-          case 'd':
-          case 'i':
-          case 'u':
-          case 'o':
-          case 'x':
-          case 'X':
-          case 'p': {
+          case "d":
+          case "i":
+          case "u":
+          case "o":
+          case "x":
+          case "X":
+          case "p": {
             // Integer.
             var signed = next == 100 || next == 105;
             argSize = argSize || 4;
-            var currArg = getNextArg('i' + argSize * 8);
+            var currArg = getNextArg("i" + argSize * 8);
             var origArg = currArg;
             var argText;
             // Flatten i64-1 [low, high] into a (slightly rounded) double
@@ -138638,27 +138978,32 @@ function zbarProcessImageData(imgData) {
             // Truncate to requested size.
             if (argSize <= 4) {
               var limit = Math.pow(256, argSize) - 1;
-              currArg = (signed ? reSign : unSign)(currArg & limit, argSize * 8);
+              currArg = (signed ? reSign : unSign)(
+                currArg & limit,
+                argSize * 8
+              );
             }
             // Format the number.
             var currAbsArg = Math.abs(currArg);
-            var prefix = '';
+            var prefix = "";
             if (next == 100 || next == 105) {
-              if (argSize == 8 && i64Math) argText = i64Math.stringify(origArg[0], origArg[1], null);
+              if (argSize == 8 && i64Math)
+                argText = i64Math.stringify(origArg[0], origArg[1], null);
               else argText = reSign(currArg, 8 * argSize, 1).toString(10);
             } else if (next == 117) {
-              if (argSize == 8 && i64Math) argText = i64Math.stringify(origArg[0], origArg[1], true);
+              if (argSize == 8 && i64Math)
+                argText = i64Math.stringify(origArg[0], origArg[1], true);
               else argText = unSign(currArg, 8 * argSize, 1).toString(10);
               currArg = Math.abs(currArg);
             } else if (next == 111) {
-              argText = (flagAlternative ? '0' : '') + currAbsArg.toString(8);
+              argText = (flagAlternative ? "0" : "") + currAbsArg.toString(8);
             } else if (next == 120 || next == 88) {
-              prefix = flagAlternative && currArg != 0 ? '0x' : '';
+              prefix = flagAlternative && currArg != 0 ? "0x" : "";
               if (argSize == 8 && i64Math) {
                 if (origArg[1]) {
                   argText = (origArg[1] >>> 0).toString(16);
                   var lower = (origArg[0] >>> 0).toString(16);
-                  while (lower.length < 8) lower = '0' + lower;
+                  while (lower.length < 8) lower = "0" + lower;
                   argText += lower;
                 } else {
                   argText = (origArg[0] >>> 0).toString(16);
@@ -138671,8 +139016,8 @@ function zbarProcessImageData(imgData) {
                 for (var i = 0; i < argText.length; i++) {
                   buffer.push((0xf - parseInt(argText[i], 16)).toString(16));
                 }
-                argText = buffer.join('');
-                while (argText.length < argSize * 2) argText = 'f' + argText;
+                argText = buffer.join("");
+                while (argText.length < argSize * 2) argText = "f" + argText;
               } else {
                 argText = currAbsArg.toString(16);
               }
@@ -138682,67 +139027,67 @@ function zbarProcessImageData(imgData) {
               }
             } else if (next == 112) {
               if (currAbsArg === 0) {
-                argText = '(nil)';
+                argText = "(nil)";
               } else {
-                prefix = '0x';
+                prefix = "0x";
                 argText = currAbsArg.toString(16);
               }
             }
             if (precisionSet) {
               while (argText.length < precision) {
-                argText = '0' + argText;
+                argText = "0" + argText;
               }
             }
 
             // Add sign if needed
             if (currArg >= 0) {
               if (flagAlwaysSigned) {
-                prefix = '+' + prefix;
+                prefix = "+" + prefix;
               } else if (flagPadSign) {
-                prefix = ' ' + prefix;
+                prefix = " " + prefix;
               }
             }
 
             // Move sign to prefix so we zero-pad after the sign
-            if (argText.charAt(0) == '-') {
-              prefix = '-' + prefix;
+            if (argText.charAt(0) == "-") {
+              prefix = "-" + prefix;
               argText = argText.substr(1);
             }
 
             // Add padding.
             while (prefix.length + argText.length < width) {
               if (flagLeftAlign) {
-                argText += ' ';
+                argText += " ";
               } else {
                 if (flagZeroPad) {
-                  argText = '0' + argText;
+                  argText = "0" + argText;
                 } else {
-                  prefix = ' ' + prefix;
+                  prefix = " " + prefix;
                 }
               }
             }
 
             // Insert the result into the buffer.
             argText = prefix + argText;
-            argText.split('').forEach(function(chr) {
+            argText.split("").forEach(function(chr) {
               ret.push(chr.charCodeAt(0));
             });
             break;
           }
-          case 'f':
-          case 'F':
-          case 'e':
-          case 'E':
-          case 'g':
-          case 'G': {
+          case "f":
+          case "F":
+          case "e":
+          case "E":
+          case "g":
+          case "G": {
             // Float.
-            var currArg = getNextArg('double');
+            var currArg = getNextArg("double");
             var argText;
             if (isNaN(currArg)) {
-              argText = 'nan';
+              argText = "nan";
               flagZeroPad = false;
             } else if (!isFinite(currArg)) {
-              argText = (currArg < 0 ? '-' : '') + 'inf';
+              argText = (currArg < 0 ? "-" : "") + "inf";
               flagZeroPad = false;
             } else {
               var isGeneral = false;
@@ -138753,12 +139098,15 @@ function zbarProcessImageData(imgData) {
               if (next == 103 || next == 71) {
                 isGeneral = true;
                 precision = precision || 1;
-                var exponent = parseInt(currArg.toExponential(effectivePrecision).split('e')[1], 10);
+                var exponent = parseInt(
+                  currArg.toExponential(effectivePrecision).split("e")[1],
+                  10
+                );
                 if (precision > exponent && exponent >= -4) {
-                  next = (next == 103 ? 'f' : 'F').charCodeAt(0);
+                  next = (next == 103 ? "f" : "F").charCodeAt(0);
                   precision -= exponent + 1;
                 } else {
-                  next = (next == 103 ? 'e' : 'E').charCodeAt(0);
+                  next = (next == 103 ? "e" : "E").charCodeAt(0);
                   precision--;
                 }
                 effectivePrecision = Math.min(precision, 20);
@@ -138768,28 +139116,33 @@ function zbarProcessImageData(imgData) {
                 argText = currArg.toExponential(effectivePrecision);
                 // Make sure the exponent has at least 2 digits.
                 if (/[eE][-+]\d$/.test(argText)) {
-                  argText = argText.slice(0, -1) + '0' + argText.slice(-1);
+                  argText = argText.slice(0, -1) + "0" + argText.slice(-1);
                 }
               } else if (next == 102 || next == 70) {
                 argText = currArg.toFixed(effectivePrecision);
                 if (currArg === 0 && __reallyNegative(currArg)) {
-                  argText = '-' + argText;
+                  argText = "-" + argText;
                 }
               }
 
-              var parts = argText.split('e');
+              var parts = argText.split("e");
               if (isGeneral && !flagAlternative) {
                 // Discard trailing zeros and periods.
-                while (parts[0].length > 1 && parts[0].indexOf('.') != -1 && (parts[0].slice(-1) == '0' || parts[0].slice(-1) == '.')) {
+                while (
+                  parts[0].length > 1 &&
+                  parts[0].indexOf(".") != -1 &&
+                  (parts[0].slice(-1) == "0" || parts[0].slice(-1) == ".")
+                ) {
                   parts[0] = parts[0].slice(0, -1);
                 }
               } else {
                 // Make sure we have a period in alternative mode.
-                if (flagAlternative && argText.indexOf('.') == -1) parts[0] += '.';
+                if (flagAlternative && argText.indexOf(".") == -1)
+                  parts[0] += ".";
                 // Zero pad until required precision.
-                while (precision > effectivePrecision++) parts[0] += '0';
+                while (precision > effectivePrecision++) parts[0] += "0";
               }
-              argText = parts[0] + (parts.length > 1 ? 'e' + parts[1] : '');
+              argText = parts[0] + (parts.length > 1 ? "e" + parts[1] : "");
 
               // Capitalize 'E' if needed.
               if (next == 69) argText = argText.toUpperCase();
@@ -138797,9 +139150,9 @@ function zbarProcessImageData(imgData) {
               // Add sign.
               if (currArg >= 0) {
                 if (flagAlwaysSigned) {
-                  argText = '+' + argText;
+                  argText = "+" + argText;
                 } else if (flagPadSign) {
-                  argText = ' ' + argText;
+                  argText = " " + argText;
                 }
               }
             }
@@ -138807,12 +139160,12 @@ function zbarProcessImageData(imgData) {
             // Add padding.
             while (argText.length < width) {
               if (flagLeftAlign) {
-                argText += ' ';
+                argText += " ";
               } else {
-                if (flagZeroPad && (argText[0] == '-' || argText[0] == '+')) {
-                  argText = argText[0] + '0' + argText.slice(1);
+                if (flagZeroPad && (argText[0] == "-" || argText[0] == "+")) {
+                  argText = argText[0] + "0" + argText.slice(1);
                 } else {
-                  argText = (flagZeroPad ? '0' : ' ') + argText;
+                  argText = (flagZeroPad ? "0" : " ") + argText;
                 }
               }
             }
@@ -138821,15 +139174,15 @@ function zbarProcessImageData(imgData) {
             if (next < 97) argText = argText.toUpperCase();
 
             // Insert the result into the buffer.
-            argText.split('').forEach(function(chr) {
+            argText.split("").forEach(function(chr) {
               ret.push(chr.charCodeAt(0));
             });
             break;
           }
-          case 's': {
+          case "s": {
             // String.
-            var arg = getNextArg('i8*');
-            var argLength = arg ? _strlen(arg) : '(null)'.length;
+            var arg = getNextArg("i8*");
+            var argLength = arg ? _strlen(arg) : "(null)".length;
             if (precisionSet) argLength = Math.min(argLength, precision);
             if (!flagLeftAlign) {
               while (argLength < width--) {
@@ -138841,7 +139194,9 @@ function zbarProcessImageData(imgData) {
                 ret.push(HEAPU8[arg++ >> 0]);
               }
             } else {
-              ret = ret.concat(intArrayFromString('(null)'.substr(0, argLength), true));
+              ret = ret.concat(
+                intArrayFromString("(null)".substr(0, argLength), true)
+              );
             }
             if (flagLeftAlign) {
               while (argLength < width--) {
@@ -138850,22 +139205,22 @@ function zbarProcessImageData(imgData) {
             }
             break;
           }
-          case 'c': {
+          case "c": {
             // Character.
-            if (flagLeftAlign) ret.push(getNextArg('i8'));
+            if (flagLeftAlign) ret.push(getNextArg("i8"));
             while (--width > 0) {
               ret.push(32);
             }
-            if (!flagLeftAlign) ret.push(getNextArg('i8'));
+            if (!flagLeftAlign) ret.push(getNextArg("i8"));
             break;
           }
-          case 'n': {
+          case "n": {
             // Write the length written so far to the next parameter.
-            var ptr = getNextArg('i32*');
+            var ptr = getNextArg("i32*");
             HEAP32[ptr >> 2] = ret.length;
             break;
           }
-          case '%': {
+          case "%": {
             // Literal percent sign.
             ret.push(curr);
             break;
@@ -138892,7 +139247,12 @@ function zbarProcessImageData(imgData) {
     // http://pubs.opengroup.org/onlinepubs/000095399/functions/printf.html
     var result = __formatString(format, varargs);
     var stack = Runtime.stackSave();
-    var ret = _fwrite(allocate(result, 'i8', ALLOC_STACK), 1, result.length, stream);
+    var ret = _fwrite(
+      allocate(result, "i8", ALLOC_STACK),
+      1,
+      result.length,
+      stream
+    );
     Runtime.stackRestore(stack);
     return ret;
   }
@@ -138915,22 +139275,22 @@ function zbarProcessImageData(imgData) {
     // http://pubs.opengroup.org/onlinepubs/000095399/functions/fopen.html
     var flags;
     mode = Pointer_stringify(mode);
-    if (mode[0] == 'r') {
-      if (mode.indexOf('+') != -1) {
+    if (mode[0] == "r") {
+      if (mode.indexOf("+") != -1) {
         flags = 2;
       } else {
         flags = 0;
       }
-    } else if (mode[0] == 'w') {
-      if (mode.indexOf('+') != -1) {
+    } else if (mode[0] == "w") {
+      if (mode.indexOf("+") != -1) {
         flags = 2;
       } else {
         flags = 1;
       }
       flags |= 64;
       flags |= 512;
-    } else if (mode[0] == 'a') {
-      if (mode.indexOf('+') != -1) {
+    } else if (mode[0] == "a") {
+      if (mode.indexOf("+") != -1) {
         flags = 2;
       } else {
         flags = 1;
@@ -138941,7 +139301,11 @@ function zbarProcessImageData(imgData) {
       ___setErrNo(ERRNO_CODES.EINVAL);
       return 0;
     }
-    var fd = _open(filename, flags, allocate([0x1ff, 0, 0, 0], 'i32', ALLOC_STACK)); // All creation permissions.
+    var fd = _open(
+      filename,
+      flags,
+      allocate([0x1ff, 0, 0, 0], "i32", ALLOC_STACK)
+    ); // All creation permissions.
     return fd === -1 ? 0 : FS.getPtrForStream(FS.getStream(fd));
   }
 
@@ -138985,12 +139349,12 @@ function zbarProcessImageData(imgData) {
     return nonzero;
   }
 
-  Module['_i64Add'] = _i64Add;
+  Module["_i64Add"] = _i64Add;
 
   function _js_read_image(dataPtr, len) {
-    var HEAPU8 = Module['HEAPU8'];
+    var HEAPU8 = Module["HEAPU8"];
     var array = HEAPU8.subarray(dataPtr, dataPtr + len);
-    Module['getImageData'](array);
+    Module["getImageData"](array);
     return array.length;
   }
 
@@ -138999,9 +139363,13 @@ function zbarProcessImageData(imgData) {
     // http://pubs.opengroup.org/onlinepubs/000095399/functions/usleep.html
     // We're single-threaded, so use a busy loop. Super-ugly.
     var msec = useconds / 1000;
-    if (ENVIRONMENT_IS_WEB && window['performance'] && window['performance']['now']) {
-      var start = window['performance']['now']();
-      while (window['performance']['now']() - start < msec) {
+    if (
+      ENVIRONMENT_IS_WEB &&
+      window["performance"] &&
+      window["performance"]["now"]
+    ) {
+      var start = window["performance"]["now"]();
+      while (window["performance"]["now"]() - start < msec) {
         // Do nothing.
       }
     } else {
@@ -139042,21 +139410,21 @@ function zbarProcessImageData(imgData) {
       Browser.mainLoop.scheduler = function Browser_mainLoop_scheduler() {
         setTimeout(Browser.mainLoop.runner, value); // doing this each time means that on exception, we stop
       };
-      Browser.mainLoop.method = 'timeout';
+      Browser.mainLoop.method = "timeout";
     } else if (mode == 1 /*EM_TIMING_RAF*/) {
       Browser.mainLoop.scheduler = function Browser_mainLoop_scheduler() {
         Browser.requestAnimationFrame(Browser.mainLoop.runner);
       };
-      Browser.mainLoop.method = 'rAF';
+      Browser.mainLoop.method = "rAF";
     }
     return 0;
   }
   function _emscripten_set_main_loop(func, fps, simulateInfiniteLoop, arg) {
-    Module['noExitRuntime'] = true;
+    Module["noExitRuntime"] = true;
 
     assert(
       !Browser.mainLoop.func,
-      'emscripten_set_main_loop: there can only be one main loop function at once: call emscripten_cancel_main_loop to cancel the previous one before setting a new one with different parameters.'
+      "emscripten_set_main_loop: there can only be one main loop function at once: call emscripten_cancel_main_loop to cancel the previous one before setting a new one with different parameters."
     );
 
     Browser.mainLoop.func = func;
@@ -139081,7 +139449,13 @@ function zbarProcessImageData(imgData) {
             Browser.mainLoop.remainingBlockers = (8 * remaining + next) / 9;
           }
         }
-        console.log('main loop blocker "' + blocker.name + '" took ' + (Date.now() - start) + ' ms'); //, left: ' + Browser.mainLoop.remainingBlockers);
+        console.log(
+          'main loop blocker "' +
+            blocker.name +
+            '" took ' +
+            (Date.now() - start) +
+            " ms"
+        ); //, left: ' + Browser.mainLoop.remainingBlockers);
         Browser.mainLoop.updateStatus();
         setTimeout(Browser.mainLoop.runner, 0);
         return;
@@ -139091,7 +139465,8 @@ function zbarProcessImageData(imgData) {
       if (thisMainLoopId < Browser.mainLoop.currentlyRunningMainloop) return;
 
       // Implement very basic swap interval control
-      Browser.mainLoop.currentFrameNumber = (Browser.mainLoop.currentFrameNumber + 1) | 0;
+      Browser.mainLoop.currentFrameNumber =
+        (Browser.mainLoop.currentFrameNumber + 1) | 0;
       if (
         Browser.mainLoop.timingMode == 1 /*EM_TIMING_RAF*/ &&
         Browser.mainLoop.timingValue > 1 &&
@@ -139105,18 +139480,18 @@ function zbarProcessImageData(imgData) {
       // Signal GL rendering layer that processing of a new frame is about to start. This helps it optimize
       // VBO double-buffering and reduce GPU stalls.
 
-      if (Browser.mainLoop.method === 'timeout' && Module.ctx) {
+      if (Browser.mainLoop.method === "timeout" && Module.ctx) {
         Module.printErr(
-          'Looks like you are rendering without using requestAnimationFrame for the main loop. You should use 0 for the frame rate in emscripten_set_main_loop in order to use requestAnimationFrame, as that can greatly improve your frame rates!'
+          "Looks like you are rendering without using requestAnimationFrame for the main loop. You should use 0 for the frame rate in emscripten_set_main_loop in order to use requestAnimationFrame, as that can greatly improve your frame rates!"
         );
-        Browser.mainLoop.method = ''; // just warn once per call to set main loop
+        Browser.mainLoop.method = ""; // just warn once per call to set main loop
       }
 
       Browser.mainLoop.runIter(function() {
-        if (typeof arg !== 'undefined') {
-          Runtime.dynCall('vi', func, [arg]);
+        if (typeof arg !== "undefined") {
+          Runtime.dynCall("vi", func, [arg]);
         } else {
-          Runtime.dynCall('v', func);
+          Runtime.dynCall("v", func);
         }
       });
 
@@ -139127,24 +139502,29 @@ function zbarProcessImageData(imgData) {
       // to queue the newest produced audio samples.
       // TODO: Consider adding pre- and post- rAF callbacks so that GL.newRenderingFrameStarted() and SDL.audio.queueNewAudioData()
       //       do not need to be hardcoded into this function, but can be more generic.
-      if (typeof SDL === 'object' && SDL.audio && SDL.audio.queueNewAudioData) SDL.audio.queueNewAudioData();
+      if (typeof SDL === "object" && SDL.audio && SDL.audio.queueNewAudioData)
+        SDL.audio.queueNewAudioData();
 
       Browser.mainLoop.scheduler();
     };
 
-    if (fps && fps > 0) _emscripten_set_main_loop_timing(0 /*EM_TIMING_SETTIMEOUT*/, 1000.0 / fps);
+    if (fps && fps > 0)
+      _emscripten_set_main_loop_timing(
+        0 /*EM_TIMING_SETTIMEOUT*/,
+        1000.0 / fps
+      );
     else _emscripten_set_main_loop_timing(1 /*EM_TIMING_RAF*/, 1); // Do rAF by rendering each frame (no decimating)
 
     Browser.mainLoop.scheduler();
 
     if (simulateInfiniteLoop) {
-      throw 'SimulateInfiniteLoop';
+      throw "SimulateInfiniteLoop";
     }
   }
   var Browser = {
     mainLoop: {
       scheduler: null,
-      method: '',
+      method: "",
       currentlyRunningMainloop: 0,
       func: null,
       arg: 0,
@@ -139166,25 +139546,27 @@ function zbarProcessImageData(imgData) {
         _emscripten_set_main_loop_timing(timingMode, timingValue);
       },
       updateStatus: function() {
-        if (Module['setStatus']) {
-          var message = Module['statusMessage'] || 'Please wait...';
+        if (Module["setStatus"]) {
+          var message = Module["statusMessage"] || "Please wait...";
           var remaining = Browser.mainLoop.remainingBlockers;
           var expected = Browser.mainLoop.expectedBlockers;
           if (remaining) {
             if (remaining < expected) {
-              Module['setStatus'](message + ' (' + (expected - remaining) + '/' + expected + ')');
+              Module["setStatus"](
+                message + " (" + (expected - remaining) + "/" + expected + ")"
+              );
             } else {
-              Module['setStatus'](message);
+              Module["setStatus"](message);
             }
           } else {
-            Module['setStatus']('');
+            Module["setStatus"]("");
           }
         }
       },
       runIter: function(func) {
         if (ABORT) return;
-        if (Module['preMainLoop']) {
-          var preRet = Module['preMainLoop']();
+        if (Module["preMainLoop"]) {
+          var preRet = Module["preMainLoop"]();
           if (preRet === false) {
             return; // |return false| skips a frame
           }
@@ -139195,11 +139577,12 @@ function zbarProcessImageData(imgData) {
           if (e instanceof ExitStatus) {
             return;
           } else {
-            if (e && typeof e === 'object' && e.stack) Module.printErr('exception thrown: ' + [e, e.stack]);
+            if (e && typeof e === "object" && e.stack)
+              Module.printErr("exception thrown: " + [e, e.stack]);
             throw e;
           }
         }
-        if (Module['postMainLoop']) Module['postMainLoop']();
+        if (Module["postMainLoop"]) Module["postMainLoop"]();
       }
     },
     isFullScreen: false,
@@ -139207,7 +139590,7 @@ function zbarProcessImageData(imgData) {
     moduleContextCreatedCallbacks: [],
     workers: [],
     init: function() {
-      if (!Module['preloadPlugins']) Module['preloadPlugins'] = []; // needs to exist even in workers
+      if (!Module["preloadPlugins"]) Module["preloadPlugins"] = []; // needs to exist even in workers
 
       if (Browser.initted) return;
       Browser.initted = true;
@@ -139217,19 +139600,28 @@ function zbarProcessImageData(imgData) {
         Browser.hasBlobConstructor = true;
       } catch (e) {
         Browser.hasBlobConstructor = false;
-        console.log('warning: no blob constructor, cannot create blobs with mimetypes');
+        console.log(
+          "warning: no blob constructor, cannot create blobs with mimetypes"
+        );
       }
       Browser.BlobBuilder =
-        typeof MozBlobBuilder != 'undefined'
+        typeof MozBlobBuilder != "undefined"
           ? MozBlobBuilder
-          : typeof WebKitBlobBuilder != 'undefined'
-            ? WebKitBlobBuilder
-            : !Browser.hasBlobConstructor
-              ? console.log('warning: no BlobBuilder')
-              : null;
-      Browser.URLObject = typeof window != 'undefined' ? (window.URL ? window.URL : window.webkitURL) : undefined;
-      if (!Module.noImageDecoding && typeof Browser.URLObject === 'undefined') {
-        console.log('warning: Browser does not support creating object URLs. Built-in browser image decoding will not be available.');
+          : typeof WebKitBlobBuilder != "undefined"
+          ? WebKitBlobBuilder
+          : !Browser.hasBlobConstructor
+          ? console.log("warning: no BlobBuilder")
+          : null;
+      Browser.URLObject =
+        typeof window != "undefined"
+          ? window.URL
+            ? window.URL
+            : window.webkitURL
+          : undefined;
+      if (!Module.noImageDecoding && typeof Browser.URLObject === "undefined") {
+        console.log(
+          "warning: Browser does not support creating object URLs. Built-in browser image decoding will not be available."
+        );
         Module.noImageDecoding = true;
       }
 
@@ -139242,10 +139634,15 @@ function zbarProcessImageData(imgData) {
       // might create some side data structure for use later (like an Image element, etc.).
 
       var imagePlugin = {};
-      imagePlugin['canHandle'] = function imagePlugin_canHandle(name) {
+      imagePlugin["canHandle"] = function imagePlugin_canHandle(name) {
         return !Module.noImageDecoding && /\.(jpg|jpeg|png|bmp)$/i.test(name);
       };
-      imagePlugin['handle'] = function imagePlugin_handle(byteArray, name, onload, onerror) {
+      imagePlugin["handle"] = function imagePlugin_handle(
+        byteArray,
+        name,
+        onload,
+        onerror
+      ) {
         var b = null;
         if (Browser.hasBlobConstructor) {
           try {
@@ -139253,10 +139650,16 @@ function zbarProcessImageData(imgData) {
             if (b.size !== byteArray.length) {
               // Safari bug #118630
               // Safari's Blob can only take an ArrayBuffer
-              b = new Blob([new Uint8Array(byteArray).buffer], { type: Browser.getMimetype(name) });
+              b = new Blob([new Uint8Array(byteArray).buffer], {
+                type: Browser.getMimetype(name)
+              });
             }
           } catch (e) {
-            Runtime.warnOnce('Blob constructor present but fails: ' + e + '; falling back to blob builder');
+            Runtime.warnOnce(
+              "Blob constructor present but fails: " +
+                e +
+                "; falling back to blob builder"
+            );
           }
         }
         if (!b) {
@@ -139267,40 +139670,48 @@ function zbarProcessImageData(imgData) {
         var url = Browser.URLObject.createObjectURL(b);
         var img = new Image();
         img.onload = function img_onload() {
-          assert(img.complete, 'Image ' + name + ' could not be decoded');
-          var canvas = document.createElement('canvas');
+          assert(img.complete, "Image " + name + " could not be decoded");
+          var canvas = document.createElement("canvas");
           canvas.width = img.width;
           canvas.height = img.height;
-          var ctx = canvas.getContext('2d');
+          var ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0);
-          Module['preloadedImages'][name] = canvas;
+          Module["preloadedImages"][name] = canvas;
           Browser.URLObject.revokeObjectURL(url);
           if (onload) onload(byteArray);
         };
         img.onerror = function img_onerror(event) {
-          console.log('Image ' + url + ' could not be decoded');
+          console.log("Image " + url + " could not be decoded");
           if (onerror) onerror();
         };
         img.src = url;
       };
-      Module['preloadPlugins'].push(imagePlugin);
+      Module["preloadPlugins"].push(imagePlugin);
 
       var audioPlugin = {};
-      audioPlugin['canHandle'] = function audioPlugin_canHandle(name) {
-        return !Module.noAudioDecoding && name.substr(-4) in { '.ogg': 1, '.wav': 1, '.mp3': 1 };
+      audioPlugin["canHandle"] = function audioPlugin_canHandle(name) {
+        return (
+          !Module.noAudioDecoding &&
+          name.substr(-4) in { ".ogg": 1, ".wav": 1, ".mp3": 1 }
+        );
       };
-      audioPlugin['handle'] = function audioPlugin_handle(byteArray, name, onload, onerror) {
+      audioPlugin["handle"] = function audioPlugin_handle(
+        byteArray,
+        name,
+        onload,
+        onerror
+      ) {
         var done = false;
         function finish(audio) {
           if (done) return;
           done = true;
-          Module['preloadedAudios'][name] = audio;
+          Module["preloadedAudios"][name] = audio;
           if (onload) onload(byteArray);
         }
         function fail() {
           if (done) return;
           done = true;
-          Module['preloadedAudios'][name] = new Audio(); // empty shim
+          Module["preloadedAudios"][name] = new Audio(); // empty shim
           if (onerror) onerror();
         }
         if (Browser.hasBlobConstructor) {
@@ -139312,7 +139723,7 @@ function zbarProcessImageData(imgData) {
           var url = Browser.URLObject.createObjectURL(b); // XXX we never revoke this!
           var audio = new Audio();
           audio.addEventListener(
-            'canplaythrough',
+            "canplaythrough",
             function() {
               finish(audio);
             },
@@ -139320,11 +139731,16 @@ function zbarProcessImageData(imgData) {
           ); // use addEventListener due to chromium bug 124926
           audio.onerror = function audio_onerror(event) {
             if (done) return;
-            console.log('warning: browser could not fully decode audio ' + name + ', trying slower base64 approach');
+            console.log(
+              "warning: browser could not fully decode audio " +
+                name +
+                ", trying slower base64 approach"
+            );
             function encode64(data) {
-              var BASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-              var PAD = '=';
-              var ret = '';
+              var BASE =
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+              var PAD = "=";
+              var ret = "";
               var leftchar = 0;
               var leftbits = 0;
               for (var i = 0; i < data.length; i++) {
@@ -139345,7 +139761,11 @@ function zbarProcessImageData(imgData) {
               }
               return ret;
             }
-            audio.src = 'data:audio/x-' + name.substr(-3) + ';base64,' + encode64(byteArray);
+            audio.src =
+              "data:audio/x-" +
+              name.substr(-3) +
+              ";base64," +
+              encode64(byteArray);
             finish(audio); // we don't wait for confirmation this worked - but it's worth trying
           };
           audio.src = url;
@@ -139357,44 +139777,60 @@ function zbarProcessImageData(imgData) {
           return fail();
         }
       };
-      Module['preloadPlugins'].push(audioPlugin);
+      Module["preloadPlugins"].push(audioPlugin);
 
       // Canvas event setup
 
-      var canvas = Module['canvas'];
+      var canvas = Module["canvas"];
       function pointerLockChange() {
         Browser.pointerLock =
-          document['pointerLockElement'] === canvas ||
-          document['mozPointerLockElement'] === canvas ||
-          document['webkitPointerLockElement'] === canvas ||
-          document['msPointerLockElement'] === canvas;
+          document["pointerLockElement"] === canvas ||
+          document["mozPointerLockElement"] === canvas ||
+          document["webkitPointerLockElement"] === canvas ||
+          document["msPointerLockElement"] === canvas;
       }
       if (canvas) {
         // forced aspect ratio can be enabled by defining 'forcedAspectRatio' on Module
         // Module['forcedAspectRatio'] = 4 / 3;
 
         canvas.requestPointerLock =
-          canvas['requestPointerLock'] ||
-          canvas['mozRequestPointerLock'] ||
-          canvas['webkitRequestPointerLock'] ||
-          canvas['msRequestPointerLock'] ||
+          canvas["requestPointerLock"] ||
+          canvas["mozRequestPointerLock"] ||
+          canvas["webkitRequestPointerLock"] ||
+          canvas["msRequestPointerLock"] ||
           function() {};
         canvas.exitPointerLock =
-          document['exitPointerLock'] ||
-          document['mozExitPointerLock'] ||
-          document['webkitExitPointerLock'] ||
-          document['msExitPointerLock'] ||
+          document["exitPointerLock"] ||
+          document["mozExitPointerLock"] ||
+          document["webkitExitPointerLock"] ||
+          document["msExitPointerLock"] ||
           function() {}; // no-op if function does not exist
         canvas.exitPointerLock = canvas.exitPointerLock.bind(document);
 
-        document.addEventListener('pointerlockchange', pointerLockChange, false);
-        document.addEventListener('mozpointerlockchange', pointerLockChange, false);
-        document.addEventListener('webkitpointerlockchange', pointerLockChange, false);
-        document.addEventListener('mspointerlockchange', pointerLockChange, false);
+        document.addEventListener(
+          "pointerlockchange",
+          pointerLockChange,
+          false
+        );
+        document.addEventListener(
+          "mozpointerlockchange",
+          pointerLockChange,
+          false
+        );
+        document.addEventListener(
+          "webkitpointerlockchange",
+          pointerLockChange,
+          false
+        );
+        document.addEventListener(
+          "mspointerlockchange",
+          pointerLockChange,
+          false
+        );
 
-        if (Module['elementPointerLock']) {
+        if (Module["elementPointerLock"]) {
           canvas.addEventListener(
-            'click',
+            "click",
             function(ev) {
               if (!Browser.pointerLock && canvas.requestPointerLock) {
                 canvas.requestPointerLock();
@@ -139406,7 +139842,12 @@ function zbarProcessImageData(imgData) {
         }
       }
     },
-    createContext: function(canvas, useWebGL, setInModule, webGLContextAttributes) {
+    createContext: function(
+      canvas,
+      useWebGL,
+      setInModule,
+      webGLContextAttributes
+    ) {
       if (useWebGL && Module.ctx && canvas == Module.canvas) return Module.ctx; // no need to recreate GL context if it's already been created for this canvas.
 
       var ctx;
@@ -139429,16 +139870,19 @@ function zbarProcessImageData(imgData) {
           ctx = GL.getContext(contextHandle).GLctx;
         }
         // Set the background of the WebGL canvas to black
-        canvas.style.backgroundColor = 'black';
+        canvas.style.backgroundColor = "black";
       } else {
-        ctx = canvas.getContext('2d');
+        ctx = canvas.getContext("2d");
       }
 
       if (!ctx) return null;
 
       if (setInModule) {
         if (!useWebGL)
-          assert(typeof GLctx === 'undefined', 'cannot set in module if GLctx is used, but we are a non-GL context that would replace it');
+          assert(
+            typeof GLctx === "undefined",
+            "cannot set in module if GLctx is used, but we are a non-GL context that would replace it"
+          );
 
         Module.ctx = ctx;
         if (useWebGL) GL.makeContextCurrent(contextHandle);
@@ -139457,30 +139901,32 @@ function zbarProcessImageData(imgData) {
     requestFullScreen: function(lockPointer, resizeCanvas) {
       Browser.lockPointer = lockPointer;
       Browser.resizeCanvas = resizeCanvas;
-      if (typeof Browser.lockPointer === 'undefined') Browser.lockPointer = true;
-      if (typeof Browser.resizeCanvas === 'undefined') Browser.resizeCanvas = false;
+      if (typeof Browser.lockPointer === "undefined")
+        Browser.lockPointer = true;
+      if (typeof Browser.resizeCanvas === "undefined")
+        Browser.resizeCanvas = false;
 
-      var canvas = Module['canvas'];
+      var canvas = Module["canvas"];
       function fullScreenChange() {
         Browser.isFullScreen = false;
         var canvasContainer = canvas.parentNode;
         if (
-          (document['webkitFullScreenElement'] ||
-            document['webkitFullscreenElement'] ||
-            document['mozFullScreenElement'] ||
-            document['mozFullscreenElement'] ||
-            document['fullScreenElement'] ||
-            document['fullscreenElement'] ||
-            document['msFullScreenElement'] ||
-            document['msFullscreenElement'] ||
-            document['webkitCurrentFullScreenElement']) === canvasContainer
+          (document["webkitFullScreenElement"] ||
+            document["webkitFullscreenElement"] ||
+            document["mozFullScreenElement"] ||
+            document["mozFullscreenElement"] ||
+            document["fullScreenElement"] ||
+            document["fullscreenElement"] ||
+            document["msFullScreenElement"] ||
+            document["msFullscreenElement"] ||
+            document["webkitCurrentFullScreenElement"]) === canvasContainer
         ) {
           canvas.cancelFullScreen =
-            document['cancelFullScreen'] ||
-            document['mozCancelFullScreen'] ||
-            document['webkitCancelFullScreen'] ||
-            document['msExitFullscreen'] ||
-            document['exitFullscreen'] ||
+            document["cancelFullScreen"] ||
+            document["mozCancelFullScreen"] ||
+            document["webkitCancelFullScreen"] ||
+            document["msExitFullscreen"] ||
+            document["exitFullscreen"] ||
             function() {};
           canvas.cancelFullScreen = canvas.cancelFullScreen.bind(document);
           if (Browser.lockPointer) canvas.requestPointerLock();
@@ -139493,31 +139939,46 @@ function zbarProcessImageData(imgData) {
 
           if (Browser.resizeCanvas) Browser.setWindowedCanvasSize();
         }
-        if (Module['onFullScreen']) Module['onFullScreen'](Browser.isFullScreen);
+        if (Module["onFullScreen"])
+          Module["onFullScreen"](Browser.isFullScreen);
         Browser.updateCanvasDimensions(canvas);
       }
 
       if (!Browser.fullScreenHandlersInstalled) {
         Browser.fullScreenHandlersInstalled = true;
-        document.addEventListener('fullscreenchange', fullScreenChange, false);
-        document.addEventListener('mozfullscreenchange', fullScreenChange, false);
-        document.addEventListener('webkitfullscreenchange', fullScreenChange, false);
-        document.addEventListener('MSFullscreenChange', fullScreenChange, false);
+        document.addEventListener("fullscreenchange", fullScreenChange, false);
+        document.addEventListener(
+          "mozfullscreenchange",
+          fullScreenChange,
+          false
+        );
+        document.addEventListener(
+          "webkitfullscreenchange",
+          fullScreenChange,
+          false
+        );
+        document.addEventListener(
+          "MSFullscreenChange",
+          fullScreenChange,
+          false
+        );
       }
 
       // create a new parent to ensure the canvas has no siblings. this allows browsers to optimize full screen performance when its parent is the full screen root
-      var canvasContainer = document.createElement('div');
+      var canvasContainer = document.createElement("div");
       canvas.parentNode.insertBefore(canvasContainer, canvas);
       canvasContainer.appendChild(canvas);
 
       // use parent of canvas as full screen root to allow aspect ratio correction (Firefox stretches the root to screen size)
       canvasContainer.requestFullScreen =
-        canvasContainer['requestFullScreen'] ||
-        canvasContainer['mozRequestFullScreen'] ||
-        canvasContainer['msRequestFullscreen'] ||
-        (canvasContainer['webkitRequestFullScreen']
+        canvasContainer["requestFullScreen"] ||
+        canvasContainer["mozRequestFullScreen"] ||
+        canvasContainer["msRequestFullscreen"] ||
+        (canvasContainer["webkitRequestFullScreen"]
           ? function() {
-              canvasContainer['webkitRequestFullScreen'](Element['ALLOW_KEYBOARD_INPUT']);
+              canvasContainer["webkitRequestFullScreen"](
+                Element["ALLOW_KEYBOARD_INPUT"]
+              );
             }
           : null);
       canvasContainer.requestFullScreen();
@@ -139538,17 +139999,17 @@ function zbarProcessImageData(imgData) {
       setTimeout(func, delay);
     },
     requestAnimationFrame: function requestAnimationFrame(func) {
-      if (typeof window === 'undefined') {
+      if (typeof window === "undefined") {
         // Provide fallback to setTimeout if window is undefined (e.g. in Node.js)
         Browser.fakeRequestAnimationFrame(func);
       } else {
         if (!window.requestAnimationFrame) {
           window.requestAnimationFrame =
-            window['requestAnimationFrame'] ||
-            window['mozRequestAnimationFrame'] ||
-            window['webkitRequestAnimationFrame'] ||
-            window['msRequestAnimationFrame'] ||
-            window['oRequestAnimationFrame'] ||
+            window["requestAnimationFrame"] ||
+            window["mozRequestAnimationFrame"] ||
+            window["webkitRequestAnimationFrame"] ||
+            window["msRequestAnimationFrame"] ||
+            window["oRequestAnimationFrame"] ||
             Browser.fakeRequestAnimationFrame;
         }
         window.requestAnimationFrame(func);
@@ -139565,54 +140026,65 @@ function zbarProcessImageData(imgData) {
       });
     },
     safeSetTimeout: function(func, timeout) {
-      Module['noExitRuntime'] = true;
+      Module["noExitRuntime"] = true;
       return setTimeout(function() {
         if (!ABORT) func();
       }, timeout);
     },
     safeSetInterval: function(func, timeout) {
-      Module['noExitRuntime'] = true;
+      Module["noExitRuntime"] = true;
       return setInterval(function() {
         if (!ABORT) func();
       }, timeout);
     },
     getMimetype: function(name) {
       return {
-        jpg: 'image/jpeg',
-        jpeg: 'image/jpeg',
-        png: 'image/png',
-        bmp: 'image/bmp',
-        ogg: 'audio/ogg',
-        wav: 'audio/wav',
-        mp3: 'audio/mpeg'
-      }[name.substr(name.lastIndexOf('.') + 1)];
+        jpg: "image/jpeg",
+        jpeg: "image/jpeg",
+        png: "image/png",
+        bmp: "image/bmp",
+        ogg: "audio/ogg",
+        wav: "audio/wav",
+        mp3: "audio/mpeg"
+      }[name.substr(name.lastIndexOf(".") + 1)];
     },
     getUserMedia: function(func) {
       if (!window.getUserMedia) {
-        window.getUserMedia = navigator['getUserMedia'] || navigator['mozGetUserMedia'];
+        window.getUserMedia =
+          navigator["getUserMedia"] || navigator["mozGetUserMedia"];
       }
       window.getUserMedia(func);
     },
     getMovementX: function(event) {
-      return event['movementX'] || event['mozMovementX'] || event['webkitMovementX'] || 0;
+      return (
+        event["movementX"] ||
+        event["mozMovementX"] ||
+        event["webkitMovementX"] ||
+        0
+      );
     },
     getMovementY: function(event) {
-      return event['movementY'] || event['mozMovementY'] || event['webkitMovementY'] || 0;
+      return (
+        event["movementY"] ||
+        event["mozMovementY"] ||
+        event["webkitMovementY"] ||
+        0
+      );
     },
     getMouseWheelDelta: function(event) {
       var delta = 0;
       switch (event.type) {
-        case 'DOMMouseScroll':
+        case "DOMMouseScroll":
           delta = event.detail;
           break;
-        case 'mousewheel':
+        case "mousewheel":
           delta = event.wheelDelta;
           break;
-        case 'wheel':
-          delta = event['deltaY'];
+        case "wheel":
+          delta = event["deltaY"];
           break;
         default:
-          throw 'unrecognized mouse wheel event: ' + event.type;
+          throw "unrecognized mouse wheel event: " + event.type;
       }
       return delta;
     },
@@ -139628,7 +140100,7 @@ function zbarProcessImageData(imgData) {
         // When the pointer is locked, calculate the coordinates
         // based on the movement of the mouse.
         // Workaround for Firefox bug 764498
-        if (event.type != 'mousemove' && 'mozMovementX' in event) {
+        if (event.type != "mousemove" && "mozMovementX" in event) {
           Browser.mouseMovementX = Browser.mouseMovementY = 0;
         } else {
           Browser.mouseMovementX = Browser.getMovementX(event);
@@ -139636,7 +140108,7 @@ function zbarProcessImageData(imgData) {
         }
 
         // check if SDL is available
-        if (typeof SDL != 'undefined') {
+        if (typeof SDL != "undefined") {
           Browser.mouseX = SDL.mouseX + Browser.mouseMovementX;
           Browser.mouseY = SDL.mouseY + Browser.mouseMovementY;
         } else {
@@ -139648,17 +140120,27 @@ function zbarProcessImageData(imgData) {
       } else {
         // Otherwise, calculate the movement based on the changes
         // in the coordinates.
-        var rect = Module['canvas'].getBoundingClientRect();
-        var cw = Module['canvas'].width;
-        var ch = Module['canvas'].height;
+        var rect = Module["canvas"].getBoundingClientRect();
+        var cw = Module["canvas"].width;
+        var ch = Module["canvas"].height;
 
         // Neither .scrollX or .pageXOffset are defined in a spec, but
         // we prefer .scrollX because it is currently in a spec draft.
         // (see: http://www.w3.org/TR/2013/WD-cssom-view-20131217/)
-        var scrollX = typeof window.scrollX !== 'undefined' ? window.scrollX : window.pageXOffset;
-        var scrollY = typeof window.scrollY !== 'undefined' ? window.scrollY : window.pageYOffset;
+        var scrollX =
+          typeof window.scrollX !== "undefined"
+            ? window.scrollX
+            : window.pageXOffset;
+        var scrollY =
+          typeof window.scrollY !== "undefined"
+            ? window.scrollY
+            : window.pageYOffset;
 
-        if (event.type === 'touchstart' || event.type === 'touchend' || event.type === 'touchmove') {
+        if (
+          event.type === "touchstart" ||
+          event.type === "touchend" ||
+          event.type === "touchmove"
+        ) {
           var touch = event.touch;
           if (touch === undefined) {
             return; // the "touch" property is only defined in SDL
@@ -139671,11 +140153,12 @@ function zbarProcessImageData(imgData) {
 
           var coords = { x: adjustedX, y: adjustedY };
 
-          if (event.type === 'touchstart') {
+          if (event.type === "touchstart") {
             Browser.lastTouches[touch.identifier] = coords;
             Browser.touches[touch.identifier] = coords;
-          } else if (event.type === 'touchend' || event.type === 'touchmove') {
-            Browser.lastTouches[touch.identifier] = Browser.touches[touch.identifier];
+          } else if (event.type === "touchend" || event.type === "touchmove") {
+            Browser.lastTouches[touch.identifier] =
+              Browser.touches[touch.identifier];
             Browser.touches[touch.identifier] = { x: adjustedX, y: adjustedY };
           }
           return;
@@ -139698,8 +140181,8 @@ function zbarProcessImageData(imgData) {
     },
     xhrLoad: function(url, onload, onerror) {
       var xhr = new XMLHttpRequest();
-      xhr.open('GET', url, true);
-      xhr.responseType = 'arraybuffer';
+      xhr.open("GET", url, true);
+      xhr.responseType = "arraybuffer";
       xhr.onload = function xhr_onload() {
         if (xhr.status == 200 || (xhr.status == 0 && xhr.response)) {
           // file URLs can return 0
@@ -139715,9 +140198,12 @@ function zbarProcessImageData(imgData) {
       Browser.xhrLoad(
         url,
         function(arrayBuffer) {
-          assert(arrayBuffer, 'Loading data file "' + url + '" failed (no arrayBuffer).');
+          assert(
+            arrayBuffer,
+            'Loading data file "' + url + '" failed (no arrayBuffer).'
+          );
           onload(new Uint8Array(arrayBuffer));
-          if (!noRunDep) removeRunDependency('al ' + url);
+          if (!noRunDep) removeRunDependency("al " + url);
         },
         function(event) {
           if (onerror) {
@@ -139727,17 +140213,17 @@ function zbarProcessImageData(imgData) {
           }
         }
       );
-      if (!noRunDep) addRunDependency('al ' + url);
+      if (!noRunDep) addRunDependency("al " + url);
     },
     resizeListeners: [],
     updateResizeListeners: function() {
-      var canvas = Module['canvas'];
+      var canvas = Module["canvas"];
       Browser.resizeListeners.forEach(function(listener) {
         listener(canvas.width, canvas.height);
       });
     },
     setCanvasSize: function(width, height, noUpdates) {
-      var canvas = Module['canvas'];
+      var canvas = Module["canvas"];
       Browser.updateCanvasDimensions(canvas, width, height);
       if (!noUpdates) Browser.updateResizeListeners();
     },
@@ -139745,7 +140231,7 @@ function zbarProcessImageData(imgData) {
     windowedHeight: 0,
     setFullScreenCanvasSize: function() {
       // check if SDL is available
-      if (typeof SDL != 'undefined') {
+      if (typeof SDL != "undefined") {
         var flags = HEAPU32[(SDL.screen + Runtime.QUANTUM_SIZE * 0) >> 2];
         flags = flags | 0x00800000; // set SDL_FULLSCREEN flag
         HEAP32[(SDL.screen + Runtime.QUANTUM_SIZE * 0) >> 2] = flags;
@@ -139754,7 +140240,7 @@ function zbarProcessImageData(imgData) {
     },
     setWindowedCanvasSize: function() {
       // check if SDL is available
-      if (typeof SDL != 'undefined') {
+      if (typeof SDL != "undefined") {
         var flags = HEAPU32[(SDL.screen + Runtime.QUANTUM_SIZE * 0) >> 2];
         flags = flags & ~0x00800000; // clear SDL_FULLSCREEN flag
         HEAP32[(SDL.screen + Runtime.QUANTUM_SIZE * 0) >> 2] = flags;
@@ -139771,24 +140257,24 @@ function zbarProcessImageData(imgData) {
       }
       var w = wNative;
       var h = hNative;
-      if (Module['forcedAspectRatio'] && Module['forcedAspectRatio'] > 0) {
-        if (w / h < Module['forcedAspectRatio']) {
-          w = Math.round(h * Module['forcedAspectRatio']);
+      if (Module["forcedAspectRatio"] && Module["forcedAspectRatio"] > 0) {
+        if (w / h < Module["forcedAspectRatio"]) {
+          w = Math.round(h * Module["forcedAspectRatio"]);
         } else {
-          h = Math.round(w / Module['forcedAspectRatio']);
+          h = Math.round(w / Module["forcedAspectRatio"]);
         }
       }
       if (
-        (document['webkitFullScreenElement'] ||
-          document['webkitFullscreenElement'] ||
-          document['mozFullScreenElement'] ||
-          document['mozFullscreenElement'] ||
-          document['fullScreenElement'] ||
-          document['fullscreenElement'] ||
-          document['msFullScreenElement'] ||
-          document['msFullscreenElement'] ||
-          document['webkitCurrentFullScreenElement']) === canvas.parentNode &&
-        typeof screen != 'undefined'
+        (document["webkitFullScreenElement"] ||
+          document["webkitFullscreenElement"] ||
+          document["mozFullScreenElement"] ||
+          document["mozFullscreenElement"] ||
+          document["fullScreenElement"] ||
+          document["fullscreenElement"] ||
+          document["msFullScreenElement"] ||
+          document["msFullscreenElement"] ||
+          document["webkitCurrentFullScreenElement"]) === canvas.parentNode &&
+        typeof screen != "undefined"
       ) {
         var factor = Math.min(screen.width / w, screen.height / h);
         w = Math.round(w * factor);
@@ -139797,20 +140283,20 @@ function zbarProcessImageData(imgData) {
       if (Browser.resizeCanvas) {
         if (canvas.width != w) canvas.width = w;
         if (canvas.height != h) canvas.height = h;
-        if (typeof canvas.style != 'undefined') {
-          canvas.style.removeProperty('width');
-          canvas.style.removeProperty('height');
+        if (typeof canvas.style != "undefined") {
+          canvas.style.removeProperty("width");
+          canvas.style.removeProperty("height");
         }
       } else {
         if (canvas.width != wNative) canvas.width = wNative;
         if (canvas.height != hNative) canvas.height = hNative;
-        if (typeof canvas.style != 'undefined') {
+        if (typeof canvas.style != "undefined") {
           if (w != wNative || h != hNative) {
-            canvas.style.setProperty('width', w + 'px', 'important');
-            canvas.style.setProperty('height', h + 'px', 'important');
+            canvas.style.setProperty("width", w + "px", "important");
+            canvas.style.setProperty("height", h + "px", "important");
           } else {
-            canvas.style.removeProperty('width');
-            canvas.style.removeProperty('height');
+            canvas.style.removeProperty("width");
+            canvas.style.removeProperty("height");
           }
         }
       }
@@ -139833,12 +140319,12 @@ function zbarProcessImageData(imgData) {
   }
 
   function _js_get_height() {
-    return Module['imageHeight'];
+    return Module["imageHeight"];
   }
 
-  Module['_bitshift64Ashr'] = _bitshift64Ashr;
+  Module["_bitshift64Ashr"] = _bitshift64Ashr;
 
-  Module['_bitshift64Lshr'] = _bitshift64Lshr;
+  Module["_bitshift64Lshr"] = _bitshift64Lshr;
 
   function _recv(fd, buf, len, flags) {
     var sock = SOCKFS.getSocket(fd);
@@ -139889,18 +140375,22 @@ function zbarProcessImageData(imgData) {
   var _BDtoIHigh = true;
 
   function _js_output_result(symbol, addon, data) {
-    var Pointer_stringify = Module['Pointer_stringify'];
-    Module['outputResult'](Pointer_stringify(symbol), Pointer_stringify(addon), Pointer_stringify(data));
+    var Pointer_stringify = Module["Pointer_stringify"];
+    Module["outputResult"](
+      Pointer_stringify(symbol),
+      Pointer_stringify(addon),
+      Pointer_stringify(data)
+    );
   }
 
   function _emscripten_memcpy_big(dest, src, num) {
     HEAPU8.set(HEAPU8.subarray(src, src + num), dest);
     return dest;
   }
-  Module['_memcpy'] = _memcpy;
+  Module["_memcpy"] = _memcpy;
 
   function _js_get_width() {
-    return Module['imageWidth'];
+    return Module["imageWidth"];
   }
 
   function _puts(s) {
@@ -139945,7 +140435,7 @@ function zbarProcessImageData(imgData) {
       assert(Runtime.dynamicAlloc);
       self.alloc = Runtime.dynamicAlloc;
       Runtime.dynamicAlloc = function() {
-        abort('cannot dynamically allocate, sbrk now has control');
+        abort("cannot dynamically allocate, sbrk now has control");
       };
     }
     var ret = DYNAMICTOP;
@@ -139953,7 +140443,7 @@ function zbarProcessImageData(imgData) {
     return ret; // Previous break location.
   }
 
-  Module['_memmove'] = _memmove;
+  Module["_memmove"] = _memmove;
 
   var _BItoD = true;
 
@@ -139966,7 +140456,7 @@ function zbarProcessImageData(imgData) {
     return -1;
   }
 
-  Module['_strcpy'] = _strcpy;
+  Module["_strcpy"] = _strcpy;
 
   function _sysconf(name) {
     // long sysconf(int name);
@@ -140119,7 +140609,8 @@ function zbarProcessImageData(imgData) {
       case 73:
         return 4;
       case 84: {
-        if (typeof navigator === 'object') return navigator['hardwareConcurrency'] || 1;
+        if (typeof navigator === "object")
+          return navigator["hardwareConcurrency"] || 1;
         return 1;
       }
     }
@@ -140132,7 +140623,7 @@ function zbarProcessImageData(imgData) {
   FS.staticInit();
   __ATINIT__.unshift({
     func: function() {
-      if (!Module['noFSInit'] && !FS.init.initialized) FS.init();
+      if (!Module["noFSInit"] && !FS.init.initialized) FS.init();
     }
   });
   __ATMAIN__.push({
@@ -140145,13 +140636,13 @@ function zbarProcessImageData(imgData) {
       FS.quit();
     }
   });
-  Module['FS_createFolder'] = FS.createFolder;
-  Module['FS_createPath'] = FS.createPath;
-  Module['FS_createDataFile'] = FS.createDataFile;
-  Module['FS_createPreloadedFile'] = FS.createPreloadedFile;
-  Module['FS_createLazyFile'] = FS.createLazyFile;
-  Module['FS_createLink'] = FS.createLink;
-  Module['FS_createDevice'] = FS.createDevice;
+  Module["FS_createFolder"] = FS.createFolder;
+  Module["FS_createPath"] = FS.createPath;
+  Module["FS_createDataFile"] = FS.createDataFile;
+  Module["FS_createPreloadedFile"] = FS.createPreloadedFile;
+  Module["FS_createLazyFile"] = FS.createLazyFile;
+  Module["FS_createLink"] = FS.createLink;
+  Module["FS_createDevice"] = FS.createDevice;
   __ATINIT__.unshift({
     func: function() {
       TTY.init();
@@ -140164,7 +140655,7 @@ function zbarProcessImageData(imgData) {
   });
   TTY.utf8 = new Runtime.UTF8Processor();
   if (ENVIRONMENT_IS_NODE) {
-    var fs = require('fs');
+    var fs = require("fs");
     NODEFS.staticInit();
   }
   __ATINIT__.push({
@@ -140172,23 +140663,32 @@ function zbarProcessImageData(imgData) {
       SOCKFS.root = FS.mount(SOCKFS, {}, null);
     }
   });
-  _fputc.ret = allocate([0], 'i8', ALLOC_STATIC);
-  Module['requestFullScreen'] = function Module_requestFullScreen(lockPointer, resizeCanvas) {
+  _fputc.ret = allocate([0], "i8", ALLOC_STATIC);
+  Module["requestFullScreen"] = function Module_requestFullScreen(
+    lockPointer,
+    resizeCanvas
+  ) {
     Browser.requestFullScreen(lockPointer, resizeCanvas);
   };
-  Module['requestAnimationFrame'] = function Module_requestAnimationFrame(func) {
+  Module["requestAnimationFrame"] = function Module_requestAnimationFrame(
+    func
+  ) {
     Browser.requestAnimationFrame(func);
   };
-  Module['setCanvasSize'] = function Module_setCanvasSize(width, height, noUpdates) {
+  Module["setCanvasSize"] = function Module_setCanvasSize(
+    width,
+    height,
+    noUpdates
+  ) {
     Browser.setCanvasSize(width, height, noUpdates);
   };
-  Module['pauseMainLoop'] = function Module_pauseMainLoop() {
+  Module["pauseMainLoop"] = function Module_pauseMainLoop() {
     Browser.mainLoop.pause();
   };
-  Module['resumeMainLoop'] = function Module_resumeMainLoop() {
+  Module["resumeMainLoop"] = function Module_resumeMainLoop() {
     Browser.mainLoop.resume();
   };
-  Module['getUserMedia'] = function Module_getUserMedia() {
+  Module["getUserMedia"] = function Module_getUserMedia() {
     Browser.getUserMedia();
   };
   STACK_BASE = STACKTOP = Runtime.alignMemory(STATICTOP);
@@ -140199,7 +140699,7 @@ function zbarProcessImageData(imgData) {
 
   DYNAMIC_BASE = DYNAMICTOP = Runtime.alignMemory(STACK_MAX);
 
-  assert(DYNAMIC_BASE < TOTAL_MEMORY, 'TOTAL_MEMORY not big enough for stack');
+  assert(DYNAMIC_BASE < TOTAL_MEMORY, "TOTAL_MEMORY not big enough for stack");
 
   var ctlz_i8 = allocate(
     [
@@ -140460,7 +140960,7 @@ function zbarProcessImageData(imgData) {
       0,
       0
     ],
-    'i8',
+    "i8",
     ALLOC_DYNAMIC
   );
   var cttz_i8 = allocate(
@@ -140722,61 +141222,61 @@ function zbarProcessImageData(imgData) {
       1,
       0
     ],
-    'i8',
+    "i8",
     ALLOC_DYNAMIC
   );
 
   function invoke_iiii(index, a1, a2, a3) {
     try {
-      return Module['dynCall_iiii'](index, a1, a2, a3);
+      return Module["dynCall_iiii"](index, a1, a2, a3);
     } catch (e) {
-      if (typeof e !== 'number' && e !== 'longjmp') throw e;
-      asm['setThrew'](1, 0);
+      if (typeof e !== "number" && e !== "longjmp") throw e;
+      asm["setThrew"](1, 0);
     }
   }
 
   function invoke_vi(index, a1) {
     try {
-      Module['dynCall_vi'](index, a1);
+      Module["dynCall_vi"](index, a1);
     } catch (e) {
-      if (typeof e !== 'number' && e !== 'longjmp') throw e;
-      asm['setThrew'](1, 0);
+      if (typeof e !== "number" && e !== "longjmp") throw e;
+      asm["setThrew"](1, 0);
     }
   }
 
   function invoke_vii(index, a1, a2) {
     try {
-      Module['dynCall_vii'](index, a1, a2);
+      Module["dynCall_vii"](index, a1, a2);
     } catch (e) {
-      if (typeof e !== 'number' && e !== 'longjmp') throw e;
-      asm['setThrew'](1, 0);
+      if (typeof e !== "number" && e !== "longjmp") throw e;
+      asm["setThrew"](1, 0);
     }
   }
 
   function invoke_ii(index, a1) {
     try {
-      return Module['dynCall_ii'](index, a1);
+      return Module["dynCall_ii"](index, a1);
     } catch (e) {
-      if (typeof e !== 'number' && e !== 'longjmp') throw e;
-      asm['setThrew'](1, 0);
+      if (typeof e !== "number" && e !== "longjmp") throw e;
+      asm["setThrew"](1, 0);
     }
   }
 
   function invoke_iii(index, a1, a2) {
     try {
-      return Module['dynCall_iii'](index, a1, a2);
+      return Module["dynCall_iii"](index, a1, a2);
     } catch (e) {
-      if (typeof e !== 'number' && e !== 'longjmp') throw e;
-      asm['setThrew'](1, 0);
+      if (typeof e !== "number" && e !== "longjmp") throw e;
+      asm["setThrew"](1, 0);
     }
   }
 
   function invoke_viiii(index, a1, a2, a3, a4) {
     try {
-      Module['dynCall_viiii'](index, a1, a2, a3, a4);
+      Module["dynCall_viiii"](index, a1, a2, a3, a4);
     } catch (e) {
-      if (typeof e !== 'number' && e !== 'longjmp') throw e;
-      asm['setThrew'](1, 0);
+      if (typeof e !== "number" && e !== "longjmp") throw e;
+      asm["setThrew"](1, 0);
     }
   }
 
@@ -140858,7 +141358,7 @@ function zbarProcessImageData(imgData) {
   };
   // EMSCRIPTEN_START_ASM
   var asm = (function(global, env, buffer) {
-    'use asm';
+    "use asm";
 
     var HEAP8 = new global.Int8Array(buffer);
     var HEAP16 = new global.Int16Array(buffer);
@@ -146921,7 +147421,8 @@ function zbarProcessImageData(imgData) {
                   $57 = $56 ? 0 : $55;
                   $58 = $57 >>> 0 > 15;
                   $reltime$0$us$i = $58 ? 15 : $57;
-                  $59 = __zbar_processor_input_wait($proc, 0, $reltime$0$us$i) | 0;
+                  $59 =
+                    __zbar_processor_input_wait($proc, 0, $reltime$0$us$i) | 0;
                   $60 = ($59 | 0) > 0;
                   if ($60) {
                     $rc$02$us$i = $59;
@@ -148986,7 +149487,9 @@ function zbarProcessImageData(imgData) {
                   $notlhs$us = ($cost$0$us | 0) < 0;
                   $notrhs$us = $min_cost$012$us >>> 0 <= $cost$0$us >>> 0;
                   $or$cond$not$us = $notrhs$us | $notlhs$us;
-                  $min_cost$0$mux$us = $or$cond$not$us ? $min_cost$012$us : $cost$0$us;
+                  $min_cost$0$mux$us = $or$cond$not$us
+                    ? $min_cost$012$us
+                    : $cost$0$us;
                   $min_cost$1$us = $min_cost$0$mux$us;
                 }
               }
@@ -156424,7 +156927,13 @@ function zbarProcessImageData(imgData) {
                   $$off = ($229 + -2) | 0;
                   $230 = $$off >>> 0 < 13;
                   if (!$230) {
-                    if (!((($229 | 0) == 38) | (($229 | 0) == 35) | (($229 | 0) == 34))) {
+                    if (
+                      !(
+                        (($229 | 0) == 38) |
+                        (($229 | 0) == 35) |
+                        (($229 | 0) == 34)
+                      )
+                    ) {
                       $281 = $226;
                       $naddon$1 = $naddon$0$ph125;
                       $nean$1 = $nean$0$ph120;
@@ -157745,7 +158254,15 @@ function zbarProcessImageData(imgData) {
       STACKTOP = sp;
       return;
     }
-    function _qr_reader_match_centers($_reader, $_qrlist, $_centers, $_ncenters, $_img, $_width, $_height) {
+    function _qr_reader_match_centers(
+      $_reader,
+      $_qrlist,
+      $_centers,
+      $_ncenters,
+      $_img,
+      $_width,
+      $_height
+    ) {
       $_reader = $_reader | 0;
       $_qrlist = $_qrlist | 0;
       $_centers = $_centers | 0;
@@ -160123,7 +160640,12 @@ function zbarProcessImageData(imgData) {
                           HEAP32[$33 >> 2] = $230;
                           _qr_finder_edge_pts_aff_classify($ur$i, $aff$i);
                           $231 = 1 << $161;
-                          $232 = _qr_finder_estimate_module_size_and_version($ur$i, $231, $231) | 0;
+                          $232 =
+                            _qr_finder_estimate_module_size_and_version(
+                              $ur$i,
+                              $231,
+                              $231
+                            ) | 0;
                           $233 = ($232 | 0) < 0;
                           L19: do {
                             if ($233) {
@@ -160158,7 +160680,12 @@ function zbarProcessImageData(imgData) {
                               $258 = $257 >> $247;
                               HEAP32[$35 >> 2] = $258;
                               _qr_finder_edge_pts_aff_classify($dl$i, $aff$i);
-                              $259 = _qr_finder_estimate_module_size_and_version($dl$i, $231, $231) | 0;
+                              $259 =
+                                _qr_finder_estimate_module_size_and_version(
+                                  $dl$i,
+                                  $231,
+                                  $231
+                                ) | 0;
                               $260 = ($259 | 0) < 0;
                               if ($260) {
                                 $$01$i = 0;
@@ -160202,8 +160729,16 @@ function zbarProcessImageData(imgData) {
                                   $289 = ($288 + $287) | 0;
                                   $290 = $289 >> $279;
                                   HEAP32[$39 >> 2] = $290;
-                                  _qr_finder_edge_pts_aff_classify($ul$i, $aff$i);
-                                  $291 = _qr_finder_estimate_module_size_and_version($ul$i, $231, $231) | 0;
+                                  _qr_finder_edge_pts_aff_classify(
+                                    $ul$i,
+                                    $aff$i
+                                  );
+                                  $291 =
+                                    _qr_finder_estimate_module_size_and_version(
+                                      $ul$i,
+                                      $231,
+                                      $231
+                                    ) | 0;
                                   $292 = ($291 | 0) < 0;
                                   if ($292) {
                                     $$01$i = 0;
@@ -160232,16 +160767,25 @@ function zbarProcessImageData(imgData) {
                                       }
                                       _qr_finder_ransac($ul$i, $aff$i, $42, 0);
                                       _qr_finder_ransac($dl$i, $aff$i, $42, 0);
-                                      _qr_line_fit_finder_pair($l$i$i, $aff$i, $ul$i, $dl$i, 0);
+                                      _qr_line_fit_finder_pair(
+                                        $l$i$i,
+                                        $aff$i,
+                                        $ul$i,
+                                        $dl$i,
+                                        0
+                                      );
                                       $301 = HEAP32[$16 >> 2] | 0;
                                       $302 = HEAP32[$301 >> 2] | 0;
                                       $303 = ($301 + 4) | 0;
                                       $304 = HEAP32[$303 >> 2] | 0;
                                       $$val65$i$i = HEAP32[$l$i$i >> 2] | 0;
-                                      $$idx66$val$i$i = HEAP32[$$idx66$i$i >> 2] | 0;
-                                      $$idx67$val$i$i = HEAP32[$$idx67$i$i >> 2] | 0;
+                                      $$idx66$val$i$i =
+                                        HEAP32[$$idx66$i$i >> 2] | 0;
+                                      $$idx67$val$i$i =
+                                        HEAP32[$$idx67$i$i >> 2] | 0;
                                       $305 = Math_imul($$val65$i$i, $302) | 0;
-                                      $306 = Math_imul($$idx66$val$i$i, $304) | 0;
+                                      $306 =
+                                        Math_imul($$idx66$val$i$i, $304) | 0;
                                       $307 = ($$idx67$val$i$i + $305) | 0;
                                       $308 = ($307 + $306) | 0;
                                       $309 = ($308 | 0) < 0;
@@ -160255,7 +160799,8 @@ function zbarProcessImageData(imgData) {
                                       $312 = ($310 + 4) | 0;
                                       $313 = HEAP32[$312 >> 2] | 0;
                                       $314 = Math_imul($311, $$val65$i$i) | 0;
-                                      $315 = Math_imul($313, $$idx66$val$i$i) | 0;
+                                      $315 =
+                                        Math_imul($313, $$idx66$val$i$i) | 0;
                                       $316 = ($314 + $$idx67$val$i$i) | 0;
                                       $317 = ($316 + $315) | 0;
                                       $318 = ($317 | 0) < 0;
@@ -160266,14 +160811,23 @@ function zbarProcessImageData(imgData) {
                                       }
                                       _qr_finder_ransac($ul$i, $aff$i, $42, 2);
                                       _qr_finder_ransac($ur$i, $aff$i, $42, 2);
-                                      _qr_line_fit_finder_pair($43, $aff$i, $ul$i, $ur$i, 2);
+                                      _qr_line_fit_finder_pair(
+                                        $43,
+                                        $aff$i,
+                                        $ul$i,
+                                        $ur$i,
+                                        2
+                                      );
                                       $319 = HEAP32[$301 >> 2] | 0;
                                       $320 = HEAP32[$303 >> 2] | 0;
                                       $$val59$i$i = HEAP32[$43 >> 2] | 0;
-                                      $$idx60$val$i$i = HEAP32[$$idx60$i$i >> 2] | 0;
-                                      $$idx61$val$i$i = HEAP32[$$idx61$i$i >> 2] | 0;
+                                      $$idx60$val$i$i =
+                                        HEAP32[$$idx60$i$i >> 2] | 0;
+                                      $$idx61$val$i$i =
+                                        HEAP32[$$idx61$i$i >> 2] | 0;
                                       $321 = Math_imul($$val59$i$i, $319) | 0;
-                                      $322 = Math_imul($$idx60$val$i$i, $320) | 0;
+                                      $322 =
+                                        Math_imul($$idx60$val$i$i, $320) | 0;
                                       $323 = ($$idx61$val$i$i + $321) | 0;
                                       $324 = ($323 + $322) | 0;
                                       $325 = ($324 | 0) < 0;
@@ -160287,7 +160841,8 @@ function zbarProcessImageData(imgData) {
                                       $328 = ($326 + 4) | 0;
                                       $329 = HEAP32[$328 >> 2] | 0;
                                       $330 = Math_imul($327, $$val59$i$i) | 0;
-                                      $331 = Math_imul($329, $$idx60$val$i$i) | 0;
+                                      $331 =
+                                        Math_imul($329, $$idx60$val$i$i) | 0;
                                       $332 = ($330 + $$idx61$val$i$i) | 0;
                                       $333 = ($332 + $331) | 0;
                                       $334 = ($333 | 0) < 0;
@@ -160315,28 +160870,45 @@ function zbarProcessImageData(imgData) {
                                           $344 = HEAP32[$343 >> 2] | 0;
                                           $345 = ($341 + ($i$01$i$i << 3)) | 0;
                                           HEAP32[$345 >> 2] = $344;
-                                          $346 = ((($342 + ($i$01$i$i << 4)) | 0) + 4) | 0;
+                                          $346 =
+                                            ((($342 + ($i$01$i$i << 4)) | 0) +
+                                              4) |
+                                            0;
                                           $347 = HEAP32[$346 >> 2] | 0;
-                                          $348 = ((($341 + ($i$01$i$i << 3)) | 0) + 4) | 0;
+                                          $348 =
+                                            ((($341 + ($i$01$i$i << 3)) | 0) +
+                                              4) |
+                                            0;
                                           HEAP32[$348 >> 2] = $347;
                                           $349 = ($i$01$i$i + 1) | 0;
-                                          $exitcond$i$i = ($349 | 0) == ($338 | 0);
+                                          $exitcond$i$i =
+                                            ($349 | 0) == ($338 | 0);
                                           if ($exitcond$i$i) {
                                             break;
                                           } else {
                                             $i$01$i$i = $349;
                                           }
                                         }
-                                        _qr_line_fit_points($45, $341, $338, $337);
+                                        _qr_line_fit_points(
+                                          $45,
+                                          $341,
+                                          $338,
+                                          $337
+                                        );
                                         $350 = HEAP32[$15 >> 2] | 0;
                                         $351 = HEAP32[$350 >> 2] | 0;
                                         $352 = ($350 + 4) | 0;
                                         $353 = HEAP32[$352 >> 2] | 0;
                                         $_l$val$i$i$i = HEAP32[$45 >> 2] | 0;
-                                        $_l$idx$val$i$i$i = HEAP32[$$idx71$i$i >> 2] | 0;
-                                        $_l$idx1$val$i$i$i = HEAP32[$87 >> 2] | 0;
-                                        $354 = Math_imul($_l$val$i$i$i, $351) | 0;
-                                        $355 = Math_imul($_l$idx$val$i$i$i, $353) | 0;
+                                        $_l$idx$val$i$i$i =
+                                          HEAP32[$$idx71$i$i >> 2] | 0;
+                                        $_l$idx1$val$i$i$i =
+                                          HEAP32[$87 >> 2] | 0;
+                                        $354 =
+                                          Math_imul($_l$val$i$i$i, $351) | 0;
+                                        $355 =
+                                          Math_imul($_l$idx$val$i$i$i, $353) |
+                                          0;
                                         $356 = ($_l$idx1$val$i$i$i + $354) | 0;
                                         $357 = ($356 + $355) | 0;
                                         $358 = ($357 | 0) < 0;
@@ -160361,7 +160933,8 @@ function zbarProcessImageData(imgData) {
                                         $364 = ($362 + 4) | 0;
                                         $365 = HEAP32[$364 >> 2] | 0;
                                         $366 = Math_imul($363, $$val53$i$i) | 0;
-                                        $367 = Math_imul($365, $$idx54$val$i$i) | 0;
+                                        $367 =
+                                          Math_imul($365, $$idx54$val$i$i) | 0;
                                         $368 = ($366 + $$idx55$val$i$i) | 0;
                                         $369 = ($368 + $367) | 0;
                                         $370 = ($369 | 0) < 0;
@@ -160373,7 +160946,8 @@ function zbarProcessImageData(imgData) {
                                         $371 = HEAP32[$301 >> 2] | 0;
                                         $372 = HEAP32[$303 >> 2] | 0;
                                         $373 = Math_imul($371, $$val53$i$i) | 0;
-                                        $374 = Math_imul($372, $$idx54$val$i$i) | 0;
+                                        $374 =
+                                          Math_imul($372, $$idx54$val$i$i) | 0;
                                         $375 = ($373 + $$idx55$val$i$i) | 0;
                                         $376 = ($375 + $374) | 0;
                                         $377 = ($376 | 0) < 0;
@@ -160382,7 +160956,15 @@ function zbarProcessImageData(imgData) {
                                           $$1$i = $$0$i;
                                           break;
                                         }
-                                        $378 = _qr_aff_line_step($aff$i, $$val53$i$i, $$idx54$val$i$i, 1, $336, $dru$i$i) | 0;
+                                        $378 =
+                                          _qr_aff_line_step(
+                                            $aff$i,
+                                            $$val53$i$i,
+                                            $$idx54$val$i$i,
+                                            1,
+                                            $336,
+                                            $dru$i$i
+                                          ) | 0;
                                         $379 = ($378 | 0) < 0;
                                         if ($379) {
                                           $$01$i = 0;
@@ -160416,33 +160998,53 @@ function zbarProcessImageData(imgData) {
                                         $397 = HEAP32[$51 >> 2] | 0;
                                         $i$01$i50$i = 0;
                                         while (1) {
-                                          $398 = ($397 + ($i$01$i50$i << 4)) | 0;
+                                          $398 =
+                                            ($397 + ($i$01$i50$i << 4)) | 0;
                                           $399 = HEAP32[$398 >> 2] | 0;
-                                          $400 = ($396 + ($i$01$i50$i << 3)) | 0;
+                                          $400 =
+                                            ($396 + ($i$01$i50$i << 3)) | 0;
                                           HEAP32[$400 >> 2] = $399;
-                                          $401 = ((($397 + ($i$01$i50$i << 4)) | 0) + 4) | 0;
+                                          $401 =
+                                            ((($397 + ($i$01$i50$i << 4)) | 0) +
+                                              4) |
+                                            0;
                                           $402 = HEAP32[$401 >> 2] | 0;
-                                          $403 = ((($396 + ($i$01$i50$i << 3)) | 0) + 4) | 0;
+                                          $403 =
+                                            ((($396 + ($i$01$i50$i << 3)) | 0) +
+                                              4) |
+                                            0;
                                           HEAP32[$403 >> 2] = $402;
                                           $404 = ($i$01$i50$i + 1) | 0;
-                                          $exitcond$i51$i = ($404 | 0) == ($393 | 0);
+                                          $exitcond$i51$i =
+                                            ($404 | 0) == ($393 | 0);
                                           if ($exitcond$i51$i) {
                                             break;
                                           } else {
                                             $i$01$i50$i = $404;
                                           }
                                         }
-                                        _qr_line_fit_points($47, $396, $393, $392);
+                                        _qr_line_fit_points(
+                                          $47,
+                                          $396,
+                                          $393,
+                                          $392
+                                        );
                                         $405 = HEAP32[$16 >> 2] | 0;
                                         $406 = HEAP32[$405 >> 2] | 0;
                                         $407 = ($405 + 4) | 0;
                                         $408 = HEAP32[$407 >> 2] | 0;
                                         $_l$val$i$i52$i = HEAP32[$47 >> 2] | 0;
-                                        $_l$idx$val$i$i54$i = HEAP32[$$idx69$i$i >> 2] | 0;
-                                        $_l$idx1$val$i$i56$i = HEAP32[$86 >> 2] | 0;
-                                        $409 = Math_imul($_l$val$i$i52$i, $406) | 0;
-                                        $410 = Math_imul($_l$idx$val$i$i54$i, $408) | 0;
-                                        $411 = ($_l$idx1$val$i$i56$i + $409) | 0;
+                                        $_l$idx$val$i$i54$i =
+                                          HEAP32[$$idx69$i$i >> 2] | 0;
+                                        $_l$idx1$val$i$i56$i =
+                                          HEAP32[$86 >> 2] | 0;
+                                        $409 =
+                                          Math_imul($_l$val$i$i52$i, $406) | 0;
+                                        $410 =
+                                          Math_imul($_l$idx$val$i$i54$i, $408) |
+                                          0;
+                                        $411 =
+                                          ($_l$idx1$val$i$i56$i + $409) | 0;
                                         $412 = ($411 + $410) | 0;
                                         $413 = ($412 | 0) < 0;
                                         if ($413) {
@@ -160466,7 +161068,8 @@ function zbarProcessImageData(imgData) {
                                         $419 = ($417 + 4) | 0;
                                         $420 = HEAP32[$419 >> 2] | 0;
                                         $421 = Math_imul($418, $$val47$i$i) | 0;
-                                        $422 = Math_imul($420, $$idx48$val$i$i) | 0;
+                                        $422 =
+                                          Math_imul($420, $$idx48$val$i$i) | 0;
                                         $423 = ($421 + $$idx49$val$i$i) | 0;
                                         $424 = ($423 + $422) | 0;
                                         $425 = ($424 | 0) < 0;
@@ -160480,7 +161083,8 @@ function zbarProcessImageData(imgData) {
                                         $428 = ($426 + 4) | 0;
                                         $429 = HEAP32[$428 >> 2] | 0;
                                         $430 = Math_imul($427, $$val47$i$i) | 0;
-                                        $431 = Math_imul($429, $$idx48$val$i$i) | 0;
+                                        $431 =
+                                          Math_imul($429, $$idx48$val$i$i) | 0;
                                         $432 = ($430 + $$idx49$val$i$i) | 0;
                                         $433 = ($432 + $431) | 0;
                                         $434 = ($433 | 0) < 0;
@@ -160489,14 +161093,23 @@ function zbarProcessImageData(imgData) {
                                           $$1$i = $$0$i;
                                           break;
                                         }
-                                        $435 = _qr_aff_line_step($aff$i, $$val47$i$i, $$idx48$val$i$i, 0, $391, $dbv$i$i) | 0;
+                                        $435 =
+                                          _qr_aff_line_step(
+                                            $aff$i,
+                                            $$val47$i$i,
+                                            $$idx48$val$i$i,
+                                            0,
+                                            $391,
+                                            $dbv$i$i
+                                          ) | 0;
                                         $436 = ($435 | 0) < 0;
                                         if ($436) {
                                           $$01$i = 0;
                                           $$1$i = $$0$i;
                                           break;
                                         }
-                                        $$pre149$i$i = HEAP32[$dbv$i$i >> 2] | 0;
+                                        $$pre149$i$i =
+                                          HEAP32[$dbv$i$i >> 2] | 0;
                                         $444 = $$pre149$i$i;
                                       }
                                       $437 = HEAP32[$34 >> 2] | 0;
@@ -160520,8 +161133,10 @@ function zbarProcessImageData(imgData) {
                                         $455 = HEAP32[$50 >> 2] | 0;
                                         $i$0121$i$i = 0;
                                         while (1) {
-                                          $456 = ($453 + ($i$0121$i$i << 3)) | 0;
-                                          $457 = ($455 + ($i$0121$i$i << 4)) | 0;
+                                          $456 =
+                                            ($453 + ($i$0121$i$i << 3)) | 0;
+                                          $457 =
+                                            ($455 + ($i$0121$i$i << 4)) | 0;
                                           $458 = $457;
                                           $459 = $458;
                                           $460 = HEAP32[$459 >> 2] | 0;
@@ -160535,7 +161150,8 @@ function zbarProcessImageData(imgData) {
                                           $467 = $466;
                                           HEAP32[$467 >> 2] = $463;
                                           $468 = ($i$0121$i$i + 1) | 0;
-                                          $exitcond$i = ($468 | 0) == ($338 | 0);
+                                          $exitcond$i =
+                                            ($468 | 0) == ($338 | 0);
                                           if ($exitcond$i) {
                                             break;
                                           } else {
@@ -160555,8 +161171,10 @@ function zbarProcessImageData(imgData) {
                                         $477 = HEAP32[$51 >> 2] | 0;
                                         $i$1120$i$i = 0;
                                         while (1) {
-                                          $478 = ($475 + ($i$1120$i$i << 3)) | 0;
-                                          $479 = ($477 + ($i$1120$i$i << 4)) | 0;
+                                          $478 =
+                                            ($475 + ($i$1120$i$i << 3)) | 0;
+                                          $479 =
+                                            ($477 + ($i$1120$i$i << 4)) | 0;
                                           $480 = $479;
                                           $481 = $480;
                                           $482 = HEAP32[$481 >> 2] | 0;
@@ -160570,7 +161188,8 @@ function zbarProcessImageData(imgData) {
                                           $489 = $488;
                                           HEAP32[$489 >> 2] = $485;
                                           $490 = ($i$1120$i$i + 1) | 0;
-                                          $exitcond90$i = ($490 | 0) == ($393 | 0);
+                                          $exitcond90$i =
+                                            ($490 | 0) == ($393 | 0);
                                           if ($exitcond90$i) {
                                             break;
                                           } else {
@@ -160668,18 +161287,23 @@ function zbarProcessImageData(imgData) {
                                           $543 = $542 >> 1;
                                           $544 = ($543 | 0) < ($bv$0$i$i | 0);
                                           $545 = $544 ? $543 : $bv$0$i$i;
-                                          $not$$i$i = ($rv$0$ph$i$i | 0) >= ($545 | 0);
+                                          $not$$i$i =
+                                            ($rv$0$ph$i$i | 0) >= ($545 | 0);
                                           $$$i$i = $540 | $not$$i$i;
                                           $546 = HEAP32[$32 >> 2] | 0;
                                           $547 = ($546 + $ru$0$ph$i$i) | 0;
                                           $548 = $547 >> 1;
-                                          $549 = ($548 | 0) < ($ru$0$ph$i$i | 0);
+                                          $549 =
+                                            ($548 | 0) < ($ru$0$ph$i$i | 0);
                                           $550 = $549 ? $548 : $ru$0$ph$i$i;
                                           $551 = ($nbempty$0$i$i | 0) > 14;
-                                          $not$98$i$i = ($bu$0$i$i | 0) >= ($550 | 0);
+                                          $not$98$i$i =
+                                            ($bu$0$i$i | 0) >= ($550 | 0);
                                           $552 = $551 | $not$98$i$i;
                                           if (!$$$i$i) {
-                                            $553 = ($rv$0$ph$i$i | 0) < ($bu$0$i$i | 0);
+                                            $553 =
+                                              ($rv$0$ph$i$i | 0) <
+                                              ($bu$0$i$i | 0);
                                             $or$cond$i$i = $552 | $553;
                                             if ($or$cond$i$i) {
                                               break;
@@ -160698,7 +161322,8 @@ function zbarProcessImageData(imgData) {
                                           $671 = $670 >> $666;
                                           $672 = ($by$0$i$i - $535) | 0;
                                           $673 = $672 >> $666;
-                                          $674 = ($nb$0$i$i | 0) < ($cb$0$i$i | 0);
+                                          $674 =
+                                            ($nb$0$i$i | 0) < ($cb$0$i$i | 0);
                                           if ($674) {
                                             $b$1$i$i = $b$0$i$i;
                                             $cb$1$i$i = $cb$0$i$i;
@@ -160711,24 +161336,36 @@ function zbarProcessImageData(imgData) {
                                             $cb$1$i$i = $676;
                                           }
                                           $notlhs$i76$i$i = ($667 | 0) < 0;
-                                          $notrhs$i77$i$i = ($667 | 0) >= ($_width | 0);
-                                          $or$cond$not$i78$i$i = $notrhs$i77$i$i | $notlhs$i76$i$i;
+                                          $notrhs$i77$i$i =
+                                            ($667 | 0) >= ($_width | 0);
+                                          $or$cond$not$i78$i$i =
+                                            $notrhs$i77$i$i | $notlhs$i76$i$i;
                                           $679 = ($669 | 0) < 0;
-                                          $or$cond1$i79$i$i = $or$cond$not$i78$i$i | $679;
-                                          $$not$i80$i$i = ($669 | 0) >= ($_height | 0);
-                                          $or$cond2$not$i81$i$i = $or$cond1$i79$i$i | $$not$i80$i$i;
+                                          $or$cond1$i79$i$i =
+                                            $or$cond$not$i78$i$i | $679;
+                                          $$not$i80$i$i =
+                                            ($669 | 0) >= ($_height | 0);
+                                          $or$cond2$not$i81$i$i =
+                                            $or$cond1$i79$i$i | $$not$i80$i$i;
                                           $680 = ($671 | 0) < 0;
-                                          $or$cond3$i82$i$i = $or$cond2$not$i81$i$i | $680;
-                                          $$not7$i83$i$i = ($671 | 0) >= ($_width | 0);
-                                          $or$cond4$not$i84$i$i = $or$cond3$i82$i$i | $$not7$i83$i$i;
+                                          $or$cond3$i82$i$i =
+                                            $or$cond2$not$i81$i$i | $680;
+                                          $$not7$i83$i$i =
+                                            ($671 | 0) >= ($_width | 0);
+                                          $or$cond4$not$i84$i$i =
+                                            $or$cond3$i82$i$i | $$not7$i83$i$i;
                                           $681 = ($673 | 0) < 0;
-                                          $or$cond5$i85$i$i = $or$cond4$not$i84$i$i | $681;
-                                          $or$cond5$not$i86$i$i = $or$cond5$i85$i$i ^ 1;
+                                          $or$cond5$i85$i$i =
+                                            $or$cond4$not$i84$i$i | $681;
+                                          $or$cond5$not$i86$i$i =
+                                            $or$cond5$i85$i$i ^ 1;
                                           $682 = ($673 | 0) < ($_height | 0);
-                                          $or$cond6$i87$i$i = $682 & $or$cond5$not$i86$i$i;
+                                          $or$cond6$i87$i$i =
+                                            $682 & $or$cond5$not$i86$i$i;
                                           do {
                                             if ($or$cond6$i87$i$i) {
-                                              $683 = Math_imul($669, $_width) | 0;
+                                              $683 =
+                                                Math_imul($669, $_width) | 0;
                                               $684 = ($683 + $667) | 0;
                                               $685 = ($_img + $684) | 0;
                                               $686 = HEAP8[$685 >> 0] | 0;
@@ -160745,7 +161382,8 @@ function zbarProcessImageData(imgData) {
                                                 $nbempty$1$i$i = 0;
                                                 break;
                                               }
-                                              $688 = Math_imul($673, $_width) | 0;
+                                              $688 =
+                                                Math_imul($673, $_width) | 0;
                                               $689 = ($688 + $671) | 0;
                                               $690 = ($_img + $689) | 0;
                                               $691 = HEAP8[$690 >> 0] | 0;
@@ -160764,7 +161402,8 @@ function zbarProcessImageData(imgData) {
                                               }
                                               $693 = ($673 + $669) | 0;
                                               $694 = $693 >> 1;
-                                              $695 = Math_imul($694, $_width) | 0;
+                                              $695 =
+                                                Math_imul($694, $_width) | 0;
                                               $696 = ($671 + $667) | 0;
                                               $697 = $696 >> 1;
                                               $698 = ($695 + $697) | 0;
@@ -160775,8 +161414,21 @@ function zbarProcessImageData(imgData) {
                                               if ($701) {
                                                 $ret$1$i$i = $$$i88$i$i;
                                               } else {
-                                                $702 = ($b$1$i$i + ($nb$0$i$i << 3)) | 0;
-                                                $703 = _qr_finder_locate_crossing($_img, $_width, $667, $669, $671, $673, 1, $702) | 0;
+                                                $702 =
+                                                  ($b$1$i$i +
+                                                    ($nb$0$i$i << 3)) |
+                                                  0;
+                                                $703 =
+                                                  _qr_finder_locate_crossing(
+                                                    $_img,
+                                                    $_width,
+                                                    $667,
+                                                    $669,
+                                                    $671,
+                                                    $673,
+                                                    1,
+                                                    $702
+                                                  ) | 0;
                                                 $ret$1$i$i = $703;
                                               }
                                               $704 = ($ret$1$i$i | 0) > -1;
@@ -160797,9 +161449,16 @@ function zbarProcessImageData(imgData) {
                                                 $nbempty$1$i$i = 0;
                                                 break;
                                               }
-                                              $706 = ($b$1$i$i + ($nb$0$i$i << 3)) | 0;
+                                              $706 =
+                                                ($b$1$i$i + ($nb$0$i$i << 3)) |
+                                                0;
                                               $707 = HEAP32[$706 >> 2] | 0;
-                                              $708 = ((($b$1$i$i + ($nb$0$i$i << 3)) | 0) + 4) | 0;
+                                              $708 =
+                                                ((($b$1$i$i +
+                                                  ($nb$0$i$i << 3)) |
+                                                  0) +
+                                                  4) |
+                                                0;
                                               $709 = HEAP32[$708 >> 2] | 0;
                                               $710 = HEAP32[$24 >> 2] | 0;
                                               $711 = HEAP32[$28 >> 2] | 0;
@@ -160823,7 +161482,8 @@ function zbarProcessImageData(imgData) {
                                               $729 = ($728 + $727) | 0;
                                               $730 = $729 >> $719;
                                               $731 = ($723 + $391) | 0;
-                                              $732 = ($731 | 0) > ($bu$0$i$i | 0);
+                                              $732 =
+                                                ($731 | 0) > ($bu$0$i$i | 0);
                                               if ($732) {
                                                 $733 = ($723 + $bu$0$i$i) | 0;
                                                 $734 = $733 >> 1;
@@ -160834,23 +161494,27 @@ function zbarProcessImageData(imgData) {
                                               $735 = ($730 + $bv$0$i$i) | 0;
                                               $736 = $735 >> 1;
                                               $737 = HEAP32[$aff$i >> 2] | 0;
-                                              $738 = Math_imul($737, $bu$1$i$i) | 0;
+                                              $738 =
+                                                Math_imul($737, $bu$1$i$i) | 0;
                                               $739 = HEAP32[$21 >> 2] | 0;
                                               $740 = Math_imul($739, $736) | 0;
                                               $741 = ($738 + $496) | 0;
                                               $742 = ($741 + $740) | 0;
                                               $743 = HEAP32[$22 >> 2] | 0;
-                                              $744 = Math_imul($743, $bu$1$i$i) | 0;
+                                              $744 =
+                                                Math_imul($743, $bu$1$i$i) | 0;
                                               $745 = HEAP32[$23 >> 2] | 0;
                                               $746 = Math_imul($745, $736) | 0;
                                               $747 = ($744 + $499) | 0;
                                               $748 = ($747 + $746) | 0;
                                               $749 = ($nb$0$i$i + 1) | 0;
                                               $750 = $blastfit$0$i$i >> 2;
-                                              $751 = ($750 + $blastfit$0$i$i) | 0;
+                                              $751 =
+                                                ($750 + $blastfit$0$i$i) | 0;
                                               $752 = ($751 | 0) > 1;
                                               $753 = $752 ? $751 : 1;
-                                              $754 = ($nb$0$i$i | 0) < ($753 | 0);
+                                              $754 =
+                                                ($nb$0$i$i | 0) < ($753 | 0);
                                               if ($754) {
                                                 $blastfit$2$i$i = $blastfit$0$i$i;
                                                 $bu$3$i$i = $bu$1$i$i;
@@ -160864,10 +161528,25 @@ function zbarProcessImageData(imgData) {
                                                 break;
                                               }
                                               $755 = HEAP32[$30 >> 2] | 0;
-                                              _qr_line_fit_points($47, $b$1$i$i, $749, $755);
-                                              $$val68$i$i = HEAP32[$47 >> 2] | 0;
-                                              $$idx69$val$i$i = HEAP32[$$idx69$i$i >> 2] | 0;
-                                              $756 = _qr_aff_line_step($aff$i, $$val68$i$i, $$idx69$val$i$i, 0, $391, $dbv$i$i) | 0;
+                                              _qr_line_fit_points(
+                                                $47,
+                                                $b$1$i$i,
+                                                $749,
+                                                $755
+                                              );
+                                              $$val68$i$i =
+                                                HEAP32[$47 >> 2] | 0;
+                                              $$idx69$val$i$i =
+                                                HEAP32[$$idx69$i$i >> 2] | 0;
+                                              $756 =
+                                                _qr_aff_line_step(
+                                                  $aff$i,
+                                                  $$val68$i$i,
+                                                  $$idx69$val$i$i,
+                                                  0,
+                                                  $391,
+                                                  $dbv$i$i
+                                                ) | 0;
                                               $757 = ($756 | 0) > -1;
                                               if (!$757) {
                                                 $blastfit$2$i$i = $749;
@@ -160919,7 +161598,9 @@ function zbarProcessImageData(imgData) {
                                             $nbempty$1$i$i = $769;
                                           }
                                           $bu$4$i$i = ($bu$3$i$i + $537) | 0;
-                                          $nbempty$2$i$i = $536 ? $nbempty$1$i$i : 2147483647;
+                                          $nbempty$2$i$i = $536
+                                            ? $nbempty$1$i$i
+                                            : 2147483647;
                                           $770 = HEAP32[$dbv$i$i >> 2] | 0;
                                           $771 = ($770 + $bv$2$i$i) | 0;
                                           $772 = ($dbxi$3$i$i + $bx$2$i$i) | 0;
@@ -160946,7 +161627,9 @@ function zbarProcessImageData(imgData) {
                                         $561 = $560 >> $556;
                                         $562 = ($ry$0$ph$i$i - $519) | 0;
                                         $563 = $562 >> $556;
-                                        $564 = ($nr$0$ph$i$i | 0) < ($cr$0$ph$i$i | 0);
+                                        $564 =
+                                          ($nr$0$ph$i$i | 0) <
+                                          ($cr$0$ph$i$i | 0);
                                         if ($564) {
                                           $cr$1$i$i = $cr$0$ph$i$i;
                                           $r$1$i$i = $r$0$ph$i$i;
@@ -160954,26 +161637,38 @@ function zbarProcessImageData(imgData) {
                                           $565 = $cr$0$ph$i$i << 1;
                                           $566 = $565 | 1;
                                           $567 = $566 << 3;
-                                          $568 = _realloc($r$0$ph$i$i, $567) | 0;
+                                          $568 =
+                                            _realloc($r$0$ph$i$i, $567) | 0;
                                           $cr$1$i$i = $566;
                                           $r$1$i$i = $568;
                                         }
                                         $notlhs$i$i$i = ($557 | 0) < 0;
-                                        $notrhs$i$i$i = ($557 | 0) >= ($_width | 0);
-                                        $or$cond$not$i$i$i = $notrhs$i$i$i | $notlhs$i$i$i;
+                                        $notrhs$i$i$i =
+                                          ($557 | 0) >= ($_width | 0);
+                                        $or$cond$not$i$i$i =
+                                          $notrhs$i$i$i | $notlhs$i$i$i;
                                         $569 = ($559 | 0) < 0;
-                                        $or$cond1$i$i$i = $or$cond$not$i$i$i | $569;
-                                        $$not$i$i$i = ($559 | 0) >= ($_height | 0);
-                                        $or$cond2$not$i$i$i = $or$cond1$i$i$i | $$not$i$i$i;
+                                        $or$cond1$i$i$i =
+                                          $or$cond$not$i$i$i | $569;
+                                        $$not$i$i$i =
+                                          ($559 | 0) >= ($_height | 0);
+                                        $or$cond2$not$i$i$i =
+                                          $or$cond1$i$i$i | $$not$i$i$i;
                                         $570 = ($561 | 0) < 0;
-                                        $or$cond3$i$i$i = $or$cond2$not$i$i$i | $570;
-                                        $$not7$i$i$i = ($561 | 0) >= ($_width | 0);
-                                        $or$cond4$not$i$i$i = $or$cond3$i$i$i | $$not7$i$i$i;
+                                        $or$cond3$i$i$i =
+                                          $or$cond2$not$i$i$i | $570;
+                                        $$not7$i$i$i =
+                                          ($561 | 0) >= ($_width | 0);
+                                        $or$cond4$not$i$i$i =
+                                          $or$cond3$i$i$i | $$not7$i$i$i;
                                         $571 = ($563 | 0) < 0;
-                                        $or$cond5$i$i$i = $or$cond4$not$i$i$i | $571;
-                                        $or$cond5$not$i$i$i = $or$cond5$i$i$i ^ 1;
+                                        $or$cond5$i$i$i =
+                                          $or$cond4$not$i$i$i | $571;
+                                        $or$cond5$not$i$i$i =
+                                          $or$cond5$i$i$i ^ 1;
                                         $572 = ($563 | 0) < ($_height | 0);
-                                        $or$cond6$i$i$i = $572 & $or$cond5$not$i$i$i;
+                                        $or$cond6$i$i$i =
+                                          $572 & $or$cond5$not$i$i$i;
                                         do {
                                           if ($or$cond6$i$i$i) {
                                             $573 = Math_imul($559, $_width) | 0;
@@ -161023,8 +161718,21 @@ function zbarProcessImageData(imgData) {
                                             if ($591) {
                                               $ret$0$i$i = $$$i$i$i;
                                             } else {
-                                              $592 = ($r$1$i$i + ($nr$0$ph$i$i << 3)) | 0;
-                                              $593 = _qr_finder_locate_crossing($_img, $_width, $557, $559, $561, $563, 1, $592) | 0;
+                                              $592 =
+                                                ($r$1$i$i +
+                                                  ($nr$0$ph$i$i << 3)) |
+                                                0;
+                                              $593 =
+                                                _qr_finder_locate_crossing(
+                                                  $_img,
+                                                  $_width,
+                                                  $557,
+                                                  $559,
+                                                  $561,
+                                                  $563,
+                                                  1,
+                                                  $592
+                                                ) | 0;
                                               $ret$0$i$i = $593;
                                             }
                                             $594 = ($ret$0$i$i | 0) > -1;
@@ -161045,9 +161753,16 @@ function zbarProcessImageData(imgData) {
                                               $ry$2$i$i = $ry$0$ph$i$i;
                                               break;
                                             }
-                                            $596 = ($r$1$i$i + ($nr$0$ph$i$i << 3)) | 0;
+                                            $596 =
+                                              ($r$1$i$i + ($nr$0$ph$i$i << 3)) |
+                                              0;
                                             $597 = HEAP32[$596 >> 2] | 0;
-                                            $598 = ((($r$1$i$i + ($nr$0$ph$i$i << 3)) | 0) + 4) | 0;
+                                            $598 =
+                                              ((($r$1$i$i +
+                                                ($nr$0$ph$i$i << 3)) |
+                                                0) +
+                                                4) |
+                                              0;
                                             $599 = HEAP32[$598 >> 2] | 0;
                                             $600 = HEAP32[$24 >> 2] | 0;
                                             $601 = HEAP32[$28 >> 2] | 0;
@@ -161073,7 +161788,8 @@ function zbarProcessImageData(imgData) {
                                             $621 = ($613 + $ru$0$ph$i$i) | 0;
                                             $622 = $621 >> 1;
                                             $623 = ($620 + $336) | 0;
-                                            $624 = ($623 | 0) > ($rv$0$ph$i$i | 0);
+                                            $624 =
+                                              ($623 | 0) > ($rv$0$ph$i$i | 0);
                                             if ($624) {
                                               $625 = ($620 + $rv$0$ph$i$i) | 0;
                                               $626 = $625 >> 1;
@@ -161084,21 +161800,25 @@ function zbarProcessImageData(imgData) {
                                             $627 = HEAP32[$aff$i >> 2] | 0;
                                             $628 = Math_imul($627, $622) | 0;
                                             $629 = HEAP32[$21 >> 2] | 0;
-                                            $630 = Math_imul($629, $rv$1$i$i) | 0;
+                                            $630 =
+                                              Math_imul($629, $rv$1$i$i) | 0;
                                             $631 = ($628 + $496) | 0;
                                             $632 = ($631 + $630) | 0;
                                             $633 = HEAP32[$22 >> 2] | 0;
                                             $634 = Math_imul($633, $622) | 0;
                                             $635 = HEAP32[$23 >> 2] | 0;
-                                            $636 = Math_imul($635, $rv$1$i$i) | 0;
+                                            $636 =
+                                              Math_imul($635, $rv$1$i$i) | 0;
                                             $637 = ($634 + $499) | 0;
                                             $638 = ($637 + $636) | 0;
                                             $639 = ($nr$0$ph$i$i + 1) | 0;
                                             $640 = $rlastfit$0$ph$i$i >> 2;
-                                            $641 = ($640 + $rlastfit$0$ph$i$i) | 0;
+                                            $641 =
+                                              ($640 + $rlastfit$0$ph$i$i) | 0;
                                             $642 = ($641 | 0) > 1;
                                             $643 = $642 ? $641 : 1;
-                                            $644 = ($nr$0$ph$i$i | 0) < ($643 | 0);
+                                            $644 =
+                                              ($nr$0$ph$i$i | 0) < ($643 | 0);
                                             if ($644) {
                                               $drxi$3$i$i = $drxi$0$ph$i$i;
                                               $dryi$3$i$i = $dryi$0$ph$i$i;
@@ -161112,10 +161832,24 @@ function zbarProcessImageData(imgData) {
                                               break;
                                             }
                                             $645 = HEAP32[$30 >> 2] | 0;
-                                            _qr_line_fit_points($45, $r$1$i$i, $639, $645);
+                                            _qr_line_fit_points(
+                                              $45,
+                                              $r$1$i$i,
+                                              $639,
+                                              $645
+                                            );
                                             $$val70$i$i = HEAP32[$45 >> 2] | 0;
-                                            $$idx71$val$i$i = HEAP32[$$idx71$i$i >> 2] | 0;
-                                            $646 = _qr_aff_line_step($aff$i, $$val70$i$i, $$idx71$val$i$i, 1, $336, $dru$i$i) | 0;
+                                            $$idx71$val$i$i =
+                                              HEAP32[$$idx71$i$i >> 2] | 0;
+                                            $646 =
+                                              _qr_aff_line_step(
+                                                $aff$i,
+                                                $$val70$i$i,
+                                                $$idx71$val$i$i,
+                                                1,
+                                                $336,
+                                                $dru$i$i
+                                              ) | 0;
                                             $647 = ($646 | 0) > -1;
                                             if (!$647) {
                                               $drxi$3$i$i = $drxi$0$ph$i$i;
@@ -161168,7 +161902,9 @@ function zbarProcessImageData(imgData) {
                                         }
                                         $660 = HEAP32[$dru$i$i >> 2] | 0;
                                         $661 = ($660 + $ru$2$i$i) | 0;
-                                        $nrempty$2$i$i = $538 ? $nrempty$1$i$i : 2147483647;
+                                        $nrempty$2$i$i = $538
+                                          ? $nrempty$1$i$i
+                                          : 2147483647;
                                         $rv$4$i$i = ($rv$3$i$i + $539) | 0;
                                         $662 = ($rx$2$i$i + $drxi$3$i$i) | 0;
                                         $663 = ($dryi$3$i$i + $ry$2$i$i) | 0;
@@ -161198,7 +161934,12 @@ function zbarProcessImageData(imgData) {
                                       $774 = ($nr$0$ph$i$i | 0) > 1;
                                       if ($774) {
                                         $775 = HEAP32[$30 >> 2] | 0;
-                                        _qr_line_fit_points($45, $r$0$ph$i$i, $nr$0$ph$i$i, $775);
+                                        _qr_line_fit_points(
+                                          $45,
+                                          $r$0$ph$i$i,
+                                          $nr$0$ph$i$i,
+                                          $775
+                                        );
                                       } else {
                                         $776 = HEAP32[$ur$i >> 2] | 0;
                                         $777 = ($776 * 3) | 0;
@@ -161279,7 +162020,12 @@ function zbarProcessImageData(imgData) {
                                       $839 = ($nb$0$i$i | 0) > 1;
                                       if ($839) {
                                         $840 = HEAP32[$30 >> 2] | 0;
-                                        _qr_line_fit_points($47, $b$0$i$i, $nb$0$i$i, $840);
+                                        _qr_line_fit_points(
+                                          $47,
+                                          $b$0$i$i,
+                                          $nb$0$i$i,
+                                          $840
+                                        );
                                       } else {
                                         $841 = HEAP32[$34 >> 2] | 0;
                                         $842 = HEAP32[$35 >> 2] | 0;
@@ -161362,17 +162108,24 @@ function zbarProcessImageData(imgData) {
                                       _free($b$0$i$i);
                                       $i$2108$i$i = 0;
                                       while (1) {
-                                        $909 = ($bbox$i + ($i$2108$i$i << 3)) | 0;
+                                        $909 =
+                                          ($bbox$i + ($i$2108$i$i << 3)) | 0;
                                         $910 = $i$2108$i$i & 1;
                                         $911 = ($l$i$i + (($910 * 12) | 0)) | 0;
                                         $912 = $i$2108$i$i >> 1;
                                         $913 = ($912 + 2) | 0;
                                         $914 = ($l$i$i + (($913 * 12) | 0)) | 0;
                                         $915 = HEAP32[$911 >> 2] | 0;
-                                        $916 = ((($l$i$i + (($913 * 12) | 0)) | 0) + 4) | 0;
+                                        $916 =
+                                          ((($l$i$i + (($913 * 12) | 0)) | 0) +
+                                            4) |
+                                          0;
                                         $917 = HEAP32[$916 >> 2] | 0;
                                         $918 = Math_imul($917, $915) | 0;
-                                        $919 = ((($l$i$i + (($910 * 12) | 0)) | 0) + 4) | 0;
+                                        $919 =
+                                          ((($l$i$i + (($910 * 12) | 0)) | 0) +
+                                            4) |
+                                          0;
                                         $920 = HEAP32[$919 >> 2] | 0;
                                         $921 = HEAP32[$914 >> 2] | 0;
                                         $922 = Math_imul($921, $920) | 0;
@@ -161383,10 +162136,16 @@ function zbarProcessImageData(imgData) {
                                           $$1$i = $$0$i;
                                           break L19;
                                         }
-                                        $925 = ((($l$i$i + (($913 * 12) | 0)) | 0) + 8) | 0;
+                                        $925 =
+                                          ((($l$i$i + (($913 * 12) | 0)) | 0) +
+                                            8) |
+                                          0;
                                         $926 = HEAP32[$925 >> 2] | 0;
                                         $927 = Math_imul($926, $920) | 0;
-                                        $928 = ((($l$i$i + (($910 * 12) | 0)) | 0) + 8) | 0;
+                                        $928 =
+                                          ((($l$i$i + (($910 * 12) | 0)) | 0) +
+                                            8) |
+                                          0;
                                         $929 = HEAP32[$928 >> 2] | 0;
                                         $930 = Math_imul($929, $917) | 0;
                                         $931 = ($927 - $930) | 0;
@@ -161411,14 +162170,20 @@ function zbarProcessImageData(imgData) {
                                         $941 = ($940 + $939) | 0;
                                         $942 = $941 ^ $940;
                                         $943 = ($942 + $x$0$i$i$i) | 0;
-                                        $944 = (($943 | 0) / ($d$0$i$i$i | 0)) & -1;
+                                        $944 =
+                                          (($943 | 0) / ($d$0$i$i$i | 0)) & -1;
                                         HEAP32[$909 >> 2] = $944;
                                         $945 = $y$0$i$i$i >> 31;
                                         $946 = ($945 + $939) | 0;
                                         $947 = $946 ^ $945;
                                         $948 = ($947 + $y$0$i$i$i) | 0;
-                                        $949 = (($948 | 0) / ($d$0$i$i$i | 0)) & -1;
-                                        $950 = ((($bbox$i + ($i$2108$i$i << 3)) | 0) + 4) | 0;
+                                        $949 =
+                                          (($948 | 0) / ($d$0$i$i$i | 0)) & -1;
+                                        $950 =
+                                          ((($bbox$i + ($i$2108$i$i << 3)) |
+                                            0) +
+                                            4) |
+                                          0;
                                         HEAP32[$950 >> 2] = $949;
                                         $951 = ($944 | 0) >= ($53 | 0);
                                         $952 = ($944 | 0) < ($54 | 0);
@@ -161484,7 +162249,16 @@ function zbarProcessImageData(imgData) {
                                           );
                                           $972 = ($963 + 10) | 0;
                                           $973 =
-                                            _qr_alignment_pattern_search($p3$i$i, $cell$i$i, $972, $972, 4, $_img, $_width, $_height) | 0;
+                                            _qr_alignment_pattern_search(
+                                              $p3$i$i,
+                                              $cell$i$i,
+                                              $972,
+                                              $972,
+                                              4,
+                                              $_img,
+                                              $_width,
+                                              $_height
+                                            ) | 0;
                                           $974 = ($973 | 0) > -1;
                                           if (!$974) {
                                             $1114 = $966;
@@ -161506,7 +162280,13 @@ function zbarProcessImageData(imgData) {
                                           $981 = ($980 << 31) >> 31;
                                           $982 = ($977 | 0) < 0;
                                           $983 = ($982 << 31) >> 31;
-                                          $984 = ___muldi3($977 | 0, $983 | 0, $972 | 0, $981 | 0) | 0;
+                                          $984 =
+                                            ___muldi3(
+                                              $977 | 0,
+                                              $983 | 0,
+                                              $972 | 0,
+                                              $981 | 0
+                                            ) | 0;
                                           $985 = tempRet0;
                                           $986 = ($963 + 4) | 0;
                                           $987 = ($986 | 0) < 0;
@@ -161516,7 +162296,13 @@ function zbarProcessImageData(imgData) {
                                           $991 = ($989 - $990) | 0;
                                           $992 = ($991 | 0) < 0;
                                           $993 = ($992 << 31) >> 31;
-                                          $994 = ___muldi3($991 | 0, $993 | 0, $986 | 0, $988 | 0) | 0;
+                                          $994 =
+                                            ___muldi3(
+                                              $991 | 0,
+                                              $993 | 0,
+                                              $986 | 0,
+                                              $988 | 0
+                                            ) | 0;
                                           $995 = tempRet0;
                                           $996 = HEAP32[$p3$i$i >> 2] | 0;
                                           $997 = Math_imul($996, $979) | 0;
@@ -161525,11 +162311,29 @@ function zbarProcessImageData(imgData) {
                                           $1000 = ($997 - $999) | 0;
                                           $1001 = ($1000 | 0) < 0;
                                           $1002 = ($1001 << 31) >> 31;
-                                          $1003 = ___muldi3($1000 | 0, $1002 | 0, 6, 0) | 0;
+                                          $1003 =
+                                            ___muldi3(
+                                              $1000 | 0,
+                                              $1002 | 0,
+                                              6,
+                                              0
+                                            ) | 0;
                                           $1004 = tempRet0;
-                                          $1005 = _i64Add($994 | 0, $995 | 0, $984 | 0, $985 | 0) | 0;
+                                          $1005 =
+                                            _i64Add(
+                                              $994 | 0,
+                                              $995 | 0,
+                                              $984 | 0,
+                                              $985 | 0
+                                            ) | 0;
                                           $1006 = tempRet0;
-                                          $1007 = _i64Add($1005 | 0, $1006 | 0, $1003 | 0, $1004 | 0) | 0;
+                                          $1007 =
+                                            _i64Add(
+                                              $1005 | 0,
+                                              $1006 | 0,
+                                              $1003 | 0,
+                                              $1004 | 0
+                                            ) | 0;
                                           $1008 = tempRet0;
                                           $1009 = ($1007 | 0) == 0;
                                           $1010 = ($1008 | 0) == 0;
@@ -161539,12 +162343,23 @@ function zbarProcessImageData(imgData) {
                                             $$1$i = $$0$i;
                                             break L19;
                                           }
-                                          $1012 = _bitshift64Lshr($1007 | 0, $1008 | 0, 63) | 0;
+                                          $1012 =
+                                            _bitshift64Lshr(
+                                              $1007 | 0,
+                                              $1008 | 0,
+                                              63
+                                            ) | 0;
                                           $1013 = tempRet0;
                                           $1014 = (0 - $1012) | 0;
                                           $1015 = ($1014 | 0) < 0;
                                           $1016 = ($1015 << 31) >> 31;
-                                          $1017 = _i64Add($1014 | 0, $1016 | 0, $1007 | 0, $1008 | 0) | 0;
+                                          $1017 =
+                                            _i64Add(
+                                              $1014 | 0,
+                                              $1016 | 0,
+                                              $1007 | 0,
+                                              $1008 | 0
+                                            ) | 0;
                                           $1018 = tempRet0;
                                           $1019 = $1017 ^ $1014;
                                           $1020 = $1018 ^ $1016;
@@ -161553,7 +162368,13 @@ function zbarProcessImageData(imgData) {
                                           $1023 = ($1022 << 31) >> 31;
                                           $1024 = ($997 | 0) < 0;
                                           $1025 = ($1024 << 31) >> 31;
-                                          $1026 = ___muldi3($997 | 0, $1025 | 0, $1021 | 0, $1023 | 0) | 0;
+                                          $1026 =
+                                            ___muldi3(
+                                              $997 | 0,
+                                              $1025 | 0,
+                                              $1021 | 0,
+                                              $1023 | 0
+                                            ) | 0;
                                           $1027 = tempRet0;
                                           $1028 = Math_imul($996, $986) | 0;
                                           $1029 = ($1028 | 0) < 0;
@@ -161561,7 +162382,13 @@ function zbarProcessImageData(imgData) {
                                           $1031 = ($977 - $990) | 0;
                                           $1032 = ($1031 | 0) < 0;
                                           $1033 = ($1032 << 31) >> 31;
-                                          $1034 = ___muldi3($1028 | 0, $1030 | 0, $1031 | 0, $1033 | 0) | 0;
+                                          $1034 =
+                                            ___muldi3(
+                                              $1028 | 0,
+                                              $1030 | 0,
+                                              $1031 | 0,
+                                              $1033 | 0
+                                            ) | 0;
                                           $1035 = tempRet0;
                                           $1036 = ($966 * 6) | 0;
                                           $1037 = ($1036 | 0) < 0;
@@ -161569,30 +162396,82 @@ function zbarProcessImageData(imgData) {
                                           $1039 = ($977 - $999) | 0;
                                           $1040 = ($1039 | 0) < 0;
                                           $1041 = ($1040 << 31) >> 31;
-                                          $1042 = ___muldi3($1039 | 0, $1041 | 0, $1036 | 0, $1038 | 0) | 0;
+                                          $1042 =
+                                            ___muldi3(
+                                              $1039 | 0,
+                                              $1041 | 0,
+                                              $1036 | 0,
+                                              $1038 | 0
+                                            ) | 0;
                                           $1043 = tempRet0;
-                                          $1044 = _i64Add($1026 | 0, $1027 | 0, $1034 | 0, $1035 | 0) | 0;
+                                          $1044 =
+                                            _i64Add(
+                                              $1026 | 0,
+                                              $1027 | 0,
+                                              $1034 | 0,
+                                              $1035 | 0
+                                            ) | 0;
                                           $1045 = tempRet0;
-                                          $1046 = _i64Add($1044 | 0, $1045 | 0, $1042 | 0, $1043 | 0) | 0;
+                                          $1046 =
+                                            _i64Add(
+                                              $1044 | 0,
+                                              $1045 | 0,
+                                              $1042 | 0,
+                                              $1043 | 0
+                                            ) | 0;
                                           $1047 = tempRet0;
-                                          $1048 = _i64Add($1046 | 0, $1047 | 0, $1014 | 0, $1016 | 0) | 0;
+                                          $1048 =
+                                            _i64Add(
+                                              $1046 | 0,
+                                              $1047 | 0,
+                                              $1014 | 0,
+                                              $1016 | 0
+                                            ) | 0;
                                           $1049 = tempRet0;
                                           $1050 = $1048 ^ $1014;
                                           $1051 = $1049 ^ $1016;
-                                          $1052 = _bitshift64Ashr($1019 | 0, $1020 | 0, 1) | 0;
+                                          $1052 =
+                                            _bitshift64Ashr(
+                                              $1019 | 0,
+                                              $1020 | 0,
+                                              1
+                                            ) | 0;
                                           $1053 = tempRet0;
-                                          $1054 = _bitshift64Lshr($1050 | 0, $1051 | 0, 63) | 0;
+                                          $1054 =
+                                            _bitshift64Lshr(
+                                              $1050 | 0,
+                                              $1051 | 0,
+                                              63
+                                            ) | 0;
                                           $1055 = tempRet0;
                                           $1056 = (0 - $1054) | 0;
                                           $1057 = ($1056 | 0) < 0;
                                           $1058 = ($1057 << 31) >> 31;
-                                          $1059 = _i64Add($1056 | 0, $1058 | 0, $1052 | 0, $1053 | 0) | 0;
+                                          $1059 =
+                                            _i64Add(
+                                              $1056 | 0,
+                                              $1058 | 0,
+                                              $1052 | 0,
+                                              $1053 | 0
+                                            ) | 0;
                                           $1060 = tempRet0;
                                           $1061 = $1059 ^ $1056;
                                           $1062 = $1060 ^ $1058;
-                                          $1063 = _i64Add($1061 | 0, $1062 | 0, $1050 | 0, $1051 | 0) | 0;
+                                          $1063 =
+                                            _i64Add(
+                                              $1061 | 0,
+                                              $1062 | 0,
+                                              $1050 | 0,
+                                              $1051 | 0
+                                            ) | 0;
                                           $1064 = tempRet0;
-                                          $1065 = ___divdi3($1063 | 0, $1064 | 0, $1019 | 0, $1020 | 0) | 0;
+                                          $1065 =
+                                            ___divdi3(
+                                              $1063 | 0,
+                                              $1064 | 0,
+                                              $1019 | 0,
+                                              $1020 | 0
+                                            ) | 0;
                                           $1066 = tempRet0;
                                           $1067 = Math_imul($967, $972) | 0;
                                           $1068 = ($1067 | 0) < 0;
@@ -161601,7 +162480,13 @@ function zbarProcessImageData(imgData) {
                                           $1071 = Math_imul($998, $1070) | 0;
                                           $1072 = ($1071 | 0) < 0;
                                           $1073 = ($1072 << 31) >> 31;
-                                          $1074 = ___muldi3($1071 | 0, $1073 | 0, $1067 | 0, $1069 | 0) | 0;
+                                          $1074 =
+                                            ___muldi3(
+                                              $1071 | 0,
+                                              $1073 | 0,
+                                              $1067 | 0,
+                                              $1069 | 0
+                                            ) | 0;
                                           $1075 = tempRet0;
                                           $1076 = Math_imul($998, $986) | 0;
                                           $1077 = ($1076 | 0) < 0;
@@ -161609,7 +162494,13 @@ function zbarProcessImageData(imgData) {
                                           $1079 = ($977 + $989) | 0;
                                           $1080 = ($1079 | 0) < 0;
                                           $1081 = ($1080 << 31) >> 31;
-                                          $1082 = ___muldi3($1076 | 0, $1078 | 0, $1079 | 0, $1081 | 0) | 0;
+                                          $1082 =
+                                            ___muldi3(
+                                              $1076 | 0,
+                                              $1078 | 0,
+                                              $1079 | 0,
+                                              $1081 | 0
+                                            ) | 0;
                                           $1083 = tempRet0;
                                           $1084 = ($967 * 6) | 0;
                                           $1085 = ($1084 | 0) < 0;
@@ -161617,28 +162508,75 @@ function zbarProcessImageData(imgData) {
                                           $1087 = ($997 + $977) | 0;
                                           $1088 = ($1087 | 0) < 0;
                                           $1089 = ($1088 << 31) >> 31;
-                                          $1090 = ___muldi3($1087 | 0, $1089 | 0, $1084 | 0, $1086 | 0) | 0;
+                                          $1090 =
+                                            ___muldi3(
+                                              $1087 | 0,
+                                              $1089 | 0,
+                                              $1084 | 0,
+                                              $1086 | 0
+                                            ) | 0;
                                           $1091 = tempRet0;
-                                          $1092 = _i64Add($1082 | 0, $1083 | 0, $1090 | 0, $1091 | 0) | 0;
+                                          $1092 =
+                                            _i64Add(
+                                              $1082 | 0,
+                                              $1083 | 0,
+                                              $1090 | 0,
+                                              $1091 | 0
+                                            ) | 0;
                                           $1093 = tempRet0;
-                                          $1094 = _i64Add($1092 | 0, $1093 | 0, $1074 | 0, $1075 | 0) | 0;
+                                          $1094 =
+                                            _i64Add(
+                                              $1092 | 0,
+                                              $1093 | 0,
+                                              $1074 | 0,
+                                              $1075 | 0
+                                            ) | 0;
                                           $1095 = tempRet0;
-                                          $1096 = _i64Add($1094 | 0, $1095 | 0, $1014 | 0, $1016 | 0) | 0;
+                                          $1096 =
+                                            _i64Add(
+                                              $1094 | 0,
+                                              $1095 | 0,
+                                              $1014 | 0,
+                                              $1016 | 0
+                                            ) | 0;
                                           $1097 = tempRet0;
                                           $1098 = $1096 ^ $1014;
                                           $1099 = $1097 ^ $1016;
-                                          $1100 = _bitshift64Lshr($1098 | 0, $1099 | 0, 63) | 0;
+                                          $1100 =
+                                            _bitshift64Lshr(
+                                              $1098 | 0,
+                                              $1099 | 0,
+                                              63
+                                            ) | 0;
                                           $1101 = tempRet0;
                                           $1102 = (0 - $1100) | 0;
                                           $1103 = ($1102 | 0) < 0;
                                           $1104 = ($1103 << 31) >> 31;
-                                          $1105 = _i64Add($1102 | 0, $1104 | 0, $1052 | 0, $1053 | 0) | 0;
+                                          $1105 =
+                                            _i64Add(
+                                              $1102 | 0,
+                                              $1104 | 0,
+                                              $1052 | 0,
+                                              $1053 | 0
+                                            ) | 0;
                                           $1106 = tempRet0;
                                           $1107 = $1105 ^ $1102;
                                           $1108 = $1106 ^ $1104;
-                                          $1109 = _i64Add($1107 | 0, $1108 | 0, $1098 | 0, $1099 | 0) | 0;
+                                          $1109 =
+                                            _i64Add(
+                                              $1107 | 0,
+                                              $1108 | 0,
+                                              $1098 | 0,
+                                              $1099 | 0
+                                            ) | 0;
                                           $1110 = tempRet0;
-                                          $1111 = ___divdi3($1109 | 0, $1110 | 0, $1019 | 0, $1020 | 0) | 0;
+                                          $1111 =
+                                            ___divdi3(
+                                              $1109 | 0,
+                                              $1110 | 0,
+                                              $1019 | 0,
+                                              $1020 | 0
+                                            ) | 0;
                                           $1112 = tempRet0;
                                           $1114 = $966;
                                           $1115 = $968;
@@ -161689,7 +162627,9 @@ function zbarProcessImageData(imgData) {
                                       $1138 = $ispos$i$i$i ? $1113 : $neg$i$i$i;
                                       $ispos3$i$i$i = ($1121 | 0) > -1;
                                       $neg4$i$i$i = (0 - $1121) | 0;
-                                      $1139 = $ispos3$i$i$i ? $1121 : $neg4$i$i$i;
+                                      $1139 = $ispos3$i$i$i
+                                        ? $1121
+                                        : $neg4$i$i$i;
                                       $1140 = ($1138 - $1139) | 0;
                                       $1141 = ($1139 | 0) > ($1138 | 0);
                                       $1142 = $1141 ? $1140 : 0;
@@ -161698,15 +162638,21 @@ function zbarProcessImageData(imgData) {
                                       $1145 = ($1131 + $1137) | 0;
                                       $ispos9$i$i$i = ($1145 | 0) > -1;
                                       $neg10$i$i$i = (0 - $1145) | 0;
-                                      $1146 = $ispos9$i$i$i ? $1145 : $neg10$i$i$i;
+                                      $1146 = $ispos9$i$i$i
+                                        ? $1145
+                                        : $neg10$i$i$i;
                                       $1147 = _qr_ilog($1146) | 0;
                                       $1148 = ($1147 + $1144) | 0;
                                       $ispos11$i$i$i = ($1116 | 0) > -1;
                                       $neg12$i$i$i = (0 - $1116) | 0;
-                                      $1149 = $ispos11$i$i$i ? $1116 : $neg12$i$i$i;
+                                      $1149 = $ispos11$i$i$i
+                                        ? $1116
+                                        : $neg12$i$i$i;
                                       $ispos15$i$i$i = ($1124 | 0) > -1;
                                       $neg16$i$i$i = (0 - $1124) | 0;
-                                      $1150 = $ispos15$i$i$i ? $1124 : $neg16$i$i$i;
+                                      $1150 = $ispos15$i$i$i
+                                        ? $1124
+                                        : $neg16$i$i$i;
                                       $1151 = ($1149 - $1150) | 0;
                                       $1152 = ($1150 | 0) > ($1149 | 0);
                                       $1153 = $1152 ? $1151 : 0;
@@ -161715,22 +162661,30 @@ function zbarProcessImageData(imgData) {
                                       $1156 = ($1134 + $1137) | 0;
                                       $ispos21$i$i$i = ($1156 | 0) > -1;
                                       $neg22$i$i$i = (0 - $1156) | 0;
-                                      $1157 = $ispos21$i$i$i ? $1156 : $neg22$i$i$i;
+                                      $1157 = $ispos21$i$i$i
+                                        ? $1156
+                                        : $neg22$i$i$i;
                                       $1158 = _qr_ilog($1157) | 0;
                                       $1159 = ($1158 + $1155) | 0;
                                       $ispos23$i$i$i = ($1131 | 0) > -1;
                                       $neg24$i$i$i = (0 - $1131) | 0;
-                                      $1160 = $ispos23$i$i$i ? $1131 : $neg24$i$i$i;
+                                      $1160 = $ispos23$i$i$i
+                                        ? $1131
+                                        : $neg24$i$i$i;
                                       $ispos27$i$i$i = ($1134 | 0) > -1;
                                       $neg28$i$i$i = (0 - $1134) | 0;
-                                      $1161 = $ispos27$i$i$i ? $1134 : $neg28$i$i$i;
+                                      $1161 = $ispos27$i$i$i
+                                        ? $1134
+                                        : $neg28$i$i$i;
                                       $1162 = ($1160 - $1161) | 0;
                                       $1163 = ($1161 | 0) > ($1160 | 0);
                                       $1164 = $1163 ? $1162 : 0;
                                       $1165 = ($1160 - $1164) | 0;
                                       $ispos43$i$i$i = ($1137 | 0) > -1;
                                       $neg44$i$i$i = (0 - $1137) | 0;
-                                      $1166 = $ispos43$i$i$i ? $1137 : $neg44$i$i$i;
+                                      $1166 = $ispos43$i$i$i
+                                        ? $1137
+                                        : $neg44$i$i$i;
                                       $1167 = ($1165 - $1166) | 0;
                                       $1168 = ($1166 | 0) > ($1165 | 0);
                                       $1169 = $1168 ? $1167 : 0;
@@ -161753,43 +162707,111 @@ function zbarProcessImageData(imgData) {
                                       $1186 = ($1185 << 31) >> 31;
                                       $1187 = ($1145 | 0) < 0;
                                       $1188 = ($1187 << 31) >> 31;
-                                      $1189 = ___muldi3($1145 | 0, $1188 | 0, $1113 | 0, $1186 | 0) | 0;
+                                      $1189 =
+                                        ___muldi3(
+                                          $1145 | 0,
+                                          $1188 | 0,
+                                          $1113 | 0,
+                                          $1186 | 0
+                                        ) | 0;
                                       $1190 = tempRet0;
                                       $1191 = ($1184 | 0) < 0;
                                       $1192 = ($1191 << 31) >> 31;
-                                      $1193 = _i64Add($1184 | 0, $1192 | 0, $1189 | 0, $1190 | 0) | 0;
+                                      $1193 =
+                                        _i64Add(
+                                          $1184 | 0,
+                                          $1192 | 0,
+                                          $1189 | 0,
+                                          $1190 | 0
+                                        ) | 0;
                                       $1194 = tempRet0;
-                                      $1195 = _bitshift64Ashr($1193 | 0, $1194 | 0, $1182 | 0) | 0;
+                                      $1195 =
+                                        _bitshift64Ashr(
+                                          $1193 | 0,
+                                          $1194 | 0,
+                                          $1182 | 0
+                                        ) | 0;
                                       $1196 = tempRet0;
                                       HEAP32[$hom$i >> 2] = $1195;
                                       $1197 = ($1116 | 0) < 0;
                                       $1198 = ($1197 << 31) >> 31;
                                       $1199 = ($1156 | 0) < 0;
                                       $1200 = ($1199 << 31) >> 31;
-                                      $1201 = ___muldi3($1156 | 0, $1200 | 0, $1116 | 0, $1198 | 0) | 0;
+                                      $1201 =
+                                        ___muldi3(
+                                          $1156 | 0,
+                                          $1200 | 0,
+                                          $1116 | 0,
+                                          $1198 | 0
+                                        ) | 0;
                                       $1202 = tempRet0;
-                                      $1203 = _i64Add($1184 | 0, $1192 | 0, $1201 | 0, $1202 | 0) | 0;
+                                      $1203 =
+                                        _i64Add(
+                                          $1184 | 0,
+                                          $1192 | 0,
+                                          $1201 | 0,
+                                          $1202 | 0
+                                        ) | 0;
                                       $1204 = tempRet0;
-                                      $1205 = _bitshift64Ashr($1203 | 0, $1204 | 0, $1182 | 0) | 0;
+                                      $1205 =
+                                        _bitshift64Ashr(
+                                          $1203 | 0,
+                                          $1204 | 0,
+                                          $1182 | 0
+                                        ) | 0;
                                       $1206 = tempRet0;
                                       HEAP32[$68 >> 2] = $1205;
                                       HEAP32[$69 >> 2] = $1114;
                                       $1207 = ($1121 | 0) < 0;
                                       $1208 = ($1207 << 31) >> 31;
-                                      $1209 = ___muldi3($1145 | 0, $1188 | 0, $1121 | 0, $1208 | 0) | 0;
+                                      $1209 =
+                                        ___muldi3(
+                                          $1145 | 0,
+                                          $1188 | 0,
+                                          $1121 | 0,
+                                          $1208 | 0
+                                        ) | 0;
                                       $1210 = tempRet0;
-                                      $1211 = _i64Add($1184 | 0, $1192 | 0, $1209 | 0, $1210 | 0) | 0;
+                                      $1211 =
+                                        _i64Add(
+                                          $1184 | 0,
+                                          $1192 | 0,
+                                          $1209 | 0,
+                                          $1210 | 0
+                                        ) | 0;
                                       $1212 = tempRet0;
-                                      $1213 = _bitshift64Ashr($1211 | 0, $1212 | 0, $1182 | 0) | 0;
+                                      $1213 =
+                                        _bitshift64Ashr(
+                                          $1211 | 0,
+                                          $1212 | 0,
+                                          $1182 | 0
+                                        ) | 0;
                                       $1214 = tempRet0;
                                       HEAP32[$70 >> 2] = $1213;
                                       $1215 = ($1124 | 0) < 0;
                                       $1216 = ($1215 << 31) >> 31;
-                                      $1217 = ___muldi3($1156 | 0, $1200 | 0, $1124 | 0, $1216 | 0) | 0;
+                                      $1217 =
+                                        ___muldi3(
+                                          $1156 | 0,
+                                          $1200 | 0,
+                                          $1124 | 0,
+                                          $1216 | 0
+                                        ) | 0;
                                       $1218 = tempRet0;
-                                      $1219 = _i64Add($1184 | 0, $1192 | 0, $1217 | 0, $1218 | 0) | 0;
+                                      $1219 =
+                                        _i64Add(
+                                          $1184 | 0,
+                                          $1192 | 0,
+                                          $1217 | 0,
+                                          $1218 | 0
+                                        ) | 0;
                                       $1220 = tempRet0;
-                                      $1221 = _bitshift64Ashr($1219 | 0, $1220 | 0, $1182 | 0) | 0;
+                                      $1221 =
+                                        _bitshift64Ashr(
+                                          $1219 | 0,
+                                          $1220 | 0,
+                                          $1182 | 0
+                                        ) | 0;
                                       $1222 = tempRet0;
                                       HEAP32[$71 >> 2] = $1221;
                                       HEAP32[$72 >> 2] = $1122;
@@ -161818,7 +162840,9 @@ function zbarProcessImageData(imgData) {
                                       $1238 = ($1138 - $1237) | 0;
                                       $ispos77$i$i$i = ($1118 | 0) > -1;
                                       $neg78$i$i$i = (0 - $1118) | 0;
-                                      $1239 = $ispos77$i$i$i ? $1118 : $neg78$i$i$i;
+                                      $1239 = $ispos77$i$i$i
+                                        ? $1118
+                                        : $neg78$i$i$i;
                                       $1240 = ($1238 - $1239) | 0;
                                       $1241 = ($1239 | 0) > ($1238 | 0);
                                       $1242 = $1241 ? $1240 : 0;
@@ -161826,10 +162850,14 @@ function zbarProcessImageData(imgData) {
                                       $1244 = _qr_ilog($1243) | 0;
                                       $ispos91$i$i$i = ($1195 | 0) > -1;
                                       $neg92$i$i$i = (0 - $1195) | 0;
-                                      $1245 = $ispos91$i$i$i ? $1195 : $neg92$i$i$i;
+                                      $1245 = $ispos91$i$i$i
+                                        ? $1195
+                                        : $neg92$i$i$i;
                                       $ispos95$i$i$i = ($1213 | 0) > -1;
                                       $neg96$i$i$i = (0 - $1213) | 0;
-                                      $1246 = $ispos95$i$i$i ? $1213 : $neg96$i$i$i;
+                                      $1246 = $ispos95$i$i$i
+                                        ? $1213
+                                        : $neg96$i$i$i;
                                       $1247 = ($1245 - $1246) | 0;
                                       $1248 = ($1246 | 0) > ($1245 | 0);
                                       $1249 = $1248 ? $1247 : 0;
@@ -161842,7 +162870,9 @@ function zbarProcessImageData(imgData) {
                                       $1256 = ($1139 - $1255) | 0;
                                       $ispos121$i$i$i = ($1126 | 0) > -1;
                                       $neg122$i$i$i = (0 - $1126) | 0;
-                                      $1257 = $ispos121$i$i$i ? $1126 : $neg122$i$i$i;
+                                      $1257 = $ispos121$i$i$i
+                                        ? $1126
+                                        : $neg122$i$i$i;
                                       $1258 = ($1256 - $1257) | 0;
                                       $1259 = ($1257 | 0) > ($1256 | 0);
                                       $1260 = $1259 ? $1258 : 0;
@@ -161850,10 +162880,14 @@ function zbarProcessImageData(imgData) {
                                       $1262 = _qr_ilog($1261) | 0;
                                       $ispos135$i$i$i = ($1205 | 0) > -1;
                                       $neg136$i$i$i = (0 - $1205) | 0;
-                                      $1263 = $ispos135$i$i$i ? $1205 : $neg136$i$i$i;
+                                      $1263 = $ispos135$i$i$i
+                                        ? $1205
+                                        : $neg136$i$i$i;
                                       $ispos139$i$i$i = ($1221 | 0) > -1;
                                       $neg140$i$i$i = (0 - $1221) | 0;
-                                      $1264 = $ispos139$i$i$i ? $1221 : $neg140$i$i$i;
+                                      $1264 = $ispos139$i$i$i
+                                        ? $1221
+                                        : $neg140$i$i$i;
                                       $1265 = ($1263 - $1264) | 0;
                                       $1266 = ($1264 | 0) > ($1263 | 0);
                                       $1267 = $1266 ? $1265 : 0;
@@ -161878,59 +162912,156 @@ function zbarProcessImageData(imgData) {
                                       $1285 = ($1284 << 31) >> 31;
                                       $1286 = ($1137 | 0) < 0;
                                       $1287 = ($1286 << 31) >> 31;
-                                      $1288 = ___muldi3($1221 | 0, $1285 | 0, $1137 | 0, $1287 | 0) | 0;
+                                      $1288 =
+                                        ___muldi3(
+                                          $1221 | 0,
+                                          $1285 | 0,
+                                          $1137 | 0,
+                                          $1287 | 0
+                                        ) | 0;
                                       $1289 = tempRet0;
                                       $1290 = ($1283 | 0) < 0;
                                       $1291 = ($1290 << 31) >> 31;
-                                      $1292 = _i64Add($1283 | 0, $1291 | 0, $1288 | 0, $1289 | 0) | 0;
+                                      $1292 =
+                                        _i64Add(
+                                          $1283 | 0,
+                                          $1291 | 0,
+                                          $1288 | 0,
+                                          $1289 | 0
+                                        ) | 0;
                                       $1293 = tempRet0;
-                                      $1294 = _bitshift64Ashr($1292 | 0, $1293 | 0, $1282 | 0) | 0;
+                                      $1294 =
+                                        _bitshift64Ashr(
+                                          $1292 | 0,
+                                          $1293 | 0,
+                                          $1282 | 0
+                                        ) | 0;
                                       $1295 = tempRet0;
                                       HEAP32[$76 >> 2] = $1294;
                                       $1296 = ($neg136$i$i$i | 0) < 0;
                                       $1297 = ($1296 << 31) >> 31;
-                                      $1298 = ___muldi3($neg136$i$i$i | 0, $1297 | 0, $1137 | 0, $1287 | 0) | 0;
+                                      $1298 =
+                                        ___muldi3(
+                                          $neg136$i$i$i | 0,
+                                          $1297 | 0,
+                                          $1137 | 0,
+                                          $1287 | 0
+                                        ) | 0;
                                       $1299 = tempRet0;
-                                      $1300 = _i64Add($1283 | 0, $1291 | 0, $1298 | 0, $1299 | 0) | 0;
+                                      $1300 =
+                                        _i64Add(
+                                          $1283 | 0,
+                                          $1291 | 0,
+                                          $1298 | 0,
+                                          $1299 | 0
+                                        ) | 0;
                                       $1301 = tempRet0;
-                                      $1302 = _bitshift64Ashr($1300 | 0, $1301 | 0, $1282 | 0) | 0;
+                                      $1302 =
+                                        _bitshift64Ashr(
+                                          $1300 | 0,
+                                          $1301 | 0,
+                                          $1282 | 0
+                                        ) | 0;
                                       $1303 = tempRet0;
                                       HEAP32[$77 >> 2] = $1302;
                                       $1304 = ($neg96$i$i$i | 0) < 0;
                                       $1305 = ($1304 << 31) >> 31;
-                                      $1306 = ___muldi3($neg96$i$i$i | 0, $1305 | 0, $1137 | 0, $1287 | 0) | 0;
+                                      $1306 =
+                                        ___muldi3(
+                                          $neg96$i$i$i | 0,
+                                          $1305 | 0,
+                                          $1137 | 0,
+                                          $1287 | 0
+                                        ) | 0;
                                       $1307 = tempRet0;
-                                      $1308 = _i64Add($1283 | 0, $1291 | 0, $1306 | 0, $1307 | 0) | 0;
+                                      $1308 =
+                                        _i64Add(
+                                          $1283 | 0,
+                                          $1291 | 0,
+                                          $1306 | 0,
+                                          $1307 | 0
+                                        ) | 0;
                                       $1309 = tempRet0;
-                                      $1310 = _bitshift64Ashr($1308 | 0, $1309 | 0, $1282 | 0) | 0;
+                                      $1310 =
+                                        _bitshift64Ashr(
+                                          $1308 | 0,
+                                          $1309 | 0,
+                                          $1282 | 0
+                                        ) | 0;
                                       $1311 = tempRet0;
                                       HEAP32[$78 >> 2] = $1310;
                                       $1312 = ($1195 | 0) < 0;
                                       $1313 = ($1312 << 31) >> 31;
-                                      $1314 = ___muldi3($1195 | 0, $1313 | 0, $1137 | 0, $1287 | 0) | 0;
+                                      $1314 =
+                                        ___muldi3(
+                                          $1195 | 0,
+                                          $1313 | 0,
+                                          $1137 | 0,
+                                          $1287 | 0
+                                        ) | 0;
                                       $1315 = tempRet0;
-                                      $1316 = _i64Add($1283 | 0, $1291 | 0, $1314 | 0, $1315 | 0) | 0;
+                                      $1316 =
+                                        _i64Add(
+                                          $1283 | 0,
+                                          $1291 | 0,
+                                          $1314 | 0,
+                                          $1315 | 0
+                                        ) | 0;
                                       $1317 = tempRet0;
-                                      $1318 = _bitshift64Ashr($1316 | 0, $1317 | 0, $1282 | 0) | 0;
+                                      $1318 =
+                                        _bitshift64Ashr(
+                                          $1316 | 0,
+                                          $1317 | 0,
+                                          $1282 | 0
+                                        ) | 0;
                                       $1319 = tempRet0;
                                       HEAP32[$79 >> 2] = $1318;
                                       $1320 = ($1213 | 0) < 0;
                                       $1321 = ($1320 << 31) >> 31;
                                       $1322 = ($1226 | 0) < 0;
                                       $1323 = ($1322 << 31) >> 31;
-                                      $1324 = ___muldi3($1213 | 0, $1321 | 0, $1226 | 0, $1323 | 0) | 0;
+                                      $1324 =
+                                        ___muldi3(
+                                          $1213 | 0,
+                                          $1321 | 0,
+                                          $1226 | 0,
+                                          $1323 | 0
+                                        ) | 0;
                                       $1325 = tempRet0;
                                       $1326 = ($1224 | 0) < 0;
                                       $1327 = ($1326 << 31) >> 31;
-                                      $1328 = ___muldi3($1221 | 0, $1285 | 0, $1224 | 0, $1327 | 0) | 0;
+                                      $1328 =
+                                        ___muldi3(
+                                          $1221 | 0,
+                                          $1285 | 0,
+                                          $1224 | 0,
+                                          $1327 | 0
+                                        ) | 0;
                                       $1329 = tempRet0;
                                       $1330 = ($1281 | 0) < 0;
                                       $1331 = ($1330 << 31) >> 31;
-                                      $1332 = _i64Subtract($1324 | 0, $1325 | 0, $1328 | 0, $1329 | 0) | 0;
+                                      $1332 =
+                                        _i64Subtract(
+                                          $1324 | 0,
+                                          $1325 | 0,
+                                          $1328 | 0,
+                                          $1329 | 0
+                                        ) | 0;
                                       $1333 = tempRet0;
-                                      $1334 = _i64Subtract($1332 | 0, $1333 | 0, $1281 | 0, $1331 | 0) | 0;
+                                      $1334 =
+                                        _i64Subtract(
+                                          $1332 | 0,
+                                          $1333 | 0,
+                                          $1281 | 0,
+                                          $1331 | 0
+                                        ) | 0;
                                       $1335 = tempRet0;
-                                      $1336 = _bitshift64Ashr($1334 | 0, $1335 | 0, $1279 | 0) | 0;
+                                      $1336 =
+                                        _bitshift64Ashr(
+                                          $1334 | 0,
+                                          $1335 | 0,
+                                          $1279 | 0
+                                        ) | 0;
                                       $1337 = tempRet0;
                                       HEAP32[$80 >> 2] = $1336;
                                       $1338 = HEAP32[$68 >> 2] | 0;
@@ -161939,7 +163070,13 @@ function zbarProcessImageData(imgData) {
                                       $1341 = HEAP32[$73 >> 2] | 0;
                                       $1342 = ($1341 | 0) < 0;
                                       $1343 = ($1342 << 31) >> 31;
-                                      $1344 = ___muldi3($1341 | 0, $1343 | 0, $1338 | 0, $1340 | 0) | 0;
+                                      $1344 =
+                                        ___muldi3(
+                                          $1341 | 0,
+                                          $1343 | 0,
+                                          $1338 | 0,
+                                          $1340 | 0
+                                        ) | 0;
                                       $1345 = tempRet0;
                                       $1346 = HEAP32[$hom$i >> 2] | 0;
                                       $1347 = ($1346 | 0) < 0;
@@ -161947,41 +163084,101 @@ function zbarProcessImageData(imgData) {
                                       $1349 = HEAP32[$74 >> 2] | 0;
                                       $1350 = ($1349 | 0) < 0;
                                       $1351 = ($1350 << 31) >> 31;
-                                      $1352 = ___muldi3($1349 | 0, $1351 | 0, $1346 | 0, $1348 | 0) | 0;
+                                      $1352 =
+                                        ___muldi3(
+                                          $1349 | 0,
+                                          $1351 | 0,
+                                          $1346 | 0,
+                                          $1348 | 0
+                                        ) | 0;
                                       $1353 = tempRet0;
-                                      $1354 = _i64Subtract($1344 | 0, $1345 | 0, $1352 | 0, $1353 | 0) | 0;
+                                      $1354 =
+                                        _i64Subtract(
+                                          $1344 | 0,
+                                          $1345 | 0,
+                                          $1352 | 0,
+                                          $1353 | 0
+                                        ) | 0;
                                       $1355 = tempRet0;
-                                      $1356 = _i64Subtract($1354 | 0, $1355 | 0, $1281 | 0, $1331 | 0) | 0;
+                                      $1356 =
+                                        _i64Subtract(
+                                          $1354 | 0,
+                                          $1355 | 0,
+                                          $1281 | 0,
+                                          $1331 | 0
+                                        ) | 0;
                                       $1357 = tempRet0;
-                                      $1358 = _bitshift64Ashr($1356 | 0, $1357 | 0, $1279 | 0) | 0;
+                                      $1358 =
+                                        _bitshift64Ashr(
+                                          $1356 | 0,
+                                          $1357 | 0,
+                                          $1279 | 0
+                                        ) | 0;
                                       $1359 = tempRet0;
                                       HEAP32[$81 >> 2] = $1358;
                                       $1360 = HEAP32[$71 >> 2] | 0;
                                       $1361 = ($1360 | 0) < 0;
                                       $1362 = ($1361 << 31) >> 31;
-                                      $1363 = ___muldi3($1360 | 0, $1362 | 0, $1346 | 0, $1348 | 0) | 0;
+                                      $1363 =
+                                        ___muldi3(
+                                          $1360 | 0,
+                                          $1362 | 0,
+                                          $1346 | 0,
+                                          $1348 | 0
+                                        ) | 0;
                                       $1364 = tempRet0;
                                       $1365 = HEAP32[$70 >> 2] | 0;
                                       $1366 = ($1365 | 0) < 0;
                                       $1367 = ($1366 << 31) >> 31;
-                                      $1368 = ___muldi3($1365 | 0, $1367 | 0, $1338 | 0, $1340 | 0) | 0;
+                                      $1368 =
+                                        ___muldi3(
+                                          $1365 | 0,
+                                          $1367 | 0,
+                                          $1338 | 0,
+                                          $1340 | 0
+                                        ) | 0;
                                       $1369 = tempRet0;
-                                      $1370 = _i64Subtract($1363 | 0, $1364 | 0, $1281 | 0, $1331 | 0) | 0;
+                                      $1370 =
+                                        _i64Subtract(
+                                          $1363 | 0,
+                                          $1364 | 0,
+                                          $1281 | 0,
+                                          $1331 | 0
+                                        ) | 0;
                                       $1371 = tempRet0;
-                                      $1372 = _i64Subtract($1370 | 0, $1371 | 0, $1368 | 0, $1369 | 0) | 0;
+                                      $1372 =
+                                        _i64Subtract(
+                                          $1370 | 0,
+                                          $1371 | 0,
+                                          $1368 | 0,
+                                          $1369 | 0
+                                        ) | 0;
                                       $1373 = tempRet0;
-                                      $1374 = _bitshift64Ashr($1372 | 0, $1373 | 0, $1279 | 0) | 0;
+                                      $1374 =
+                                        _bitshift64Ashr(
+                                          $1372 | 0,
+                                          $1373 | 0,
+                                          $1279 | 0
+                                        ) | 0;
                                       $1375 = tempRet0;
                                       HEAP32[$82 >> 2] = $1374;
                                       HEAP32[$83 >> 2] = 14;
-                                      HEAP32[($84 + 0) >> 2] = HEAP32[($bbox$i + 0) >> 2] | 0;
-                                      HEAP32[($84 + 4) >> 2] = HEAP32[($bbox$i + 4) >> 2] | 0;
-                                      HEAP32[($84 + 8) >> 2] = HEAP32[($bbox$i + 8) >> 2] | 0;
-                                      HEAP32[($84 + 12) >> 2] = HEAP32[($bbox$i + 12) >> 2] | 0;
-                                      HEAP32[($84 + 16) >> 2] = HEAP32[($bbox$i + 16) >> 2] | 0;
-                                      HEAP32[($84 + 20) >> 2] = HEAP32[($bbox$i + 20) >> 2] | 0;
-                                      HEAP32[($84 + 24) >> 2] = HEAP32[($bbox$i + 24) >> 2] | 0;
-                                      HEAP32[($84 + 28) >> 2] = HEAP32[($bbox$i + 28) >> 2] | 0;
+                                      HEAP32[($84 + 0) >> 2] =
+                                        HEAP32[($bbox$i + 0) >> 2] | 0;
+                                      HEAP32[($84 + 4) >> 2] =
+                                        HEAP32[($bbox$i + 4) >> 2] | 0;
+                                      HEAP32[($84 + 8) >> 2] =
+                                        HEAP32[($bbox$i + 8) >> 2] | 0;
+                                      HEAP32[($84 + 12) >> 2] =
+                                        HEAP32[($bbox$i + 12) >> 2] | 0;
+                                      HEAP32[($84 + 16) >> 2] =
+                                        HEAP32[($bbox$i + 16) >> 2] | 0;
+                                      HEAP32[($84 + 20) >> 2] =
+                                        HEAP32[($bbox$i + 20) >> 2] | 0;
+                                      HEAP32[($84 + 24) >> 2] =
+                                        HEAP32[($bbox$i + 24) >> 2] | 0;
+                                      HEAP32[($84 + 28) >> 2] =
+                                        HEAP32[($bbox$i + 28) >> 2] | 0;
                                       $1376 = HEAP32[$14 >> 2] | 0;
                                       $1377 = HEAP32[$1376 >> 2] | 0;
                                       $1378 = ($1376 + 4) | 0;
@@ -162030,13 +163227,15 @@ function zbarProcessImageData(imgData) {
                                         $1407 = ($1405 + $1406) | 0;
                                         $1408 = $1407 ^ $1406;
                                         $1409 = ($1408 + $x$0$i$i) | 0;
-                                        $1410 = (($1409 | 0) / ($w$0$i$i | 0)) & -1;
+                                        $1410 =
+                                          (($1409 | 0) / ($w$0$i$i | 0)) & -1;
                                         HEAP32[$38 >> 2] = $1410;
                                         $1411 = $y$0$i$i >> 31;
                                         $1412 = ($1405 + $1411) | 0;
                                         $1413 = $1412 ^ $1411;
                                         $1414 = ($1413 + $y$0$i$i) | 0;
-                                        $1415 = (($1414 | 0) / ($w$0$i$i | 0)) & -1;
+                                        $1415 =
+                                          (($1414 | 0) / ($w$0$i$i | 0)) & -1;
                                         $1416 = $1415;
                                         $1493 = $1410;
                                       }
@@ -162085,13 +163284,15 @@ function zbarProcessImageData(imgData) {
                                         $1445 = ($1443 + $1444) | 0;
                                         $1446 = $1445 ^ $1444;
                                         $1447 = ($1446 + $x$0$i36$i) | 0;
-                                        $1448 = (($1447 | 0) / ($w$0$i38$i | 0)) & -1;
+                                        $1448 =
+                                          (($1447 | 0) / ($w$0$i38$i | 0)) & -1;
                                         HEAP32[$32 >> 2] = $1448;
                                         $1449 = $y$0$i37$i >> 31;
                                         $1450 = ($1443 + $1449) | 0;
                                         $1451 = $1450 ^ $1449;
                                         $1452 = ($1451 + $y$0$i37$i) | 0;
-                                        $1453 = (($1452 | 0) / ($w$0$i38$i | 0)) & -1;
+                                        $1453 =
+                                          (($1452 | 0) / ($w$0$i38$i | 0)) & -1;
                                         $storemerge63$i = $1453;
                                       }
                                       HEAP32[$33 >> 2] = $storemerge63$i;
@@ -162139,30 +163340,48 @@ function zbarProcessImageData(imgData) {
                                         $1482 = ($1480 + $1481) | 0;
                                         $1483 = $1482 ^ $1481;
                                         $1484 = ($1483 + $x$0$i41$i) | 0;
-                                        $1485 = (($1484 | 0) / ($w$0$i43$i | 0)) & -1;
+                                        $1485 =
+                                          (($1484 | 0) / ($w$0$i43$i | 0)) & -1;
                                         HEAP32[$34 >> 2] = $1485;
                                         $1486 = $y$0$i42$i >> 31;
                                         $1487 = ($1480 + $1486) | 0;
                                         $1488 = $1487 ^ $1486;
                                         $1489 = ($1488 + $y$0$i42$i) | 0;
-                                        $1490 = (($1489 | 0) / ($w$0$i43$i | 0)) & -1;
+                                        $1490 =
+                                          (($1489 | 0) / ($w$0$i43$i | 0)) & -1;
                                         $storemerge64$i = $1490;
                                       }
                                       HEAP32[$35 >> 2] = $storemerge64$i;
-                                      _qr_finder_edge_pts_hom_classify($ur$i, $hom$i);
+                                      _qr_finder_edge_pts_hom_classify(
+                                        $ur$i,
+                                        $hom$i
+                                      );
                                       $1491 = HEAP32[$32 >> 2] | 0;
                                       $1492 = ($1491 - $1493) | 0;
-                                      $1494 = _qr_finder_estimate_module_size_and_version($ur$i, $1492, $1492) | 0;
+                                      $1494 =
+                                        _qr_finder_estimate_module_size_and_version(
+                                          $ur$i,
+                                          $1492,
+                                          $1492
+                                        ) | 0;
                                       $1495 = ($1494 | 0) < 0;
                                       if ($1495) {
                                         $$01$i = 0;
                                         $$1$i = $$0$i;
                                         break;
                                       }
-                                      _qr_finder_edge_pts_hom_classify($dl$i, $hom$i);
+                                      _qr_finder_edge_pts_hom_classify(
+                                        $dl$i,
+                                        $hom$i
+                                      );
                                       $1496 = HEAP32[$35 >> 2] | 0;
                                       $1497 = ($1496 - $1416) | 0;
-                                      $1498 = _qr_finder_estimate_module_size_and_version($dl$i, $1497, $1497) | 0;
+                                      $1498 =
+                                        _qr_finder_estimate_module_size_and_version(
+                                          $dl$i,
+                                          $1497,
+                                          $1497
+                                        ) | 0;
                                       $1499 = ($1498 | 0) < 0;
                                       if ($1499) {
                                         $$01$i = 0;
@@ -162191,11 +163410,21 @@ function zbarProcessImageData(imgData) {
                                           }
                                           $1507 = ($1500 | 0) > 3;
                                           if ($1507) {
-                                            $1508 = _qr_finder_version_decode($ur$i, $hom$i, $_img, $_width, $_height, 0) | 0;
+                                            $1508 =
+                                              _qr_finder_version_decode(
+                                                $ur$i,
+                                                $hom$i,
+                                                $_img,
+                                                $_width,
+                                                $_height,
+                                                0
+                                              ) | 0;
                                             $1509 = ($1508 - $1500) | 0;
                                             $ispos14$i = ($1509 | 0) > -1;
                                             $neg15$i = (0 - $1509) | 0;
-                                            $1510 = $ispos14$i ? $1509 : $neg15$i;
+                                            $1510 = $ispos14$i
+                                              ? $1509
+                                              : $neg15$i;
                                             $1511 = ($1510 | 0) > 3;
                                             $$$i = $1511 ? -1 : $1508;
                                             $ur_version$0$i = $$$i;
@@ -162204,11 +163433,21 @@ function zbarProcessImageData(imgData) {
                                           }
                                           $1512 = ($1501 | 0) > 3;
                                           if ($1512) {
-                                            $1513 = _qr_finder_version_decode($dl$i, $hom$i, $_img, $_width, $_height, 1) | 0;
+                                            $1513 =
+                                              _qr_finder_version_decode(
+                                                $dl$i,
+                                                $hom$i,
+                                                $_img,
+                                                $_width,
+                                                $_height,
+                                                1
+                                              ) | 0;
                                             $1514 = ($1513 - $1501) | 0;
                                             $ispos12$i = ($1514 | 0) > -1;
                                             $neg13$i = (0 - $1514) | 0;
-                                            $1515 = $ispos12$i ? $1514 : $neg13$i;
+                                            $1515 = $ispos12$i
+                                              ? $1514
+                                              : $neg13$i;
                                             $1516 = ($1515 | 0) > 3;
                                             $$16$i = $1516 ? -1 : $1513;
                                             $dl_version$0$i = $$16$i;
@@ -162218,7 +163457,9 @@ function zbarProcessImageData(imgData) {
                                           $1517 = ($ur_version$0$i | 0) > -1;
                                           $1518 = ($dl_version$0$i | 0) < 0;
                                           if ($1517) {
-                                            $1519 = ($dl_version$0$i | 0) == ($ur_version$0$i | 0);
+                                            $1519 =
+                                              ($dl_version$0$i | 0) ==
+                                              ($ur_version$0$i | 0);
                                             $or$cond17$i = $1518 | $1519;
                                             if ($or$cond17$i) {
                                               $1534 = $1501;
@@ -162242,14 +163483,22 @@ function zbarProcessImageData(imgData) {
                                           }
                                         }
                                       } while (0);
-                                      _qr_finder_edge_pts_hom_classify($ul$i, $hom$i);
+                                      _qr_finder_edge_pts_hom_classify(
+                                        $ul$i,
+                                        $hom$i
+                                      );
                                       $1520 = HEAP32[$32 >> 2] | 0;
                                       $1521 = HEAP32[$34 >> 2] | 0;
                                       $1522 = ($1520 - $1521) | 0;
                                       $1523 = HEAP32[$35 >> 2] | 0;
                                       $1524 = HEAP32[$39 >> 2] | 0;
                                       $1525 = ($1523 - $1524) | 0;
-                                      $1526 = _qr_finder_estimate_module_size_and_version($ul$i, $1522, $1525) | 0;
+                                      $1526 =
+                                        _qr_finder_estimate_module_size_and_version(
+                                          $ul$i,
+                                          $1522,
+                                          $1525
+                                        ) | 0;
                                       $1527 = ($1526 | 0) < 0;
                                       if ($1527) {
                                         $$01$i = 0;
@@ -162278,7 +163527,16 @@ function zbarProcessImageData(imgData) {
                                         $$1$i = $$0$i;
                                         break;
                                       }
-                                      $1537 = _qr_finder_fmt_info_decode($ul$i, $ur$i, $dl$i, $hom$i, $_img, $_width, $_height) | 0;
+                                      $1537 =
+                                        _qr_finder_fmt_info_decode(
+                                          $ul$i,
+                                          $ur$i,
+                                          $dl$i,
+                                          $hom$i,
+                                          $_img,
+                                          $_width,
+                                          $_height
+                                        ) | 0;
                                       $1538 = ($1537 | 0) < 0;
                                       if ($1538) {
                                         label = 135;
@@ -162350,7 +163608,16 @@ function zbarProcessImageData(imgData) {
                                         $1565 = HEAP32[$49 >> 2] | 0;
                                         HEAP32[$dl$i >> 2] = $1565;
                                         HEAP32[$49 >> 2] = $1564;
-                                        $1566 = _qr_finder_fmt_info_decode($ul$i, $dl$i, $ur$i, $hom$i, $_img, $_width, $_height) | 0;
+                                        $1566 =
+                                          _qr_finder_fmt_info_decode(
+                                            $ul$i,
+                                            $dl$i,
+                                            $ur$i,
+                                            $hom$i,
+                                            $_img,
+                                            $_width,
+                                            $_height
+                                          ) | 0;
                                         $1567 = ($1566 | 0) < 0;
                                         if ($1567) {
                                           $$01$i = 0;
@@ -162365,14 +163632,22 @@ function zbarProcessImageData(imgData) {
                                         $1571 = HEAP32[$66 >> 2] | 0;
                                         HEAP32[$64 >> 2] = $1571;
                                         HEAP32[$66 >> 2] = $1570;
-                                        HEAP32[($84 + 0) >> 2] = HEAP32[($bbox$i + 0) >> 2] | 0;
-                                        HEAP32[($84 + 4) >> 2] = HEAP32[($bbox$i + 4) >> 2] | 0;
-                                        HEAP32[($84 + 8) >> 2] = HEAP32[($bbox$i + 8) >> 2] | 0;
-                                        HEAP32[($84 + 12) >> 2] = HEAP32[($bbox$i + 12) >> 2] | 0;
-                                        HEAP32[($84 + 16) >> 2] = HEAP32[($bbox$i + 16) >> 2] | 0;
-                                        HEAP32[($84 + 20) >> 2] = HEAP32[($bbox$i + 20) >> 2] | 0;
-                                        HEAP32[($84 + 24) >> 2] = HEAP32[($bbox$i + 24) >> 2] | 0;
-                                        HEAP32[($84 + 28) >> 2] = HEAP32[($bbox$i + 28) >> 2] | 0;
+                                        HEAP32[($84 + 0) >> 2] =
+                                          HEAP32[($bbox$i + 0) >> 2] | 0;
+                                        HEAP32[($84 + 4) >> 2] =
+                                          HEAP32[($bbox$i + 4) >> 2] | 0;
+                                        HEAP32[($84 + 8) >> 2] =
+                                          HEAP32[($bbox$i + 8) >> 2] | 0;
+                                        HEAP32[($84 + 12) >> 2] =
+                                          HEAP32[($bbox$i + 12) >> 2] | 0;
+                                        HEAP32[($84 + 16) >> 2] =
+                                          HEAP32[($bbox$i + 16) >> 2] | 0;
+                                        HEAP32[($84 + 20) >> 2] =
+                                          HEAP32[($bbox$i + 20) >> 2] | 0;
+                                        HEAP32[($84 + 24) >> 2] =
+                                          HEAP32[($bbox$i + 24) >> 2] | 0;
+                                        HEAP32[($84 + 28) >> 2] =
+                                          HEAP32[($bbox$i + 28) >> 2] | 0;
                                         $1572 = HEAP32[$14 >> 2] | 0;
                                         $1573 = HEAP32[$16 >> 2] | 0;
                                         $1574 = HEAP32[$15 >> 2] | 0;
@@ -162522,7 +163797,8 @@ function zbarProcessImageData(imgData) {
                               if ($1643) {
                                 $1644 = ($_centers + ($l$147 << 4)) | 0;
                                 $$val23 = HEAP32[$1644 >> 2] | 0;
-                                $$idx24 = ((($_centers + ($l$147 << 4)) | 0) + 4) | 0;
+                                $$idx24 =
+                                  ((($_centers + ($l$147 << 4)) | 0) + 4) | 0;
                                 $$idx24$val = HEAP32[$$idx24 >> 2] | 0;
                                 $1645 = ($$idx24$val - $$idx20$val) | 0;
                                 $1646 = Math_imul($1645, $1633) | 0;
@@ -162594,10 +163870,14 @@ function zbarProcessImageData(imgData) {
                                 $1677 = ($ninside$248 + 1) | 0;
                                 $1678 = ($1673 + ($ninside$248 << 4)) | 0;
                                 $1679 = ($_centers + ($l$249 << 4)) | 0;
-                                HEAP32[($1678 + 0) >> 2] = HEAP32[($1679 + 0) >> 2] | 0;
-                                HEAP32[($1678 + 4) >> 2] = HEAP32[($1679 + 4) >> 2] | 0;
-                                HEAP32[($1678 + 8) >> 2] = HEAP32[($1679 + 8) >> 2] | 0;
-                                HEAP32[($1678 + 12) >> 2] = HEAP32[($1679 + 12) >> 2] | 0;
+                                HEAP32[($1678 + 0) >> 2] =
+                                  HEAP32[($1679 + 0) >> 2] | 0;
+                                HEAP32[($1678 + 4) >> 2] =
+                                  HEAP32[($1679 + 4) >> 2] | 0;
+                                HEAP32[($1678 + 8) >> 2] =
+                                  HEAP32[($1679 + 8) >> 2] | 0;
+                                HEAP32[($1678 + 12) >> 2] =
+                                  HEAP32[($1679 + 12) >> 2] | 0;
                                 $ninside$3 = $1677;
                               } else {
                                 $ninside$3 = $ninside$248;
@@ -162611,7 +163891,15 @@ function zbarProcessImageData(imgData) {
                                 $ninside$248 = $ninside$3;
                               }
                             }
-                            _qr_reader_match_centers($_reader, $_qrlist, $1673, $ninside$3, $_img, $_width, $_height);
+                            _qr_reader_match_centers(
+                              $_reader,
+                              $_qrlist,
+                              $1673,
+                              $ninside$3,
+                              $_img,
+                              $_width,
+                              $_height
+                            );
                             _free($1673);
                             $l$354 = 0;
                           } else {
@@ -163514,7 +164802,8 @@ function zbarProcessImageData(imgData) {
                             HEAP32[$183 >> 2] = $182;
                             $184 = ($178 + 4) | 0;
                             $185 = HEAP32[$184 >> 2] | 0;
-                            $186 = ((($$046$i$i + ($$12$i5$i$i << 4)) | 0) + 4) | 0;
+                            $186 =
+                              ((($$046$i$i + ($$12$i5$i$i << 4)) | 0) + 4) | 0;
                             HEAP32[$186 >> 2] = $185;
                             $187 = ($182 - $180) | 0;
                             HEAP32[$183 >> 2] = $187;
@@ -163532,7 +164821,8 @@ function zbarProcessImageData(imgData) {
                             HEAP32[$193 >> 2] = $192;
                             $194 = ($178 + 4) | 0;
                             $195 = HEAP32[$194 >> 2] | 0;
-                            $196 = ((($$046$i$i + ($$2$i7$i$i << 4)) | 0) + 4) | 0;
+                            $196 =
+                              ((($$046$i$i + ($$2$i7$i$i << 4)) | 0) + 4) | 0;
                             HEAP32[$196 >> 2] = $195;
                             $197 = ($178 + 8) | 0;
                             $198 = HEAP32[$197 >> 2] | 0;
@@ -163558,7 +164848,8 @@ function zbarProcessImageData(imgData) {
                         $$1$lcssa$i9$i$i = $$04$i1$i$i;
                       }
                       $203 = ($i$03$i2$i$i + 1) | 0;
-                      $exitcond$i10$i$i = ($203 | 0) == ($nhneighbors$0$ph34$i$i | 0);
+                      $exitcond$i10$i$i =
+                        ($203 | 0) == ($nhneighbors$0$ph34$i$i | 0);
                       if ($exitcond$i10$i$i) {
                         $$04$i$i$i = $$1$lcssa$i9$i$i;
                         $i$03$i$i$i = 0;
@@ -163594,7 +164885,8 @@ function zbarProcessImageData(imgData) {
                           HEAP32[$216 >> 2] = $215;
                           $217 = ($211 + 4) | 0;
                           $218 = HEAP32[$217 >> 2] | 0;
-                          $219 = ((($$046$i$i + ($$12$i$i$i << 4)) | 0) + 4) | 0;
+                          $219 =
+                            ((($$046$i$i + ($$12$i$i$i << 4)) | 0) + 4) | 0;
                           $220 = ($218 - $213) | 0;
                           HEAP32[$219 >> 2] = $220;
                           $221 = ($$12$i$i$i + 1) | 0;
@@ -163724,7 +165016,15 @@ function zbarProcessImageData(imgData) {
         HEAP32[$254 >> 2] = 0;
         $255 = HEAP32[$248 >> 2] | 0;
         $256 = HEAP32[$250 >> 2] | 0;
-        _qr_reader_match_centers($reader, $qrlist, $257, $ncenters$0$i, $252, $255, $256);
+        _qr_reader_match_centers(
+          $reader,
+          $qrlist,
+          $257,
+          $ncenters$0$i,
+          $252,
+          $255,
+          $256
+        );
         $258 = HEAP32[$254 >> 2] | 0;
         $259 = ($258 | 0) > 0;
         if ($259) {
@@ -163824,7 +165124,13 @@ function zbarProcessImageData(imgData) {
       STACKTOP = sp;
       return $$0 | 0;
     }
-    function _qr_finder_cluster_lines($_clusters, $_neighbors, $_lines, $_nlines, $_v) {
+    function _qr_finder_cluster_lines(
+      $_clusters,
+      $_neighbors,
+      $_lines,
+      $_nlines,
+      $_v
+    ) {
       $_clusters = $_clusters | 0;
       $_neighbors = $_neighbors | 0;
       $_lines = $_lines | 0;
@@ -163997,7 +165303,8 @@ function zbarProcessImageData(imgData) {
                     $21 = $20 >> 2;
                     $22 = ($18 + ($4 << 2)) | 0;
                     $23 = HEAP32[$22 >> 2] | 0;
-                    $24 = ((($_lines + (($j$017 * 20) | 0)) | 0) + ($4 << 2)) | 0;
+                    $24 =
+                      ((($_lines + (($j$017 * 20) | 0)) | 0) + ($4 << 2)) | 0;
                     $25 = HEAP32[$24 >> 2] | 0;
                     $26 = ($23 - $25) | 0;
                     $ispos = ($26 | 0) > -1;
@@ -164011,7 +165318,8 @@ function zbarProcessImageData(imgData) {
                     }
                     $29 = ($18 + ($_v << 2)) | 0;
                     $30 = HEAP32[$29 >> 2] | 0;
-                    $31 = ((($_lines + (($j$017 * 20) | 0)) | 0) + ($_v << 2)) | 0;
+                    $31 =
+                      ((($_lines + (($j$017 * 20) | 0)) | 0) + ($_v << 2)) | 0;
                     $32 = HEAP32[$31 >> 2] | 0;
                     $33 = ($30 - $32) | 0;
                     $ispos1 = ($33 | 0) > -1;
@@ -164033,7 +165341,8 @@ function zbarProcessImageData(imgData) {
                         $44 = HEAP32[$43 >> 2] | 0;
                         $45 = ($44 | 0) > 0;
                         if ($45) {
-                          $46 = ((($_lines + (($j$017 * 20) | 0)) | 0) + 12) | 0;
+                          $46 =
+                            ((($_lines + (($j$017 * 20) | 0)) | 0) + 12) | 0;
                           $47 = HEAP32[$46 >> 2] | 0;
                           $48 = ($47 | 0) > 0;
                           if ($48) {
@@ -164532,7 +165841,11 @@ function zbarProcessImageData(imgData) {
       STACKTOP = sp;
       return;
     }
-    function _qr_finder_estimate_module_size_and_version($_f, $_width, $_height) {
+    function _qr_finder_estimate_module_size_and_version(
+      $_f,
+      $_width,
+      $_height
+    ) {
       $_f = $_f | 0;
       $_width = $_width | 0;
       $_height = $_height | 0;
@@ -165232,7 +166545,14 @@ function zbarProcessImageData(imgData) {
       STACKTOP = sp;
       return;
     }
-    function _qr_finder_version_decode($_f, $_hom, $_img, $_width, $_height, $_dir) {
+    function _qr_finder_version_decode(
+      $_f,
+      $_hom,
+      $_img,
+      $_width,
+      $_height,
+      $_dir
+    ) {
       $_f = $_f | 0;
       $_hom = $_hom | 0;
       $_img = $_img | 0;
@@ -165701,7 +167021,15 @@ function zbarProcessImageData(imgData) {
       STACKTOP = sp;
       return $147 | 0;
     }
-    function _qr_finder_fmt_info_decode($_ul, $_ur, $_dl, $_hom, $_img, $_width, $_height) {
+    function _qr_finder_fmt_info_decode(
+      $_ul,
+      $_ur,
+      $_dl,
+      $_hom,
+      $_img,
+      $_width,
+      $_height
+    ) {
       $_ul = $_ul | 0;
       $_ur = $_ur | 0;
       $_dl = $_dl | 0;
@@ -166749,7 +168077,18 @@ function zbarProcessImageData(imgData) {
       STACKTOP = sp;
       return $355 | 0;
     }
-    function _qr_code_decode($_qrdata, $_gf, $_ul_pos, $_ur_pos, $_dl_pos, $_version, $_fmt_info, $_img, $_width, $_height) {
+    function _qr_code_decode(
+      $_qrdata,
+      $_gf,
+      $_ul_pos,
+      $_ur_pos,
+      $_dl_pos,
+      $_version,
+      $_fmt_info,
+      $_img,
+      $_width,
+      $_height
+    ) {
       $_qrdata = $_qrdata | 0;
       $_gf = $_gf | 0;
       $_ul_pos = $_ul_pos | 0;
@@ -168754,7 +170093,25 @@ function zbarProcessImageData(imgData) {
       $18 = HEAP32[$17 >> 2] | 0;
       $19 = ($_qrdata + 44) | 0;
       $20 = HEAP32[$19 >> 2] | 0;
-      _qr_hom_cell_init($base_cell$i, 0, 0, $4, 0, 0, $4, $4, $4, $6, $8, $10, $12, $14, $16, $18, $20);
+      _qr_hom_cell_init(
+        $base_cell$i,
+        0,
+        0,
+        $4,
+        0,
+        0,
+        $4,
+        $4,
+        $4,
+        $6,
+        $8,
+        $10,
+        $12,
+        $14,
+        $16,
+        $18,
+        $20
+      );
       $21 = ($2 + 1) | 0;
       $22 = ($grid + 52) | 0;
       HEAP32[$22 >> 2] = $21;
@@ -169400,7 +170757,25 @@ function zbarProcessImageData(imgData) {
                     $267 = HEAP32[$266 >> 2] | 0;
                     $268 = ((($123 + ($253 << 3)) | 0) + 4) | 0;
                     $269 = HEAP32[$268 >> 2] | 0;
-                    _qr_hom_cell_init($242, $246, $248, $250, $252, $255, $257, $180, $182, $259, $261, $263, $265, $267, $269, $237, $241);
+                    _qr_hom_cell_init(
+                      $242,
+                      $246,
+                      $248,
+                      $250,
+                      $252,
+                      $255,
+                      $257,
+                      $180,
+                      $182,
+                      $259,
+                      $261,
+                      $263,
+                      $265,
+                      $267,
+                      $269,
+                      $237,
+                      $241
+                    );
                     $cell$0$i = $242;
                   } else {
                     $270 = ($j$043$i | 0) > 0;
@@ -169429,7 +170804,16 @@ function zbarProcessImageData(imgData) {
                   }
                 } while (0);
                 $280 = ($123 + ($178 << 3)) | 0;
-                _qr_alignment_pattern_search($280, $cell$0$i, $180, $182, 2, $_img, $_width, $_height) | 0;
+                _qr_alignment_pattern_search(
+                  $280,
+                  $cell$0$i,
+                  $180,
+                  $182,
+                  2,
+                  $_img,
+                  $_width,
+                  $_height
+                ) | 0;
                 $281 = ($176 | 0) > 0;
                 $282 = ($j$043$i | 0) > 0;
                 $or$cond11$i = $281 & $282;
@@ -169469,7 +170853,25 @@ function zbarProcessImageData(imgData) {
                   $314 = HEAP32[$280 >> 2] | 0;
                   $315 = ((($123 + ($178 << 3)) | 0) + 4) | 0;
                   $316 = HEAP32[$315 >> 2] | 0;
-                  _qr_hom_cell_init($286, $290, $292, $294, $296, $299, $301, $180, $182, $303, $305, $307, $309, $311, $313, $314, $316);
+                  _qr_hom_cell_init(
+                    $286,
+                    $290,
+                    $292,
+                    $294,
+                    $296,
+                    $299,
+                    $301,
+                    $180,
+                    $182,
+                    $303,
+                    $305,
+                    $307,
+                    $309,
+                    $311,
+                    $313,
+                    $314,
+                    $316
+                  );
                 }
                 $317 = ($j$043$i + 1) | 0;
                 $318 = ($j$043$i | 0) < ($169 | 0);
@@ -172070,7 +173472,25 @@ function zbarProcessImageData(imgData) {
       STACKTOP = sp;
       return $ret$2 | 0;
     }
-    function _qr_hom_cell_init($_cell, $_u0, $_v0, $_u1, $_v1, $_u2, $_v2, $_u3, $_v3, $_x0, $_y0, $_x1, $_y1, $_x2, $_y2, $_x3, $_y3) {
+    function _qr_hom_cell_init(
+      $_cell,
+      $_u0,
+      $_v0,
+      $_u1,
+      $_v1,
+      $_u2,
+      $_v2,
+      $_u3,
+      $_v3,
+      $_x0,
+      $_y0,
+      $_x1,
+      $_y1,
+      $_x2,
+      $_y2,
+      $_x3,
+      $_y3
+    ) {
       $_cell = $_cell | 0;
       $_u0 = $_u0 | 0;
       $_v0 = $_v0 | 0;
@@ -173290,7 +174710,16 @@ function zbarProcessImageData(imgData) {
       STACKTOP = sp;
       return;
     }
-    function _qr_alignment_pattern_search($_p, $_cell, $_u, $_v, $_r, $_img, $_width, $_height) {
+    function _qr_alignment_pattern_search(
+      $_p,
+      $_cell,
+      $_u,
+      $_v,
+      $_r,
+      $_img,
+      $_width,
+      $_height
+    ) {
       $_p = $_p | 0;
       $_cell = $_cell | 0;
       $_u = $_u | 0;
@@ -173832,7 +175261,9 @@ function zbarProcessImageData(imgData) {
             HEAP32[$39 >> 2] = $42;
             $43 = $y$090 >>> 31;
             $44 = ($43 + 2147483647) | 0;
-            $45 = ((((($p + (($i$097 * 40) | 0)) | 0) + ($j$092 << 3)) | 0) + 4) | 0;
+            $45 =
+              ((((($p + (($i$097 * 40) | 0)) | 0) + ($j$092 << 3)) | 0) + 4) |
+              0;
             HEAP32[$45 >> 2] = $44;
           } else {
             $46 = ($w$089 | 0) < 0;
@@ -173864,7 +175295,9 @@ function zbarProcessImageData(imgData) {
             $62 = (($61 | 0) / ($$0$i | 0)) & -1;
             $63 = HEAP32[$38 >> 2] | 0;
             $64 = ($63 + $62) | 0;
-            $65 = ((((($p + (($i$097 * 40) | 0)) | 0) + ($j$092 << 3)) | 0) + 4) | 0;
+            $65 =
+              ((((($p + (($i$097 * 40) | 0)) | 0) + ($j$092 << 3)) | 0) + 4) |
+              0;
             HEAP32[$65 >> 2] = $64;
           }
           $66 = ($x$091 + $8) | 0;
@@ -173899,7 +175332,8 @@ function zbarProcessImageData(imgData) {
       $75 = HEAP32[$74 >> 2] | 0;
       $76 = ($p + 100) | 0;
       $77 = HEAP32[$76 >> 2] | 0;
-      $78 = _qr_alignment_pattern_fetch($p, $75, $77, $_img, $_width, $_height) | 0;
+      $78 =
+        _qr_alignment_pattern_fetch($p, $75, $77, $_img, $_width, $_height) | 0;
       $79 = ($78 | 0) == 33084991;
       L14: do {
         if ($79) {
@@ -174022,7 +175456,15 @@ function zbarProcessImageData(imgData) {
                       $storemerge = $143;
                     }
                     HEAP32[$106 >> 2] = $storemerge;
-                    $145 = _qr_alignment_pattern_fetch($p, $144, $storemerge, $_img, $_width, $_height) | 0;
+                    $145 =
+                      _qr_alignment_pattern_fetch(
+                        $p,
+                        $144,
+                        $storemerge,
+                        $_img,
+                        $_width,
+                        $_height
+                      ) | 0;
                     $146 = ($best_dist$154 | 0) < 0;
                     $147 = ($145 | 0) == 33084991;
                     $or$cond1$i15 = $146 | $147;
@@ -174051,7 +175493,9 @@ function zbarProcessImageData(imgData) {
                     $154 = ($ret$0$lcssa$i20 | 0) < ($best_dist$154 | 0);
                     $storemerge$besty$152 = $154 ? $storemerge : $besty$152;
                     $$bestx$153 = $154 ? $144 : $bestx$153;
-                    $ret$0$lcssa$i20$best_dist$154 = $154 ? $ret$0$lcssa$i20 : $best_dist$154;
+                    $ret$0$lcssa$i20$best_dist$154 = $154
+                      ? $ret$0$lcssa$i20
+                      : $best_dist$154;
                     $$best_match$156 = $154 ? $145 : $best_match$156;
                     $155 = ($j$151 | 0) < ($116 | 0);
                     if ($155) {
@@ -174217,7 +175661,8 @@ function zbarProcessImageData(imgData) {
           $207 = ($205 | 0) < ($_width | 0);
           $or$cond = $206 & $207;
           if ($or$cond) {
-            $208 = ((((($p + (($201 * 40) | 0)) | 0) + ($198 << 3)) | 0) + 4) | 0;
+            $208 =
+              ((((($p + (($201 * 40) | 0)) | 0) + ($198 << 3)) | 0) + 4) | 0;
             $209 = HEAP32[$208 >> 2] | 0;
             $210 = ($209 + $183) | 0;
             $211 = $210 >> 2;
@@ -174235,7 +175680,9 @@ function zbarProcessImageData(imgData) {
               $221 = ($219 | 0) < ($_width | 0);
               $or$cond2 = $220 & $221;
               if ($or$cond2) {
-                $222 = ((((($p + (($215 * 40) | 0)) | 0) + ($214 << 3)) | 0) + 4) | 0;
+                $222 =
+                  ((((($p + (($215 * 40) | 0)) | 0) + ($214 << 3)) | 0) + 4) |
+                  0;
                 $223 = HEAP32[$222 >> 2] | 0;
                 $224 = ($223 + $183) | 0;
                 $225 = $224 >> 2;
@@ -174244,7 +175691,17 @@ function zbarProcessImageData(imgData) {
                 $or$cond3 = $226 & $227;
                 if ($or$cond3) {
                   $228 = $i$238 & 1;
-                  $229 = _qr_finder_locate_crossing($_img, $_width, $205, $211, $219, $225, $228, $pc) | 0;
+                  $229 =
+                    _qr_finder_locate_crossing(
+                      $_img,
+                      $_width,
+                      $205,
+                      $211,
+                      $219,
+                      $225,
+                      $228,
+                      $pc
+                    ) | 0;
                   $230 = ($229 | 0) == 0;
                   if ($230) {
                     $231 = HEAP32[$pc >> 2] | 0;
@@ -174442,7 +175899,15 @@ function zbarProcessImageData(imgData) {
         $311 = (($310 | 0) / ($299 | 0)) & -1;
         $312 = ($305 + $bestx$424) | 0;
         $313 = ($311 + $besty$423) | 0;
-        $314 = _qr_alignment_pattern_fetch($p, $312, $313, $_img, $_width, $_height) | 0;
+        $314 =
+          _qr_alignment_pattern_fetch(
+            $p,
+            $312,
+            $313,
+            $_img,
+            $_width,
+            $_height
+          ) | 0;
         $315 = ($best_dist$425 + 1) | 0;
         $316 = ($best_dist$425 | 0) < 0;
         $317 = ($314 | 0) == 33084991;
@@ -174482,7 +175947,14 @@ function zbarProcessImageData(imgData) {
       STACKTOP = sp;
       return $$0 | 0;
     }
-    function _qr_alignment_pattern_fetch($_p, $_x0, $_y0, $_img, $_width, $_height) {
+    function _qr_alignment_pattern_fetch(
+      $_p,
+      $_x0,
+      $_y0,
+      $_img,
+      $_width,
+      $_height
+    ) {
       $_p = $_p | 0;
       $_x0 = $_x0 | 0;
       $_y0 = $_y0 | 0;
@@ -174780,7 +176252,16 @@ function zbarProcessImageData(imgData) {
       STACKTOP = sp;
       return $131 | 0;
     }
-    function _qr_finder_locate_crossing($_img, $_width, $_x0, $_y0, $_x1, $_y1, $_v, $_p) {
+    function _qr_finder_locate_crossing(
+      $_img,
+      $_width,
+      $_x0,
+      $_y0,
+      $_x1,
+      $_y1,
+      $_v,
+      $_p
+    ) {
       $_img = $_img | 0;
       $_width = $_width | 0;
       $_x0 = $_x0 | 0;
@@ -177183,7 +178664,8 @@ function zbarProcessImageData(imgData) {
                             } else if (($50 | 0) == 9) {
                               $52 = ($fnc1$177 | 0) == 0;
                               if ($52) {
-                                $53 = ((($48 + (($k$080 * 12) | 0)) | 0) + 4) | 0;
+                                $53 =
+                                  ((($48 + (($k$080 * 12) | 0)) | 0) + 4) | 0;
                                 $54 = HEAP32[$53 >> 2] | 0;
                                 $55 = ($sa_ctext$176 + 2) | 0;
                                 $fnc1$2 = 2;
@@ -177213,7 +178695,8 @@ function zbarProcessImageData(imgData) {
                               $57 = $56 & $50;
                               $58 = ($57 | 0) == 0;
                               if ($58) {
-                                $59 = ((($48 + (($k$080 * 12) | 0)) | 0) + 8) | 0;
+                                $59 =
+                                  ((($48 + (($k$080 * 12) | 0)) | 0) + 8) | 0;
                                 $60 = HEAP32[$59 >> 2] | 0;
                                 $61 = $60 << $shift$0;
                                 $62 = ($61 + $sa_ctext$176) | 0;
@@ -177391,8 +178874,11 @@ function zbarProcessImageData(imgData) {
                         $112 = _realloc($$pre$i, $111) | 0;
                         HEAP32[$$phi$trans$insert$i >> 2] = $112;
                         $$pre219 = HEAP32[$sym$1 >> 2] | 0;
-                        $$phi$trans$insert$i11$phi$trans$insert = ($$pre219 + 32) | 0;
-                        $$pre$i12$pre = HEAP32[$$phi$trans$insert$i11$phi$trans$insert >> 2] | 0;
+                        $$phi$trans$insert$i11$phi$trans$insert =
+                          ($$pre219 + 32) | 0;
+                        $$pre$i12$pre =
+                          HEAP32[$$phi$trans$insert$i11$phi$trans$insert >> 2] |
+                          0;
                         $$pre$i12 = $$pre$i12$pre;
                         $114 = $112;
                         $121 = $$pre219;
@@ -177424,8 +178910,11 @@ function zbarProcessImageData(imgData) {
                         $129 = _realloc($$pre$i12, $128) | 0;
                         HEAP32[$$phi$trans$insert$i11 >> 2] = $129;
                         $$pre221 = HEAP32[$sym$1 >> 2] | 0;
-                        $$phi$trans$insert$i14$phi$trans$insert = ($$pre221 + 32) | 0;
-                        $$pre$i15$pre = HEAP32[$$phi$trans$insert$i14$phi$trans$insert >> 2] | 0;
+                        $$phi$trans$insert$i14$phi$trans$insert =
+                          ($$pre221 + 32) | 0;
+                        $$pre$i15$pre =
+                          HEAP32[$$phi$trans$insert$i14$phi$trans$insert >> 2] |
+                          0;
                         $$pre$i15 = $$pre$i15$pre;
                         $131 = $129;
                         $138 = $$pre221;
@@ -177457,8 +178946,11 @@ function zbarProcessImageData(imgData) {
                         $146 = _realloc($$pre$i15, $145) | 0;
                         HEAP32[$$phi$trans$insert$i14 >> 2] = $146;
                         $$pre223 = HEAP32[$sym$1 >> 2] | 0;
-                        $$phi$trans$insert$i17$phi$trans$insert = ($$pre223 + 32) | 0;
-                        $$pre$i18$pre = HEAP32[$$phi$trans$insert$i17$phi$trans$insert >> 2] | 0;
+                        $$phi$trans$insert$i17$phi$trans$insert =
+                          ($$pre223 + 32) | 0;
+                        $$pre$i18$pre =
+                          HEAP32[$$phi$trans$insert$i17$phi$trans$insert >> 2] |
+                          0;
                         $$pre$i18 = $$pre$i18$pre;
                         $148 = $146;
                         $155 = $$pre223;
@@ -177545,10 +179037,14 @@ function zbarProcessImageData(imgData) {
                             L75: do {
                               switch ($198 | 0) {
                                 case 2: {
-                                  $208 = ((($196 + (($k$1132 * 12) | 0)) | 0) + 4) | 0;
+                                  $208 =
+                                    ((($196 + (($k$1132 * 12) | 0)) | 0) + 4) |
+                                    0;
                                   $209 = HEAP32[$208 >> 2] | 0;
                                   HEAP32[$in >> 2] = $209;
-                                  $210 = ((($196 + (($k$1132 * 12) | 0)) | 0) + 8) | 0;
+                                  $210 =
+                                    ((($196 + (($k$1132 * 12) | 0)) | 0) + 8) |
+                                    0;
                                   $211 = HEAP32[$210 >> 2] | 0;
                                   HEAP32[$inleft >> 2] = $211;
                                   do {
@@ -177574,7 +179070,8 @@ function zbarProcessImageData(imgData) {
                                         $215 = $214;
                                         $217 = $216;
                                         $218 = ($215 - $217) | 0;
-                                        $219 = ($sa_ctext$3 - $sa_ntext$4123) | 0;
+                                        $219 =
+                                          ($sa_ctext$3 - $sa_ntext$4123) | 0;
                                         $220 = ($218 + 1) | 0;
                                         $221 = $219 >>> 0 < $220 >>> 0;
                                         if ($221) {
@@ -177585,7 +179082,8 @@ function zbarProcessImageData(imgData) {
                                           break L71;
                                         }
                                         $222 = ($68 + $sa_ntext$4123) | 0;
-                                        _memcpy($222 | 0, $216 | 0, $218 | 0) | 0;
+                                        _memcpy($222 | 0, $216 | 0, $218 | 0) |
+                                          0;
                                         $223 = ($218 + $sa_ntext$4123) | 0;
                                         $224 = $220 >>> 0 < $225 >>> 0;
                                         if ($224) {
@@ -177652,7 +179150,9 @@ function zbarProcessImageData(imgData) {
                                 }
                                 case 1: {
                                   $199 = ($sa_ctext$3 - $sa_ntext$3127) | 0;
-                                  $200 = ((($196 + (($k$1132 * 12) | 0)) | 0) + 8) | 0;
+                                  $200 =
+                                    ((($196 + (($k$1132 * 12) | 0)) | 0) + 8) |
+                                    0;
                                   $201 = HEAP32[$200 >> 2] | 0;
                                   $202 = $199 >>> 0 < $201 >>> 0;
                                   if ($202) {
@@ -177663,7 +179163,9 @@ function zbarProcessImageData(imgData) {
                                     break L71;
                                   }
                                   $203 = ($68 + $sa_ntext$3127) | 0;
-                                  $204 = ((($196 + (($k$1132 * 12) | 0)) | 0) + 4) | 0;
+                                  $204 =
+                                    ((($196 + (($k$1132 * 12) | 0)) | 0) + 4) |
+                                    0;
                                   $205 = HEAP32[$204 >> 2] | 0;
                                   _memcpy($203 | 0, $205 | 0, $201 | 0) | 0;
                                   $206 = HEAP32[$200 >> 2] | 0;
@@ -177675,14 +179177,19 @@ function zbarProcessImageData(imgData) {
                                   break;
                                 }
                                 case 7: {
-                                  $353 = ((($196 + (($k$1132 * 12) | 0)) | 0) + 4) | 0;
+                                  $353 =
+                                    ((($196 + (($k$1132 * 12) | 0)) | 0) + 4) |
+                                    0;
                                   $354 = HEAP32[$353 >> 2] | 0;
                                   $355 = $354 >>> 0 < 19;
                                   $356 = ($354 | 0) != 14;
                                   $or$cond = $355 & $356;
                                   do {
                                     if ($or$cond) {
-                                      if ((($354 | 0) == 0) | (($354 | 0) == 2)) {
+                                      if (
+                                        (($354 | 0) == 0) |
+                                        (($354 | 0) == 2)
+                                      ) {
                                         $enc$0 = 7936;
                                         break;
                                       }
@@ -177717,10 +179224,14 @@ function zbarProcessImageData(imgData) {
                                 }
                                 case 8:
                                 case 4: {
-                                  $241 = ((($196 + (($k$1132 * 12) | 0)) | 0) + 4) | 0;
+                                  $241 =
+                                    ((($196 + (($k$1132 * 12) | 0)) | 0) + 4) |
+                                    0;
                                   $242 = HEAP32[$241 >> 2] | 0;
                                   HEAP32[$in >> 2] = $242;
-                                  $243 = ((($196 + (($k$1132 * 12) | 0)) | 0) + 8) | 0;
+                                  $243 =
+                                    ((($196 + (($k$1132 * 12) | 0)) | 0) + 8) |
+                                    0;
                                   $244 = HEAP32[$243 >> 2] | 0;
                                   HEAP32[$inleft >> 2] = $244;
                                   $245 = ($68 + $sa_ntext$3127) | 0;
@@ -177737,7 +179248,14 @@ function zbarProcessImageData(imgData) {
                                       $sa_ntext$3$lcssa = $sa_ntext$3127;
                                       break L71;
                                     }
-                                    $347 = _iconv($eci_cd$1134, $in, $inleft, $out, $outleft) | 0;
+                                    $347 =
+                                      _iconv(
+                                        $eci_cd$1134,
+                                        $in,
+                                        $inleft,
+                                        $out,
+                                        $outleft
+                                      ) | 0;
                                     $348 = ($347 | 0) == -1;
                                     $349 = $348 & 1;
                                     if ($348) {
@@ -177786,7 +179304,14 @@ function zbarProcessImageData(imgData) {
                                             if ($13) {
                                               $481 = 1;
                                             } else {
-                                              $270 = _iconv($6, $in, $inleft, $out, $outleft) | 0;
+                                              $270 =
+                                                _iconv(
+                                                  $6,
+                                                  $in,
+                                                  $inleft,
+                                                  $out,
+                                                  $outleft
+                                                ) | 0;
                                               $271 = ($270 | 0) == -1;
                                               $272 = $271 & 1;
                                               if ($271) {
@@ -177798,7 +179323,10 @@ function zbarProcessImageData(imgData) {
                                               $275 = ($274 - $82) | 0;
                                               $i$03$i24 = 0;
                                               while (1) {
-                                                $278 = ($enc_list + ($i$03$i24 << 2)) | 0;
+                                                $278 =
+                                                  ($enc_list +
+                                                    ($i$03$i24 << 2)) |
+                                                  0;
                                                 $279 = HEAP32[$278 >> 2] | 0;
                                                 $280 = ($279 | 0) == ($6 | 0);
                                                 $276 = ($i$03$i24 + 1) | 0;
@@ -177821,9 +179349,14 @@ function zbarProcessImageData(imgData) {
                                                 $$in$i26 = $i$03$i24;
                                                 while (1) {
                                                   $282 = ($$in$i26 + -1) | 0;
-                                                  $283 = ($enc_list + ($282 << 2)) | 0;
+                                                  $283 =
+                                                    ($enc_list + ($282 << 2)) |
+                                                    0;
                                                   $284 = HEAP32[$283 >> 2] | 0;
-                                                  $285 = ($enc_list + ($$in$i26 << 2)) | 0;
+                                                  $285 =
+                                                    ($enc_list +
+                                                      ($$in$i26 << 2)) |
+                                                    0;
                                                   HEAP32[$285 >> 2] = $284;
                                                   $286 = ($282 | 0) > 0;
                                                   if ($286) {
@@ -177881,7 +179414,8 @@ function zbarProcessImageData(imgData) {
                                         $i$03$i39 = 0;
                                       }
                                       while (1) {
-                                        $297 = ($enc_list + ($i$03$i39 << 2)) | 0;
+                                        $297 =
+                                          ($enc_list + ($i$03$i39 << 2)) | 0;
                                         $298 = HEAP32[$297 >> 2] | 0;
                                         $299 = ($298 | 0) == ($6 | 0);
                                         $295 = ($i$03$i39 + 1) | 0;
@@ -177906,7 +179440,8 @@ function zbarProcessImageData(imgData) {
                                           $301 = ($$in$i41 + -1) | 0;
                                           $302 = ($enc_list + ($301 << 2)) | 0;
                                           $303 = HEAP32[$302 >> 2] | 0;
-                                          $304 = ($enc_list + ($$in$i41 << 2)) | 0;
+                                          $304 =
+                                            ($enc_list + ($$in$i41 << 2)) | 0;
                                           HEAP32[$304 >> 2] = $303;
                                           $305 = ($301 | 0) > 0;
                                           if ($305) {
@@ -177949,7 +179484,8 @@ function zbarProcessImageData(imgData) {
                                           $254 = ($$in$i + -1) | 0;
                                           $255 = ($enc_list + ($254 << 2)) | 0;
                                           $256 = HEAP32[$255 >> 2] | 0;
-                                          $257 = ($enc_list + ($$in$i << 2)) | 0;
+                                          $257 =
+                                            ($enc_list + ($$in$i << 2)) | 0;
                                           HEAP32[$257 >> 2] = $256;
                                           $258 = ($254 | 0) > 0;
                                           if ($258) {
@@ -178011,9 +179547,14 @@ function zbarProcessImageData(imgData) {
                                             $ej$0$in107 = $ei$0114;
                                             $ej$0108 = $ej$0106;
                                             while (1) {
-                                              $321 = ($enc_list + ($ej$0108 << 2)) | 0;
+                                              $321 =
+                                                ($enc_list + ($ej$0108 << 2)) |
+                                                0;
                                               $322 = HEAP32[$321 >> 2] | 0;
-                                              $323 = ($enc_list + ($ej$0$in107 << 2)) | 0;
+                                              $323 =
+                                                ($enc_list +
+                                                  ($ej$0$in107 << 2)) |
+                                                0;
                                               HEAP32[$323 >> 2] = $322;
                                               $ej$0 = ($ej$0108 + 1) | 0;
                                               $exitcond203 = ($ej$0 | 0) == 3;
@@ -178033,7 +179574,14 @@ function zbarProcessImageData(imgData) {
                                           $324 = $307;
                                         }
                                       } while (0);
-                                      $325 = _iconv($324, $in, $inleft, $out, $outleft) | 0;
+                                      $325 =
+                                        _iconv(
+                                          $324,
+                                          $in,
+                                          $inleft,
+                                          $out,
+                                          $outleft
+                                        ) | 0;
                                       $326 = ($325 | 0) == -1;
                                       $327 = $326 & 1;
                                       if (!$326) {
@@ -178543,7 +180091,15 @@ function zbarProcessImageData(imgData) {
       STACKTOP = sp;
       return;
     }
-    function _rs_correct($_gf, $_m0, $_data, $_ndata, $_npar, $_erasures, $_nerasures) {
+    function _rs_correct(
+      $_gf,
+      $_m0,
+      $_data,
+      $_ndata,
+      $_npar,
+      $_erasures,
+      $_nerasures
+    ) {
       $_gf = $_gf | 0;
       $_m0 = $_m0 | 0;
       $_data = $_data | 0;
@@ -185351,12 +186907,17 @@ function zbarProcessImageData(imgData) {
                   $204 = ($50 + -161) | 0;
                   $205 = $204 >>> 0 > 88;
                   if (!$205) {
-                    $235 = (((86336 + (($204 * 314) | 0)) | 0) + ($$21 << 1)) | 0;
+                    $235 =
+                      (((86336 + (($204 * 314) | 0)) | 0) + ($$21 << 1)) | 0;
                     $236 = HEAP16[$235 >> 1] | 0;
                     $237 = $236 & 65535;
                     $238 = ($204 | 0) == 39;
                     if ($238) {
-                      if ((($$21 | 0) == 66) | (($$21 | 0) == 58) | (($$21 | 0) == 60)) {
+                      if (
+                        (($$21 | 0) == 66) |
+                        (($$21 | 0) == 58) |
+                        (($$21 | 0) == 60)
+                      ) {
                         $240 = 131072;
                       } else {
                         $240 = 0;
@@ -185546,7 +187107,8 @@ function zbarProcessImageData(imgData) {
                       label = 115;
                       break L10;
                     }
-                    $143 = (((12280 + (($139 * 188) | 0)) | 0) + ($140 << 1)) | 0;
+                    $143 =
+                      (((12280 + (($139 * 188) | 0)) | 0) + ($140 << 1)) | 0;
                     $144 = HEAP16[$143 >> 1] | 0;
                     $145 = $144 & 65535;
                     $146 = ($144 << 16) >> 16 == 0;
@@ -185589,7 +187151,8 @@ function zbarProcessImageData(imgData) {
                   $249 = $247 >>> 0 > 93;
                   $or$cond22 = $248 | $249;
                   if (!$or$cond22) {
-                    $279 = (((114288 + (($246 * 188) | 0)) | 0) + ($247 << 1)) | 0;
+                    $279 =
+                      (((114288 + (($246 * 188) | 0)) | 0) + ($247 << 1)) | 0;
                     $280 = HEAP16[$279 >> 1] | 0;
                     $281 = $280 & 65535;
                     $282 = ($280 << 16) >> 16 == 0;
@@ -185672,7 +187235,10 @@ function zbarProcessImageData(imgData) {
                       $j2$034 = 0;
                       $k$533 = $k$436;
                       while (1) {
-                        $269 = (((114288 + (($i1$037 * 188) | 0)) | 0) + ($j2$034 << 1)) | 0;
+                        $269 =
+                          (((114288 + (($i1$037 * 188) | 0)) | 0) +
+                            ($j2$034 << 1)) |
+                          0;
                         $270 = HEAP16[$269 >> 1] | 0;
                         $271 = $270 & 65535;
                         $272 = ($271 - $d$639) | 0;
@@ -185898,7 +187464,8 @@ function zbarProcessImageData(imgData) {
                 $j$042 = 0;
                 $k$141 = $k$044;
                 while (1) {
-                  $179 = (((28072 + (($i$045 * 380) | 0)) | 0) + ($j$042 << 1)) | 0;
+                  $179 =
+                    (((28072 + (($i$045 * 380) | 0)) | 0) + ($j$042 << 1)) | 0;
                   $180 = HEAP16[$179 >> 1] | 0;
                   $181 = $180 & 65535;
                   $182 = ($181 - $d$248) | 0;
@@ -186977,7 +188544,16 @@ function zbarProcessImageData(imgData) {
                     }
                   }
                 } else {
-                  _trinkle($head$077, $width, $cmp, $19, $61, $pshift$078, 0, $lp);
+                  _trinkle(
+                    $head$077,
+                    $width,
+                    $cmp,
+                    $19,
+                    $61,
+                    $pshift$078,
+                    0,
+                    $lp
+                  );
                 }
               } while (0);
               $109 = ($pshift$078 | 0) == 1;
@@ -187030,7 +188606,16 @@ function zbarProcessImageData(imgData) {
         $head$0$lcssa = $base;
         $pshift$0$lcssa = 1;
       }
-      _trinkle($head$0$lcssa, $width, $cmp, $$lcssa76, $$lcssa75, $pshift$0$lcssa, 0, $lp);
+      _trinkle(
+        $head$0$lcssa,
+        $width,
+        $cmp,
+        $$lcssa76,
+        $$lcssa75,
+        $pshift$0$lcssa,
+        0,
+        $lp
+      );
       $126 = $$lcssa76;
       $128 = $$lcssa75;
       $head$1 = $head$0$lcssa;
@@ -187184,7 +188769,16 @@ function zbarProcessImageData(imgData) {
       STACKTOP = sp;
       return;
     }
-    function _trinkle($head, $width, $cmp, $pp$val, $pp$1$val, $pshift, $trusty, $lp) {
+    function _trinkle(
+      $head,
+      $width,
+      $cmp,
+      $pp$val,
+      $pp$1$val,
+      $pshift,
+      $trusty,
+      $lp
+    ) {
       $head = $head | 0;
       $width = $width | 0;
       $cmp = $cmp | 0;
@@ -191245,7 +192839,8 @@ function zbarProcessImageData(imgData) {
                             $432 = $428 | $429;
                             HEAP32[133240 >> 2] = $432;
                             $$sum14$pre$i = ($426 + 2) | 0;
-                            $$pre$i25 = (((133240 + ($$sum14$pre$i << 2)) | 0) + 40) | 0;
+                            $$pre$i25 =
+                              (((133240 + ($$sum14$pre$i << 2)) | 0) + 40) | 0;
                             $$pre$phi$i26Z2D = $$pre$i25;
                             $F5$0$i = $427;
                           } else {
@@ -192282,7 +193877,8 @@ function zbarProcessImageData(imgData) {
                           $852 = $848 | $849;
                           HEAP32[133240 >> 2] = $852;
                           $$sum26$pre$i$i = ($846 + 2) | 0;
-                          $$pre$i25$i = (((133240 + ($$sum26$pre$i$i << 2)) | 0) + 40) | 0;
+                          $$pre$i25$i =
+                            (((133240 + ($$sum26$pre$i$i << 2)) | 0) + 40) | 0;
                           $$pre$phi$i26$iZ2D = $$pre$i25$i;
                           $F4$0$i$i = $847;
                         } else {
@@ -192536,10 +194132,14 @@ function zbarProcessImageData(imgData) {
             HEAP32[((133240 + 28) | 0) >> 2] = $964;
             $965 = ($949 + 4) | 0;
             HEAP32[$965 >> 2] = 27;
-            HEAP32[($950 + 0) >> 2] = HEAP32[(((133240 + 448) | 0) + 0) >> 2] | 0;
-            HEAP32[($950 + 4) >> 2] = HEAP32[(((133240 + 448) | 0) + 4) >> 2] | 0;
-            HEAP32[($950 + 8) >> 2] = HEAP32[(((133240 + 448) | 0) + 8) >> 2] | 0;
-            HEAP32[($950 + 12) >> 2] = HEAP32[(((133240 + 448) | 0) + 12) >> 2] | 0;
+            HEAP32[($950 + 0) >> 2] =
+              HEAP32[(((133240 + 448) | 0) + 0) >> 2] | 0;
+            HEAP32[($950 + 4) >> 2] =
+              HEAP32[(((133240 + 448) | 0) + 4) >> 2] | 0;
+            HEAP32[($950 + 8) >> 2] =
+              HEAP32[(((133240 + 448) | 0) + 8) >> 2] | 0;
+            HEAP32[($950 + 12) >> 2] =
+              HEAP32[(((133240 + 448) | 0) + 12) >> 2] | 0;
             HEAP32[((133240 + 448) | 0) >> 2] = $tbase$247$i;
             HEAP32[((133240 + 452) | 0) >> 2] = $tsize$246$i;
             HEAP32[((133240 + 460) | 0) >> 2] = 0;
@@ -192591,7 +194191,8 @@ function zbarProcessImageData(imgData) {
                     $991 = $987 | $988;
                     HEAP32[133240 >> 2] = $991;
                     $$sum10$pre$i$i = ($985 + 2) | 0;
-                    $$pre$i$i = (((133240 + ($$sum10$pre$i$i << 2)) | 0) + 40) | 0;
+                    $$pre$i$i =
+                      (((133240 + ($$sum10$pre$i$i << 2)) | 0) + 40) | 0;
                     $$pre$phi$i$iZ2D = $$pre$i$i;
                     $F$0$i$i = $986;
                   } else {
@@ -198494,8 +200095,10 @@ function zbarProcessImageData(imgData) {
                   }
                   case 18: {
                     $arglist_current32 = HEAP32[$ap >> 2] | 0;
-                    HEAP32[tempDoublePtr >> 2] = HEAP32[$arglist_current32 >> 2];
-                    HEAP32[(tempDoublePtr + 4) >> 2] = HEAP32[($arglist_current32 + 4) >> 2];
+                    HEAP32[tempDoublePtr >> 2] =
+                      HEAP32[$arglist_current32 >> 2];
+                    HEAP32[(tempDoublePtr + 4) >> 2] =
+                      HEAP32[($arglist_current32 + 4) >> 2];
                     $194 = +HEAPF64[tempDoublePtr >> 3];
                     $arglist_next33 = ($arglist_current32 + 8) | 0;
                     HEAP32[$ap >> 2] = $arglist_next33;
@@ -198552,8 +200155,10 @@ function zbarProcessImageData(imgData) {
                   }
                   case 17: {
                     $arglist_current29 = HEAP32[$ap >> 2] | 0;
-                    HEAP32[tempDoublePtr >> 2] = HEAP32[$arglist_current29 >> 2];
-                    HEAP32[(tempDoublePtr + 4) >> 2] = HEAP32[($arglist_current29 + 4) >> 2];
+                    HEAP32[tempDoublePtr >> 2] =
+                      HEAP32[$arglist_current29 >> 2];
+                    HEAP32[(tempDoublePtr + 4) >> 2] =
+                      HEAP32[($arglist_current29 + 4) >> 2];
                     $190 = +HEAPF64[tempDoublePtr >> 3];
                     $arglist_next30 = ($arglist_current29 + 8) | 0;
                     HEAP32[$ap >> 2] = $arglist_next30;
@@ -199257,12 +200862,15 @@ function zbarProcessImageData(imgData) {
                         $594 = HEAP32[$d$0256$i >> 2] | 0;
                         $595 = _bitshift64Shl($594 | 0, 0, $592 | 0) | 0;
                         $596 = tempRet0;
-                        $597 = _i64Add($595 | 0, $596 | 0, $carry$0255$i | 0, 0) | 0;
+                        $597 =
+                          _i64Add($595 | 0, $596 | 0, $carry$0255$i | 0, 0) | 0;
                         $598 = tempRet0;
-                        $599 = ___uremdi3($597 | 0, $598 | 0, 1000000000, 0) | 0;
+                        $599 =
+                          ___uremdi3($597 | 0, $598 | 0, 1000000000, 0) | 0;
                         $600 = tempRet0;
                         HEAP32[$d$0256$i >> 2] = $599;
-                        $601 = ___udivdi3($597 | 0, $598 | 0, 1000000000, 0) | 0;
+                        $601 =
+                          ___udivdi3($597 | 0, $598 | 0, 1000000000, 0) | 0;
                         $602 = tempRet0;
                         $d$0$i = ($d$0256$i + -4) | 0;
                         $603 = $d$0$i >>> 0 < $a$1263$i >>> 0;
@@ -201258,8 +202866,10 @@ function zbarProcessImageData(imgData) {
                   }
                   case 17: {
                     $arglist_current59 = HEAP32[$ap >> 2] | 0;
-                    HEAP32[tempDoublePtr >> 2] = HEAP32[$arglist_current59 >> 2];
-                    HEAP32[(tempDoublePtr + 4) >> 2] = HEAP32[($arglist_current59 + 4) >> 2];
+                    HEAP32[tempDoublePtr >> 2] =
+                      HEAP32[$arglist_current59 >> 2];
+                    HEAP32[(tempDoublePtr + 4) >> 2] =
+                      HEAP32[($arglist_current59 + 4) >> 2];
                     $1036 = +HEAPF64[tempDoublePtr >> 3];
                     $arglist_next60 = ($arglist_current59 + 8) | 0;
                     HEAP32[$ap >> 2] = $arglist_next60;
@@ -201269,8 +202879,10 @@ function zbarProcessImageData(imgData) {
                   }
                   case 18: {
                     $arglist_current62 = HEAP32[$ap >> 2] | 0;
-                    HEAP32[tempDoublePtr >> 2] = HEAP32[$arglist_current62 >> 2];
-                    HEAP32[(tempDoublePtr + 4) >> 2] = HEAP32[($arglist_current62 + 4) >> 2];
+                    HEAP32[tempDoublePtr >> 2] =
+                      HEAP32[$arglist_current62 >> 2];
+                    HEAP32[(tempDoublePtr + 4) >> 2] =
+                      HEAP32[($arglist_current62 + 4) >> 2];
                     $1037 = +HEAPF64[tempDoublePtr >> 3];
                     $arglist_next63 = ($arglist_current62 + 8) | 0;
                     HEAP32[$ap >> 2] = $arglist_next63;
@@ -201782,7 +203394,8 @@ function zbarProcessImageData(imgData) {
       var ander = 0;
       if ((bits | 0) < 32) {
         ander = ((1 << bits) - 1) | 0;
-        tempRet0 = (high << bits) | ((low & (ander << (32 - bits))) >>> (32 - bits));
+        tempRet0 =
+          (high << bits) | ((low & (ander << (32 - bits))) >>> (32 - bits));
         return low << bits;
       }
       tempRet0 = low << (bits - 32);
@@ -201844,7 +203457,8 @@ function zbarProcessImageData(imgData) {
       src = src | 0;
       num = num | 0;
       var ret = 0;
-      if ((num | 0) >= 4096) return _emscripten_memcpy_big(dest | 0, src | 0, num | 0) | 0;
+      if ((num | 0) >= 4096)
+        return _emscripten_memcpy_big(dest | 0, src | 0, num | 0) | 0;
       ret = dest | 0;
       if ((dest & 3) == (src & 3)) {
         while (dest & 3) {
@@ -201944,7 +203558,10 @@ function zbarProcessImageData(imgData) {
       $11 = $b >>> 16;
       $12 = Math_imul($11, $1) | 0;
       return (
-        ((tempRet0 = (((($8 >>> 16) + (Math_imul($11, $6) | 0)) | 0) + (((($8 & 65535) + $12) | 0) >>> 16)) | 0),
+        ((tempRet0 =
+          (((($8 >>> 16) + (Math_imul($11, $6) | 0)) | 0) +
+            (((($8 & 65535) + $12) | 0) >>> 16)) |
+          0),
         0 | ((($8 + $12) << 16) | ($3 & 65535))) | 0
       );
     }
@@ -201965,9 +203582,11 @@ function zbarProcessImageData(imgData) {
         $8$0 = 0,
         $10$0 = 0;
       $1$0 = ($a$1 >> 31) | ((($a$1 | 0) < 0 ? -1 : 0) << 1);
-      $1$1 = ((($a$1 | 0) < 0 ? -1 : 0) >> 31) | ((($a$1 | 0) < 0 ? -1 : 0) << 1);
+      $1$1 =
+        ((($a$1 | 0) < 0 ? -1 : 0) >> 31) | ((($a$1 | 0) < 0 ? -1 : 0) << 1);
       $2$0 = ($b$1 >> 31) | ((($b$1 | 0) < 0 ? -1 : 0) << 1);
-      $2$1 = ((($b$1 | 0) < 0 ? -1 : 0) >> 31) | ((($b$1 | 0) < 0 ? -1 : 0) << 1);
+      $2$1 =
+        ((($b$1 | 0) < 0 ? -1 : 0) >> 31) | ((($b$1 | 0) < 0 ? -1 : 0) << 1);
       $4$0 = _i64Subtract($1$0 ^ $a$0, $1$1 ^ $a$1, $1$0, $1$1) | 0;
       $4$1 = tempRet0;
       $6$0 = _i64Subtract($2$0 ^ $b$0, $2$1 ^ $b$1, $2$0, $2$1) | 0;
@@ -201997,14 +203616,22 @@ function zbarProcessImageData(imgData) {
       STACKTOP = (STACKTOP + 8) | 0;
       $rem = __stackBase__ | 0;
       $1$0 = ($a$1 >> 31) | ((($a$1 | 0) < 0 ? -1 : 0) << 1);
-      $1$1 = ((($a$1 | 0) < 0 ? -1 : 0) >> 31) | ((($a$1 | 0) < 0 ? -1 : 0) << 1);
+      $1$1 =
+        ((($a$1 | 0) < 0 ? -1 : 0) >> 31) | ((($a$1 | 0) < 0 ? -1 : 0) << 1);
       $2$0 = ($b$1 >> 31) | ((($b$1 | 0) < 0 ? -1 : 0) << 1);
-      $2$1 = ((($b$1 | 0) < 0 ? -1 : 0) >> 31) | ((($b$1 | 0) < 0 ? -1 : 0) << 1);
+      $2$1 =
+        ((($b$1 | 0) < 0 ? -1 : 0) >> 31) | ((($b$1 | 0) < 0 ? -1 : 0) << 1);
       $4$0 = _i64Subtract($1$0 ^ $a$0, $1$1 ^ $a$1, $1$0, $1$1) | 0;
       $4$1 = tempRet0;
       $6$0 = _i64Subtract($2$0 ^ $b$0, $2$1 ^ $b$1, $2$0, $2$1) | 0;
       ___udivmoddi4($4$0, $4$1, $6$0, tempRet0, $rem) | 0;
-      $10$0 = _i64Subtract(HEAP32[$rem >> 2] ^ $1$0, HEAP32[($rem + 4) >> 2] ^ $1$1, $1$0, $1$1) | 0;
+      $10$0 =
+        _i64Subtract(
+          HEAP32[$rem >> 2] ^ $1$0,
+          HEAP32[($rem + 4) >> 2] ^ $1$1,
+          $1$0,
+          $1$1
+        ) | 0;
       $10$1 = tempRet0;
       STACKTOP = __stackBase__;
       return ((tempRet0 = $10$1), $10$0) | 0;
@@ -202021,10 +203648,17 @@ function zbarProcessImageData(imgData) {
         $2 = 0;
       $x_sroa_0_0_extract_trunc = $a$0;
       $y_sroa_0_0_extract_trunc = $b$0;
-      $1$0 = ___muldsi3($x_sroa_0_0_extract_trunc, $y_sroa_0_0_extract_trunc) | 0;
+      $1$0 =
+        ___muldsi3($x_sroa_0_0_extract_trunc, $y_sroa_0_0_extract_trunc) | 0;
       $1$1 = tempRet0;
       $2 = Math_imul($a$1, $y_sroa_0_0_extract_trunc) | 0;
-      return ((tempRet0 = ((((Math_imul($b$1, $x_sroa_0_0_extract_trunc) | 0) + $2) | 0) + $1$1) | ($1$1 & 0)), 0 | ($1$0 & -1)) | 0;
+      return (
+        ((tempRet0 =
+          ((((Math_imul($b$1, $x_sroa_0_0_extract_trunc) | 0) + $2) | 0) +
+            $1$1) |
+          ($1$1 & 0)),
+        0 | ($1$0 & -1)) | 0
+      );
     }
     function ___udivdi3($a$0, $a$1, $b$0, $b$1) {
       $a$0 = $a$0 | 0;
@@ -202047,7 +203681,9 @@ function zbarProcessImageData(imgData) {
       $rem = __stackBase__ | 0;
       ___udivmoddi4($a$0, $a$1, $b$0, $b$1, $rem) | 0;
       STACKTOP = __stackBase__;
-      return ((tempRet0 = HEAP32[($rem + 4) >> 2] | 0), HEAP32[$rem >> 2] | 0) | 0;
+      return (
+        ((tempRet0 = HEAP32[($rem + 4) >> 2] | 0), HEAP32[$rem >> 2] | 0) | 0
+      );
     }
     function ___udivmoddi4($a$0, $a$1, $b$0, $b$1, $rem) {
       $a$0 = $a$0 | 0;
@@ -202129,11 +203765,16 @@ function zbarProcessImageData(imgData) {
         $4 = ($rem | 0) != 0;
         if (($d_sroa_1_4_extract_trunc | 0) == 0) {
           if ($4) {
-            HEAP32[$rem >> 2] = ($n_sroa_0_0_extract_trunc >>> 0) % ($d_sroa_0_0_extract_trunc >>> 0);
+            HEAP32[$rem >> 2] =
+              ($n_sroa_0_0_extract_trunc >>> 0) %
+              ($d_sroa_0_0_extract_trunc >>> 0);
             HEAP32[($rem + 4) >> 2] = 0;
           }
           $_0$1 = 0;
-          $_0$0 = (($n_sroa_0_0_extract_trunc >>> 0) / ($d_sroa_0_0_extract_trunc >>> 0)) >>> 0;
+          $_0$0 =
+            (($n_sroa_0_0_extract_trunc >>> 0) /
+              ($d_sroa_0_0_extract_trunc >>> 0)) >>>
+            0;
           return ((tempRet0 = $_0$1), $_0$0) | 0;
         } else {
           if (!$4) {
@@ -202153,30 +203794,43 @@ function zbarProcessImageData(imgData) {
         if (($d_sroa_0_0_extract_trunc | 0) == 0) {
           if ($17) {
             if (($rem | 0) != 0) {
-              HEAP32[$rem >> 2] = ($n_sroa_1_4_extract_trunc >>> 0) % ($d_sroa_0_0_extract_trunc >>> 0);
+              HEAP32[$rem >> 2] =
+                ($n_sroa_1_4_extract_trunc >>> 0) %
+                ($d_sroa_0_0_extract_trunc >>> 0);
               HEAP32[($rem + 4) >> 2] = 0;
             }
             $_0$1 = 0;
-            $_0$0 = (($n_sroa_1_4_extract_trunc >>> 0) / ($d_sroa_0_0_extract_trunc >>> 0)) >>> 0;
+            $_0$0 =
+              (($n_sroa_1_4_extract_trunc >>> 0) /
+                ($d_sroa_0_0_extract_trunc >>> 0)) >>>
+              0;
             return ((tempRet0 = $_0$1), $_0$0) | 0;
           }
           if (($n_sroa_0_0_extract_trunc | 0) == 0) {
             if (($rem | 0) != 0) {
               HEAP32[$rem >> 2] = 0;
-              HEAP32[($rem + 4) >> 2] = ($n_sroa_1_4_extract_trunc >>> 0) % ($d_sroa_1_4_extract_trunc >>> 0);
+              HEAP32[($rem + 4) >> 2] =
+                ($n_sroa_1_4_extract_trunc >>> 0) %
+                ($d_sroa_1_4_extract_trunc >>> 0);
             }
             $_0$1 = 0;
-            $_0$0 = (($n_sroa_1_4_extract_trunc >>> 0) / ($d_sroa_1_4_extract_trunc >>> 0)) >>> 0;
+            $_0$0 =
+              (($n_sroa_1_4_extract_trunc >>> 0) /
+                ($d_sroa_1_4_extract_trunc >>> 0)) >>>
+              0;
             return ((tempRet0 = $_0$1), $_0$0) | 0;
           }
           $37 = ($d_sroa_1_4_extract_trunc - 1) | 0;
           if ((($37 & $d_sroa_1_4_extract_trunc) | 0) == 0) {
             if (($rem | 0) != 0) {
               HEAP32[$rem >> 2] = 0 | ($a$0 & -1);
-              HEAP32[($rem + 4) >> 2] = ($37 & $n_sroa_1_4_extract_trunc) | ($a$1 & 0);
+              HEAP32[($rem + 4) >> 2] =
+                ($37 & $n_sroa_1_4_extract_trunc) | ($a$1 & 0);
             }
             $_0$1 = 0;
-            $_0$0 = $n_sroa_1_4_extract_trunc >>> ((_llvm_cttz_i32($d_sroa_1_4_extract_trunc | 0) | 0) >>> 0);
+            $_0$0 =
+              $n_sroa_1_4_extract_trunc >>>
+              ((_llvm_cttz_i32($d_sroa_1_4_extract_trunc | 0) | 0) >>> 0);
             return ((tempRet0 = $_0$1), $_0$0) | 0;
           }
           $49 = _llvm_ctlz_i32($d_sroa_1_4_extract_trunc | 0) | 0;
@@ -202185,7 +203839,9 @@ function zbarProcessImageData(imgData) {
             $57 = ($51 + 1) | 0;
             $58 = (31 - $51) | 0;
             $sr_1_ph = $57;
-            $r_sroa_0_1_ph = ($n_sroa_1_4_extract_trunc << $58) | ($n_sroa_0_0_extract_trunc >>> ($57 >>> 0));
+            $r_sroa_0_1_ph =
+              ($n_sroa_1_4_extract_trunc << $58) |
+              ($n_sroa_0_0_extract_trunc >>> ($57 >>> 0));
             $r_sroa_1_1_ph = $n_sroa_1_4_extract_trunc >>> ($57 >>> 0);
             $q_sroa_0_1_ph = 0;
             $q_sroa_1_1_ph = $n_sroa_0_0_extract_trunc << $58;
@@ -202204,14 +203860,18 @@ function zbarProcessImageData(imgData) {
         } else {
           if (!$17) {
             $117 = _llvm_ctlz_i32($d_sroa_1_4_extract_trunc | 0) | 0;
-            $119 = ($117 - (_llvm_ctlz_i32($n_sroa_1_4_extract_trunc | 0) | 0)) | 0;
+            $119 =
+              ($117 - (_llvm_ctlz_i32($n_sroa_1_4_extract_trunc | 0) | 0)) | 0;
             if ($119 >>> 0 <= 31) {
               $125 = ($119 + 1) | 0;
               $126 = (31 - $119) | 0;
               $130 = ($119 - 31) >> 31;
               $sr_1_ph = $125;
-              $r_sroa_0_1_ph = (($n_sroa_0_0_extract_trunc >>> ($125 >>> 0)) & $130) | ($n_sroa_1_4_extract_trunc << $126);
-              $r_sroa_1_1_ph = ($n_sroa_1_4_extract_trunc >>> ($125 >>> 0)) & $130;
+              $r_sroa_0_1_ph =
+                (($n_sroa_0_0_extract_trunc >>> ($125 >>> 0)) & $130) |
+                ($n_sroa_1_4_extract_trunc << $126);
+              $r_sroa_1_1_ph =
+                ($n_sroa_1_4_extract_trunc >>> ($125 >>> 0)) & $130;
               $q_sroa_0_1_ph = 0;
               $q_sroa_1_1_ph = $n_sroa_0_0_extract_trunc << $126;
               break;
@@ -202229,8 +203889,10 @@ function zbarProcessImageData(imgData) {
           }
           $66 = ($d_sroa_0_0_extract_trunc - 1) | 0;
           if ((($66 & $d_sroa_0_0_extract_trunc) | 0) != 0) {
-            $86 = ((_llvm_ctlz_i32($d_sroa_0_0_extract_trunc | 0) | 0) + 33) | 0;
-            $88 = ($86 - (_llvm_ctlz_i32($n_sroa_1_4_extract_trunc | 0) | 0)) | 0;
+            $86 =
+              ((_llvm_ctlz_i32($d_sroa_0_0_extract_trunc | 0) | 0) + 33) | 0;
+            $88 =
+              ($86 - (_llvm_ctlz_i32($n_sroa_1_4_extract_trunc | 0) | 0)) | 0;
             $89 = (64 - $88) | 0;
             $91 = (32 - $88) | 0;
             $92 = $91 >> 31;
@@ -202238,12 +203900,17 @@ function zbarProcessImageData(imgData) {
             $105 = $95 >> 31;
             $sr_1_ph = $88;
             $r_sroa_0_1_ph =
-              ((($91 - 1) >> 31) & ($n_sroa_1_4_extract_trunc >>> ($95 >>> 0))) |
-              ((($n_sroa_1_4_extract_trunc << $91) | ($n_sroa_0_0_extract_trunc >>> ($88 >>> 0))) & $105);
+              ((($91 - 1) >> 31) &
+                ($n_sroa_1_4_extract_trunc >>> ($95 >>> 0))) |
+              ((($n_sroa_1_4_extract_trunc << $91) |
+                ($n_sroa_0_0_extract_trunc >>> ($88 >>> 0))) &
+                $105);
             $r_sroa_1_1_ph = $105 & ($n_sroa_1_4_extract_trunc >>> ($88 >>> 0));
             $q_sroa_0_1_ph = ($n_sroa_0_0_extract_trunc << $89) & $92;
             $q_sroa_1_1_ph =
-              ((($n_sroa_1_4_extract_trunc << $89) | ($n_sroa_0_0_extract_trunc >>> ($95 >>> 0))) & $92) |
+              ((($n_sroa_1_4_extract_trunc << $89) |
+                ($n_sroa_0_0_extract_trunc >>> ($95 >>> 0))) &
+                $92) |
               (($n_sroa_0_0_extract_trunc << $91) & (($88 - 33) >> 31));
             break;
           }
@@ -202258,7 +203925,10 @@ function zbarProcessImageData(imgData) {
           } else {
             $78 = _llvm_cttz_i32($d_sroa_0_0_extract_trunc | 0) | 0;
             $_0$1 = 0 | ($n_sroa_1_4_extract_trunc >>> ($78 >>> 0));
-            $_0$0 = ($n_sroa_1_4_extract_trunc << (32 - $78)) | ($n_sroa_0_0_extract_trunc >>> ($78 >>> 0)) | 0;
+            $_0$0 =
+              ($n_sroa_1_4_extract_trunc << (32 - $78)) |
+              ($n_sroa_0_0_extract_trunc >>> ($78 >>> 0)) |
+              0;
             return ((tempRet0 = $_0$1), $_0$0) | 0;
           }
         }
@@ -202272,8 +203942,15 @@ function zbarProcessImageData(imgData) {
         $carry_0_lcssa$0 = 0;
       } else {
         $d_sroa_0_0_insert_insert99$0 = 0 | ($b$0 & -1);
-        $d_sroa_0_0_insert_insert99$1 = $d_sroa_1_4_extract_shift$0 | ($b$1 & 0);
-        $137$0 = _i64Add($d_sroa_0_0_insert_insert99$0, $d_sroa_0_0_insert_insert99$1, -1, -1) | 0;
+        $d_sroa_0_0_insert_insert99$1 =
+          $d_sroa_1_4_extract_shift$0 | ($b$1 & 0);
+        $137$0 =
+          _i64Add(
+            $d_sroa_0_0_insert_insert99$0,
+            $d_sroa_0_0_insert_insert99$1,
+            -1,
+            -1
+          ) | 0;
         $137$1 = tempRet0;
         $q_sroa_1_1198 = $q_sroa_1_1_ph;
         $q_sroa_0_1199 = $q_sroa_0_1_ph;
@@ -202284,9 +203961,16 @@ function zbarProcessImageData(imgData) {
         while (1) {
           $147 = ($q_sroa_0_1199 >>> 31) | ($q_sroa_1_1198 << 1);
           $149 = $carry_0203 | ($q_sroa_0_1199 << 1);
-          $r_sroa_0_0_insert_insert42$0 = 0 | (($r_sroa_0_1201 << 1) | ($q_sroa_1_1198 >>> 31));
-          $r_sroa_0_0_insert_insert42$1 = ($r_sroa_0_1201 >>> 31) | ($r_sroa_1_1200 << 1) | 0;
-          _i64Subtract($137$0, $137$1, $r_sroa_0_0_insert_insert42$0, $r_sroa_0_0_insert_insert42$1) | 0;
+          $r_sroa_0_0_insert_insert42$0 =
+            0 | (($r_sroa_0_1201 << 1) | ($q_sroa_1_1198 >>> 31));
+          $r_sroa_0_0_insert_insert42$1 =
+            ($r_sroa_0_1201 >>> 31) | ($r_sroa_1_1200 << 1) | 0;
+          _i64Subtract(
+            $137$0,
+            $137$1,
+            $r_sroa_0_0_insert_insert42$0,
+            $r_sroa_0_0_insert_insert42$1
+          ) | 0;
           $150$1 = tempRet0;
           $151$0 = ($150$1 >> 31) | ((($150$1 | 0) < 0 ? -1 : 0) << 1);
           $152 = $151$0 & 1;
@@ -202295,7 +203979,9 @@ function zbarProcessImageData(imgData) {
               $r_sroa_0_0_insert_insert42$0,
               $r_sroa_0_0_insert_insert42$1,
               $151$0 & $d_sroa_0_0_insert_insert99$0,
-              (((($150$1 | 0) < 0 ? -1 : 0) >> 31) | ((($150$1 | 0) < 0 ? -1 : 0) << 1)) & $d_sroa_0_0_insert_insert99$1
+              (((($150$1 | 0) < 0 ? -1 : 0) >> 31) |
+                ((($150$1 | 0) < 0 ? -1 : 0) << 1)) &
+                $d_sroa_0_0_insert_insert99$1
             ) | 0;
           $r_sroa_0_0_extract_trunc = $154$0;
           $r_sroa_1_4_extract_trunc = tempRet0;
@@ -202320,7 +204006,8 @@ function zbarProcessImageData(imgData) {
       }
       $q_sroa_0_0_insert_ext75$0 = $q_sroa_0_1_lcssa;
       $q_sroa_0_0_insert_ext75$1 = 0;
-      $q_sroa_0_0_insert_insert77$1 = $q_sroa_1_1_lcssa | $q_sroa_0_0_insert_ext75$1;
+      $q_sroa_0_0_insert_insert77$1 =
+        $q_sroa_1_1_lcssa | $q_sroa_0_0_insert_ext75$1;
       if (($rem | 0) != 0) {
         HEAP32[$rem >> 2] = 0 | $r_sroa_0_1_lcssa;
         HEAP32[($rem + 4) >> 2] = $r_sroa_1_1_lcssa | 0;
@@ -202328,9 +204015,13 @@ function zbarProcessImageData(imgData) {
       $_0$1 =
         ((0 | $q_sroa_0_0_insert_ext75$0) >>> 31) |
         ($q_sroa_0_0_insert_insert77$1 << 1) |
-        ((($q_sroa_0_0_insert_ext75$1 << 1) | ($q_sroa_0_0_insert_ext75$0 >>> 31)) & 0) |
+        ((($q_sroa_0_0_insert_ext75$1 << 1) |
+          ($q_sroa_0_0_insert_ext75$0 >>> 31)) &
+          0) |
         $carry_0_lcssa$1;
-      $_0$0 = ((($q_sroa_0_0_insert_ext75$0 << 1) | (0 >>> 31)) & -2) | $carry_0_lcssa$0;
+      $_0$0 =
+        ((($q_sroa_0_0_insert_ext75$0 << 1) | (0 >>> 31)) & -2) |
+        $carry_0_lcssa$0;
       return ((tempRet0 = $_0$1), $_0$0) | 0;
     }
     // =======================================================================
@@ -202493,34 +204184,34 @@ function zbarProcessImageData(imgData) {
     Module.asmLibraryArg,
     buffer
   );
-  var _i64Subtract = (Module['_i64Subtract'] = asm['_i64Subtract']);
-  var _free = (Module['_free'] = asm['_free']);
-  var _main = (Module['_main'] = asm['_main']);
-  var _realloc = (Module['_realloc'] = asm['_realloc']);
-  var _i64Add = (Module['_i64Add'] = asm['_i64Add']);
-  var _memmove = (Module['_memmove'] = asm['_memmove']);
-  var _bitshift64Ashr = (Module['_bitshift64Ashr'] = asm['_bitshift64Ashr']);
-  var _strlen = (Module['_strlen'] = asm['_strlen']);
-  var _memset = (Module['_memset'] = asm['_memset']);
-  var _malloc = (Module['_malloc'] = asm['_malloc']);
-  var _memcpy = (Module['_memcpy'] = asm['_memcpy']);
-  var _bitshift64Lshr = (Module['_bitshift64Lshr'] = asm['_bitshift64Lshr']);
-  var _strcpy = (Module['_strcpy'] = asm['_strcpy']);
-  var _calloc = (Module['_calloc'] = asm['_calloc']);
-  var _bitshift64Shl = (Module['_bitshift64Shl'] = asm['_bitshift64Shl']);
-  var runPostSets = (Module['runPostSets'] = asm['runPostSets']);
-  var dynCall_iiii = (Module['dynCall_iiii'] = asm['dynCall_iiii']);
-  var dynCall_vi = (Module['dynCall_vi'] = asm['dynCall_vi']);
-  var dynCall_vii = (Module['dynCall_vii'] = asm['dynCall_vii']);
-  var dynCall_ii = (Module['dynCall_ii'] = asm['dynCall_ii']);
-  var dynCall_iii = (Module['dynCall_iii'] = asm['dynCall_iii']);
-  var dynCall_viiii = (Module['dynCall_viiii'] = asm['dynCall_viiii']);
+  var _i64Subtract = (Module["_i64Subtract"] = asm["_i64Subtract"]);
+  var _free = (Module["_free"] = asm["_free"]);
+  var _main = (Module["_main"] = asm["_main"]);
+  var _realloc = (Module["_realloc"] = asm["_realloc"]);
+  var _i64Add = (Module["_i64Add"] = asm["_i64Add"]);
+  var _memmove = (Module["_memmove"] = asm["_memmove"]);
+  var _bitshift64Ashr = (Module["_bitshift64Ashr"] = asm["_bitshift64Ashr"]);
+  var _strlen = (Module["_strlen"] = asm["_strlen"]);
+  var _memset = (Module["_memset"] = asm["_memset"]);
+  var _malloc = (Module["_malloc"] = asm["_malloc"]);
+  var _memcpy = (Module["_memcpy"] = asm["_memcpy"]);
+  var _bitshift64Lshr = (Module["_bitshift64Lshr"] = asm["_bitshift64Lshr"]);
+  var _strcpy = (Module["_strcpy"] = asm["_strcpy"]);
+  var _calloc = (Module["_calloc"] = asm["_calloc"]);
+  var _bitshift64Shl = (Module["_bitshift64Shl"] = asm["_bitshift64Shl"]);
+  var runPostSets = (Module["runPostSets"] = asm["runPostSets"]);
+  var dynCall_iiii = (Module["dynCall_iiii"] = asm["dynCall_iiii"]);
+  var dynCall_vi = (Module["dynCall_vi"] = asm["dynCall_vi"]);
+  var dynCall_vii = (Module["dynCall_vii"] = asm["dynCall_vii"]);
+  var dynCall_ii = (Module["dynCall_ii"] = asm["dynCall_ii"]);
+  var dynCall_iii = (Module["dynCall_iii"] = asm["dynCall_iii"]);
+  var dynCall_viiii = (Module["dynCall_viiii"] = asm["dynCall_viiii"]);
 
-  Runtime.stackAlloc = asm['stackAlloc'];
-  Runtime.stackSave = asm['stackSave'];
-  Runtime.stackRestore = asm['stackRestore'];
-  Runtime.setTempRet0 = asm['setTempRet0'];
-  Runtime.getTempRet0 = asm['getTempRet0'];
+  Runtime.stackAlloc = asm["stackAlloc"];
+  Runtime.stackSave = asm["stackSave"];
+  Runtime.stackRestore = asm["stackRestore"];
+  Runtime.setTempRet0 = asm["setTempRet0"];
+  Runtime.getTempRet0 = asm["getTempRet0"];
 
   // TODO: strip out parts of this we do not need
 
@@ -202634,7 +204325,10 @@ function zbarProcessImageData(imgData) {
       } else if (value < 0) {
         return goog.math.Long.fromNumber(-value).negate();
       } else {
-        return new goog.math.Long(value % goog.math.Long.TWO_PWR_32_DBL_ | 0, (value / goog.math.Long.TWO_PWR_32_DBL_) | 0);
+        return new goog.math.Long(
+          value % goog.math.Long.TWO_PWR_32_DBL_ | 0,
+          (value / goog.math.Long.TWO_PWR_32_DBL_) | 0
+        );
       }
     };
 
@@ -202658,17 +204352,17 @@ function zbarProcessImageData(imgData) {
      */
     goog.math.Long.fromString = function(str, opt_radix) {
       if (str.length == 0) {
-        throw Error('number format error: empty string');
+        throw Error("number format error: empty string");
       }
 
       var radix = opt_radix || 10;
       if (radix < 2 || 36 < radix) {
-        throw Error('radix out of range: ' + radix);
+        throw Error("radix out of range: " + radix);
       }
 
-      if (str.charAt(0) == '-') {
+      if (str.charAt(0) == "-") {
         return goog.math.Long.fromString(str.substring(1), radix).negate();
-      } else if (str.indexOf('-') >= 0) {
+      } else if (str.indexOf("-") >= 0) {
         throw Error('number format error: interior "-" character: ' + str);
       }
 
@@ -202712,7 +204406,8 @@ function zbarProcessImageData(imgData) {
      * @type {number}
      * @private
      */
-    goog.math.Long.TWO_PWR_32_DBL_ = goog.math.Long.TWO_PWR_16_DBL_ * goog.math.Long.TWO_PWR_16_DBL_;
+    goog.math.Long.TWO_PWR_32_DBL_ =
+      goog.math.Long.TWO_PWR_16_DBL_ * goog.math.Long.TWO_PWR_16_DBL_;
 
     /**
      * @type {number}
@@ -202724,13 +204419,15 @@ function zbarProcessImageData(imgData) {
      * @type {number}
      * @private
      */
-    goog.math.Long.TWO_PWR_48_DBL_ = goog.math.Long.TWO_PWR_32_DBL_ * goog.math.Long.TWO_PWR_16_DBL_;
+    goog.math.Long.TWO_PWR_48_DBL_ =
+      goog.math.Long.TWO_PWR_32_DBL_ * goog.math.Long.TWO_PWR_16_DBL_;
 
     /**
      * @type {number}
      * @private
      */
-    goog.math.Long.TWO_PWR_64_DBL_ = goog.math.Long.TWO_PWR_32_DBL_ * goog.math.Long.TWO_PWR_32_DBL_;
+    goog.math.Long.TWO_PWR_64_DBL_ =
+      goog.math.Long.TWO_PWR_32_DBL_ * goog.math.Long.TWO_PWR_32_DBL_;
 
     /**
      * @type {number}
@@ -202748,7 +204445,10 @@ function zbarProcessImageData(imgData) {
     goog.math.Long.NEG_ONE = goog.math.Long.fromInt(-1);
 
     /** @type {!goog.math.Long} */
-    goog.math.Long.MAX_VALUE = goog.math.Long.fromBits(0xffffffff | 0, 0x7fffffff | 0);
+    goog.math.Long.MAX_VALUE = goog.math.Long.fromBits(
+      0xffffffff | 0,
+      0x7fffffff | 0
+    );
 
     /** @type {!goog.math.Long} */
     goog.math.Long.MIN_VALUE = goog.math.Long.fromBits(0, 0x80000000 | 0);
@@ -202766,7 +204466,9 @@ function zbarProcessImageData(imgData) {
 
     /** @return {number} The closest floating-point representation to this value. */
     goog.math.Long.prototype.toNumber = function() {
-      return this.high_ * goog.math.Long.TWO_PWR_32_DBL_ + this.getLowBitsUnsigned();
+      return (
+        this.high_ * goog.math.Long.TWO_PWR_32_DBL_ + this.getLowBitsUnsigned()
+      );
     };
 
     /**
@@ -202776,11 +204478,11 @@ function zbarProcessImageData(imgData) {
     goog.math.Long.prototype.toString = function(opt_radix) {
       var radix = opt_radix || 10;
       if (radix < 2 || 36 < radix) {
-        throw Error('radix out of range: ' + radix);
+        throw Error("radix out of range: " + radix);
       }
 
       if (this.isZero()) {
-        return '0';
+        return "0";
       }
 
       if (this.isNegative()) {
@@ -202792,7 +204494,7 @@ function zbarProcessImageData(imgData) {
           var rem = div.multiply(radixLong).subtract(this);
           return div.toString(radix) + rem.toInt().toString(radix);
         } else {
-          return '-' + this.negate().toString(radix);
+          return "-" + this.negate().toString(radix);
         }
       }
 
@@ -202801,7 +204503,7 @@ function zbarProcessImageData(imgData) {
       var radixToPower = goog.math.Long.fromNumber(Math.pow(radix, 6));
 
       var rem = this;
-      var result = '';
+      var result = "";
       while (true) {
         var remDiv = rem.div(radixToPower);
         var intval = rem.subtract(remDiv.multiply(radixToPower)).toInt();
@@ -202812,9 +204514,9 @@ function zbarProcessImageData(imgData) {
           return digits + result;
         } else {
           while (digits.length < 6) {
-            digits = '0' + digits;
+            digits = "0" + digits;
           }
-          result = '' + digits + result;
+          result = "" + digits + result;
         }
       }
     };
@@ -202831,7 +204533,9 @@ function zbarProcessImageData(imgData) {
 
     /** @return {number} The low 32-bits as an unsigned value. */
     goog.math.Long.prototype.getLowBitsUnsigned = function() {
-      return this.low_ >= 0 ? this.low_ : goog.math.Long.TWO_PWR_32_DBL_ + this.low_;
+      return this.low_ >= 0
+        ? this.low_
+        : goog.math.Long.TWO_PWR_32_DBL_ + this.low_;
     };
 
     /**
@@ -203032,7 +204736,10 @@ function zbarProcessImageData(imgData) {
       }
 
       // If both longs are small, use float multiplication
-      if (this.lessThan(goog.math.Long.TWO_PWR_24_) && other.lessThan(goog.math.Long.TWO_PWR_24_)) {
+      if (
+        this.lessThan(goog.math.Long.TWO_PWR_24_) &&
+        other.lessThan(goog.math.Long.TWO_PWR_24_)
+      ) {
         return goog.math.Long.fromNumber(this.toNumber() * other.toNumber());
       }
 
@@ -203083,13 +204790,16 @@ function zbarProcessImageData(imgData) {
      */
     goog.math.Long.prototype.div = function(other) {
       if (other.isZero()) {
-        throw Error('division by zero');
+        throw Error("division by zero");
       } else if (this.isZero()) {
         return goog.math.Long.ZERO;
       }
 
       if (this.equals(goog.math.Long.MIN_VALUE)) {
-        if (other.equals(goog.math.Long.ONE) || other.equals(goog.math.Long.NEG_ONE)) {
+        if (
+          other.equals(goog.math.Long.ONE) ||
+          other.equals(goog.math.Long.NEG_ONE)
+        ) {
           return goog.math.Long.MIN_VALUE; // recall that -MIN_VALUE == MIN_VALUE
         } else if (other.equals(goog.math.Long.MIN_VALUE)) {
           return goog.math.Long.ONE;
@@ -203098,7 +204808,9 @@ function zbarProcessImageData(imgData) {
           var halfThis = this.shiftRight(1);
           var approx = halfThis.div(other).shiftLeft(1);
           if (approx.equals(goog.math.Long.ZERO)) {
-            return other.isNegative() ? goog.math.Long.ONE : goog.math.Long.NEG_ONE;
+            return other.isNegative()
+              ? goog.math.Long.ONE
+              : goog.math.Long.NEG_ONE;
           } else {
             var rem = this.subtract(other.multiply(approx));
             var result = approx.add(rem.div(other));
@@ -203180,7 +204892,10 @@ function zbarProcessImageData(imgData) {
      * @return {!goog.math.Long} The bitwise-AND of this and the other.
      */
     goog.math.Long.prototype.and = function(other) {
-      return goog.math.Long.fromBits(this.low_ & other.low_, this.high_ & other.high_);
+      return goog.math.Long.fromBits(
+        this.low_ & other.low_,
+        this.high_ & other.high_
+      );
     };
 
     /**
@@ -203189,7 +204904,10 @@ function zbarProcessImageData(imgData) {
      * @return {!goog.math.Long} The bitwise-OR of this and the other.
      */
     goog.math.Long.prototype.or = function(other) {
-      return goog.math.Long.fromBits(this.low_ | other.low_, this.high_ | other.high_);
+      return goog.math.Long.fromBits(
+        this.low_ | other.low_,
+        this.high_ | other.high_
+      );
     };
 
     /**
@@ -203198,7 +204916,10 @@ function zbarProcessImageData(imgData) {
      * @return {!goog.math.Long} The bitwise-XOR of this and the other.
      */
     goog.math.Long.prototype.xor = function(other) {
-      return goog.math.Long.fromBits(this.low_ ^ other.low_, this.high_ ^ other.high_);
+      return goog.math.Long.fromBits(
+        this.low_ ^ other.low_,
+        this.high_ ^ other.high_
+      );
     };
 
     /**
@@ -203214,7 +204935,10 @@ function zbarProcessImageData(imgData) {
         var low = this.low_;
         if (numBits < 32) {
           var high = this.high_;
-          return goog.math.Long.fromBits(low << numBits, (high << numBits) | (low >>> (32 - numBits)));
+          return goog.math.Long.fromBits(
+            low << numBits,
+            (high << numBits) | (low >>> (32 - numBits))
+          );
         } else {
           return goog.math.Long.fromBits(0, low << (numBits - 32));
         }
@@ -203234,9 +204958,15 @@ function zbarProcessImageData(imgData) {
         var high = this.high_;
         if (numBits < 32) {
           var low = this.low_;
-          return goog.math.Long.fromBits((low >>> numBits) | (high << (32 - numBits)), high >> numBits);
+          return goog.math.Long.fromBits(
+            (low >>> numBits) | (high << (32 - numBits)),
+            high >> numBits
+          );
         } else {
-          return goog.math.Long.fromBits(high >> (numBits - 32), high >= 0 ? 0 : -1);
+          return goog.math.Long.fromBits(
+            high >> (numBits - 32),
+            high >= 0 ? 0 : -1
+          );
         }
       }
     };
@@ -203256,7 +204986,10 @@ function zbarProcessImageData(imgData) {
         var high = this.high_;
         if (numBits < 32) {
           var low = this.low_;
-          return goog.math.Long.fromBits((low >>> numBits) | (high << (32 - numBits)), high >>> numBits);
+          return goog.math.Long.fromBits(
+            (low >>> numBits) | (high << (32 - numBits)),
+            high >>> numBits
+          );
         } else if (numBits == 32) {
           return goog.math.Long.fromBits(high, 0);
         } else {
@@ -203267,42 +205000,42 @@ function zbarProcessImageData(imgData) {
 
     //======= begin jsbn =======
 
-    var navigator = { appName: 'Modern Browser' }; // polyfill a little
+    var navigator = { appName: "Modern Browser" }; // polyfill a little
 
     // Copyright (c) 2005  Tom Wu
     // All Rights Reserved.
     // http://www-cs-students.stanford.edu/~tjw/jsbn/
 
     /*
-   * Copyright (c) 2003-2005  Tom Wu
-   * All Rights Reserved.
-   *
-   * Permission is hereby granted, free of charge, to any person obtaining
-   * a copy of this software and associated documentation files (the
-   * "Software"), to deal in the Software without restriction, including
-   * without limitation the rights to use, copy, modify, merge, publish,
-   * distribute, sublicense, and/or sell copies of the Software, and to
-   * permit persons to whom the Software is furnished to do so, subject to
-   * the following conditions:
-   *
-   * The above copyright notice and this permission notice shall be
-   * included in all copies or substantial portions of the Software.
-   *
-   * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
-   * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-   * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-   *
-   * IN NO EVENT SHALL TOM WU BE LIABLE FOR ANY SPECIAL, INCIDENTAL,
-   * INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND, OR ANY DAMAGES WHATSOEVER
-   * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER OR NOT ADVISED OF
-   * THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF LIABILITY, ARISING OUT
-   * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-   *
-   * In addition, the following condition applies:
-   *
-   * All redistributions must retain an intact copy of this copyright notice
-   * and disclaimer.
-   */
+     * Copyright (c) 2003-2005  Tom Wu
+     * All Rights Reserved.
+     *
+     * Permission is hereby granted, free of charge, to any person obtaining
+     * a copy of this software and associated documentation files (the
+     * "Software"), to deal in the Software without restriction, including
+     * without limitation the rights to use, copy, modify, merge, publish,
+     * distribute, sublicense, and/or sell copies of the Software, and to
+     * permit persons to whom the Software is furnished to do so, subject to
+     * the following conditions:
+     *
+     * The above copyright notice and this permission notice shall be
+     * included in all copies or substantial portions of the Software.
+     *
+     * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
+     * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
+     * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+     *
+     * IN NO EVENT SHALL TOM WU BE LIABLE FOR ANY SPECIAL, INCIDENTAL,
+     * INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND, OR ANY DAMAGES WHATSOEVER
+     * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER OR NOT ADVISED OF
+     * THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF LIABILITY, ARISING OUT
+     * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+     *
+     * In addition, the following condition applies:
+     *
+     * All redistributions must retain an intact copy of this copyright notice
+     * and disclaimer.
+     */
 
     // Basic JavaScript BN library - subset useful for RSA encryption.
 
@@ -203316,8 +205049,8 @@ function zbarProcessImageData(imgData) {
     // (public) Constructor
     function BigInteger(a, b, c) {
       if (a != null)
-        if ('number' == typeof a) this.fromNumber(a, b, c);
-        else if (b == null && 'string' != typeof a) this.fromString(a, 256);
+        if ("number" == typeof a) this.fromNumber(a, b, c);
+        else if (b == null && "string" != typeof a) this.fromString(a, 256);
         else this.fromString(a, b);
     }
 
@@ -203373,10 +205106,10 @@ function zbarProcessImageData(imgData) {
       }
       return c;
     }
-    if (j_lm && navigator.appName == 'Microsoft Internet Explorer') {
+    if (j_lm && navigator.appName == "Microsoft Internet Explorer") {
       BigInteger.prototype.am = am2;
       dbits = 30;
-    } else if (j_lm && navigator.appName != 'Netscape') {
+    } else if (j_lm && navigator.appName != "Netscape") {
       BigInteger.prototype.am = am1;
       dbits = 26;
     } else {
@@ -203395,14 +205128,14 @@ function zbarProcessImageData(imgData) {
     BigInteger.prototype.F2 = 2 * dbits - BI_FP;
 
     // Digit conversions
-    var BI_RM = '0123456789abcdefghijklmnopqrstuvwxyz';
+    var BI_RM = "0123456789abcdefghijklmnopqrstuvwxyz";
     var BI_RC = new Array();
     var rr, vv;
-    rr = '0'.charCodeAt(0);
+    rr = "0".charCodeAt(0);
     for (vv = 0; vv <= 9; ++vv) BI_RC[rr++] = vv;
-    rr = 'a'.charCodeAt(0);
+    rr = "a".charCodeAt(0);
     for (vv = 10; vv < 36; ++vv) BI_RC[rr++] = vv;
-    rr = 'A'.charCodeAt(0);
+    rr = "A".charCodeAt(0);
     for (vv = 10; vv < 36; ++vv) BI_RC[rr++] = vv;
 
     function int2char(n) {
@@ -203458,7 +205191,7 @@ function zbarProcessImageData(imgData) {
       while (--i >= 0) {
         var x = k == 8 ? s[i] & 0xff : intAt(s, i);
         if (x < 0) {
-          if (s.charAt(i) == '-') mi = true;
+          if (s.charAt(i) == "-") mi = true;
           continue;
         }
         mi = false;
@@ -203486,7 +205219,7 @@ function zbarProcessImageData(imgData) {
 
     // (public) return string representation in given radix
     function bnToString(b) {
-      if (this.s < 0) return '-' + this.negate().toString(b);
+      if (this.s < 0) return "-" + this.negate().toString(b);
       var k;
       if (b == 16) k = 4;
       else if (b == 8) k = 3;
@@ -203497,7 +205230,7 @@ function zbarProcessImageData(imgData) {
       var km = (1 << k) - 1,
         d,
         m = false,
-        r = '',
+        r = "",
         i = this.t;
       var p = this.DB - ((i * this.DB) % k);
       if (i-- > 0) {
@@ -203520,7 +205253,7 @@ function zbarProcessImageData(imgData) {
           if (m) r += int2char(d);
         }
       }
-      return m ? r : '0';
+      return m ? r : "0";
     }
 
     // (public) -this
@@ -203576,7 +205309,9 @@ function zbarProcessImageData(imgData) {
     // (public) return the number of bits in "this"
     function bnBitLength() {
       if (this.t <= 0) return 0;
-      return this.DB * (this.t - 1) + nbits(this[this.t - 1] ^ (this.s & this.DM));
+      return (
+        this.DB * (this.t - 1) + nbits(this[this.t - 1] ^ (this.s & this.DM))
+      );
     }
 
     // (protected) r = this << n*DB
@@ -203690,7 +205425,10 @@ function zbarProcessImageData(imgData) {
       while (--i >= 0) r[i] = 0;
       for (i = 0; i < x.t - 1; ++i) {
         var c = x.am(i, x[i], r, 2 * i, 0, 1);
-        if ((r[i + x.t] += x.am(i + 1, 2 * x[i], r, 2 * i + 1, c, x.t - i - 1)) >= x.DV) {
+        if (
+          (r[i + x.t] += x.am(i + 1, 2 * x[i], r, 2 * i + 1, c, x.t - i - 1)) >=
+          x.DV
+        ) {
           r[i + x.t] -= x.DV;
           r[i + x.t + 1] = 1;
         }
@@ -203743,7 +205481,8 @@ function zbarProcessImageData(imgData) {
       while (y.t < ys) y[y.t++] = 0;
       while (--j >= 0) {
         // Estimate quotient digit
-        var qd = r[--i] == y0 ? this.DM : Math.floor(r[i] * d1 + (r[i - 1] + e) * d2);
+        var qd =
+          r[--i] == y0 ? this.DM : Math.floor(r[i] * d1 + (r[i - 1] + e) * d2);
         if ((r[i] += y.am(0, qd, r, j, 0, ys)) < qd) {
           // Try it out
           y.dlShiftTo(j, t);
@@ -203859,7 +205598,10 @@ function zbarProcessImageData(imgData) {
       for (var i = 0; i < this.m.t; ++i) {
         // faster way of calculating u0 = x[i]*mp mod DV
         var j = x[i] & 0x7fff;
-        var u0 = (j * this.mpl + (((j * this.mph + (x[i] >> 15) * this.mpl) & this.um) << 15)) & x.DM;
+        var u0 =
+          (j * this.mpl +
+            (((j * this.mph + (x[i] >> 15) * this.mpl) & this.um) << 15)) &
+          x.DM;
         // use am to combine the multiply-shift-add into one call
         j = i + this.m.t;
         x[j] += this.m.am(0, u0, x, i, 0, this.m.t);
@@ -203969,7 +205711,7 @@ function zbarProcessImageData(imgData) {
       for (var i = 0; i < s.length; ++i) {
         var x = intAt(s, i);
         if (x < 0) {
-          if (s.charAt(i) == '-' && this.signum() == 0) mi = true;
+          if (s.charAt(i) == "-" && this.signum() == 0) mi = true;
           continue;
         }
         w = b * w + x;
@@ -204021,13 +205763,13 @@ function zbarProcessImageData(imgData) {
     // (protected) convert to radix string
     function bnpToRadix(b) {
       if (b == null) b = 10;
-      if (this.signum() == 0 || b < 2 || b > 36) return '0';
+      if (this.signum() == 0 || b < 2 || b > 36) return "0";
       var cs = this.chunkSize(b);
       var a = Math.pow(b, cs);
       var d = nbv(a),
         y = nbi(),
         z = nbi(),
-        r = '';
+        r = "";
       this.divRemTo(d, y, z);
       while (y.signum() > 0) {
         r = (a + z.intValue()).toString(b).substr(1) + r;
@@ -204109,9 +205851,9 @@ function zbarProcessImageData(imgData) {
         if (Wrapper.ensuredTemps) return;
         Wrapper.ensuredTemps = true;
         Wrapper.two32 = new BigInteger();
-        Wrapper.two32.fromString('4294967296', 10);
+        Wrapper.two32.fromString("4294967296", 10);
         Wrapper.two64 = new BigInteger();
-        Wrapper.two64.fromString('18446744073709551616', 10);
+        Wrapper.two64.fromString("18446744073709551616", 10);
         Wrapper.temp1 = new BigInteger();
         Wrapper.temp2 = new BigInteger();
       },
@@ -204128,7 +205870,7 @@ function zbarProcessImageData(imgData) {
       },
       stringify: function(l, h, unsigned) {
         var ret = new goog.math.Long(l, h).toString();
-        if (unsigned && ret[0] == '-') {
+        if (unsigned && ret[0] == "-") {
           // unsign slowly using jsbn bignums
           Wrapper.ensureTemps();
           var bignum = new BigInteger();
@@ -204163,7 +205905,7 @@ function zbarProcessImageData(imgData) {
         var ret = goog.math.Long.fromString(bignum.toString()); // min-max checks should have clamped this to a range goog.math.Long can handle well
         HEAP32[tempDoublePtr >> 2] = ret.low_;
         HEAP32[(tempDoublePtr + 4) >> 2] = ret.high_;
-        if (error) throw 'range error';
+        if (error) throw "range error";
       }
     };
     return Wrapper;
@@ -204174,32 +205916,33 @@ function zbarProcessImageData(imgData) {
   // === Auto-generated postamble setup entry stuff ===
 
   if (memoryInitializer) {
-    if (typeof Module['locateFile'] === 'function') {
-      memoryInitializer = Module['locateFile'](memoryInitializer);
-    } else if (Module['memoryInitializerPrefixURL']) {
-      memoryInitializer = Module['memoryInitializerPrefixURL'] + memoryInitializer;
+    if (typeof Module["locateFile"] === "function") {
+      memoryInitializer = Module["locateFile"](memoryInitializer);
+    } else if (Module["memoryInitializerPrefixURL"]) {
+      memoryInitializer =
+        Module["memoryInitializerPrefixURL"] + memoryInitializer;
     }
     if (ENVIRONMENT_IS_NODE || ENVIRONMENT_IS_SHELL) {
-      var data = Module['readBinary'](memoryInitializer);
+      var data = Module["readBinary"](memoryInitializer);
       HEAPU8.set(data, STATIC_BASE);
     } else {
-      addRunDependency('memory initializer');
+      addRunDependency("memory initializer");
       Browser.asyncLoad(
         memoryInitializer,
         function(data) {
           HEAPU8.set(data, STATIC_BASE);
-          removeRunDependency('memory initializer');
+          removeRunDependency("memory initializer");
         },
         function(data) {
-          throw 'could not load memory initializer ' + memoryInitializer;
+          throw "could not load memory initializer " + memoryInitializer;
         }
       );
     }
   }
 
   function ExitStatus(status) {
-    this.name = 'ExitStatus';
-    this.message = 'Program terminated with exit(' + status + ')';
+    this.name = "ExitStatus";
+    this.message = "Program terminated with exit(" + status + ")";
     this.status = status;
   }
   ExitStatus.prototype = new Error();
@@ -204211,13 +205954,19 @@ function zbarProcessImageData(imgData) {
 
   dependenciesFulfilled = function runCaller() {
     // If run has never been called, and we should call run (INVOKE_RUN is true, and Module.noInitialRun is not false)
-    if (!Module['calledRun'] && shouldRunNow) run();
-    if (!Module['calledRun']) dependenciesFulfilled = runCaller; // try this again later, after new deps are fulfilled
+    if (!Module["calledRun"] && shouldRunNow) run();
+    if (!Module["calledRun"]) dependenciesFulfilled = runCaller; // try this again later, after new deps are fulfilled
   };
 
-  Module['callMain'] = Module.callMain = function callMain(args) {
-    assert(runDependencies == 0, 'cannot call main when async dependencies remain! (listen on __ATMAIN__)');
-    assert(__ATPRERUN__.length == 0, 'cannot call main when preRun functions remain to be called');
+  Module["callMain"] = Module.callMain = function callMain(args) {
+    assert(
+      runDependencies == 0,
+      "cannot call main when async dependencies remain! (listen on __ATMAIN__)"
+    );
+    assert(
+      __ATPRERUN__.length == 0,
+      "cannot call main when preRun functions remain to be called"
+    );
 
     args = args || [];
 
@@ -204229,19 +205978,21 @@ function zbarProcessImageData(imgData) {
         argv.push(0);
       }
     }
-    var argv = [allocate(intArrayFromString(Module['thisProgram']), 'i8', ALLOC_NORMAL)];
+    var argv = [
+      allocate(intArrayFromString(Module["thisProgram"]), "i8", ALLOC_NORMAL)
+    ];
     pad();
     for (var i = 0; i < argc - 1; i = i + 1) {
-      argv.push(allocate(intArrayFromString(args[i]), 'i8', ALLOC_NORMAL));
+      argv.push(allocate(intArrayFromString(args[i]), "i8", ALLOC_NORMAL));
       pad();
     }
     argv.push(0);
-    argv = allocate(argv, 'i32', ALLOC_NORMAL);
+    argv = allocate(argv, "i32", ALLOC_NORMAL);
 
     initialStackTop = STACKTOP;
 
     try {
-      var ret = Module['_main'](argc, argv, 0);
+      var ret = Module["_main"](argc, argv, 0);
 
       // if we're not running an evented main loop, it's time to exit
       exit(ret);
@@ -204250,12 +206001,13 @@ function zbarProcessImageData(imgData) {
         // exit() throws this once it's done to make sure execution
         // has been stopped completely
         return;
-      } else if (e == 'SimulateInfiniteLoop') {
+      } else if (e == "SimulateInfiniteLoop") {
         // running an evented main loop, don't immediately exit
-        Module['noExitRuntime'] = true;
+        Module["noExitRuntime"] = true;
         return;
       } else {
-        if (e && typeof e === 'object' && e.stack) Module.printErr('exception thrown: ' + [e, e.stack]);
+        if (e && typeof e === "object" && e.stack)
+          Module.printErr("exception thrown: " + [e, e.stack]);
         throw e;
       }
     } finally {
@@ -204264,7 +206016,7 @@ function zbarProcessImageData(imgData) {
   };
 
   function run(args) {
-    args = args || Module['arguments'];
+    args = args || Module["arguments"];
 
     if (preloadStartTime === null) preloadStartTime = Date.now();
 
@@ -204275,11 +206027,11 @@ function zbarProcessImageData(imgData) {
     preRun();
 
     if (runDependencies > 0) return; // a preRun added a dependency, run will be called later
-    if (Module['calledRun']) return; // run may have just been called through dependencies being fulfilled just in this very frame
+    if (Module["calledRun"]) return; // run may have just been called through dependencies being fulfilled just in this very frame
 
     function doRun() {
-      if (Module['calledRun']) return; // run may have just been called while the async setStatus time below was happening
-      Module['calledRun'] = true;
+      if (Module["calledRun"]) return; // run may have just been called while the async setStatus time below was happening
+      Module["calledRun"] = true;
 
       if (ABORT) return;
 
@@ -204288,21 +206040,23 @@ function zbarProcessImageData(imgData) {
       preMain();
 
       if (ENVIRONMENT_IS_WEB && preloadStartTime !== null) {
-        Module.printErr('pre-main prep time: ' + (Date.now() - preloadStartTime) + ' ms');
+        Module.printErr(
+          "pre-main prep time: " + (Date.now() - preloadStartTime) + " ms"
+        );
       }
 
-      if (Module['_main'] && shouldRunNow) {
-        Module['callMain'](args);
+      if (Module["_main"] && shouldRunNow) {
+        Module["callMain"](args);
       }
 
       postRun();
     }
 
-    if (Module['setStatus']) {
-      Module['setStatus']('Running...');
+    if (Module["setStatus"]) {
+      Module["setStatus"]("Running...");
       setTimeout(function() {
         setTimeout(function() {
-          Module['setStatus']('');
+          Module["setStatus"]("");
         }, 1);
         doRun();
       }, 1);
@@ -204310,10 +206064,10 @@ function zbarProcessImageData(imgData) {
       doRun();
     }
   }
-  Module['run'] = Module.run = run;
+  Module["run"] = Module.run = run;
 
   function exit(status) {
-    if (Module['noExitRuntime']) {
+    if (Module["noExitRuntime"]) {
       return;
     }
 
@@ -204329,22 +206083,22 @@ function zbarProcessImageData(imgData) {
       // Instead of process.exit() directly, wait for stdout flush event.
       // See https://github.com/joyent/node/issues/1669 and https://github.com/kripken/emscripten/issues/2582
       // Workaround is based on https://github.com/RReverser/acorn/commit/50ab143cecc9ed71a2d66f78b4aec3bb2e9844f6
-      process['stdout']['once']('drain', function() {
-        process['exit'](status);
+      process["stdout"]["once"]("drain", function() {
+        process["exit"](status);
       });
-      console.log(' '); // Make sure to print something to force the drain event to occur, in case the stdout buffer was empty.
+      console.log(" "); // Make sure to print something to force the drain event to occur, in case the stdout buffer was empty.
       // Work around another node bug where sometimes 'drain' is never fired - make another effort
       // to emit the exit status, after a significant delay (if node hasn't fired drain by then, give up)
       setTimeout(function() {
-        process['exit'](status);
+        process["exit"](status);
       }, 500);
-    } else if (ENVIRONMENT_IS_SHELL && typeof quit === 'function') {
+    } else if (ENVIRONMENT_IS_SHELL && typeof quit === "function") {
       quit(status);
     }
     // if we reach here, we must throw an exception to halt the current execution
     throw new ExitStatus(status);
   }
-  Module['exit'] = Module.exit = exit;
+  Module["exit"] = Module.exit = exit;
 
   function abort(text) {
     if (text) {
@@ -204355,24 +206109,26 @@ function zbarProcessImageData(imgData) {
     ABORT = true;
     EXITSTATUS = 1;
 
-    var extra = '\nIf this abort() is unexpected, build with -s ASSERTIONS=1 which can give more information.';
+    var extra =
+      "\nIf this abort() is unexpected, build with -s ASSERTIONS=1 which can give more information.";
 
-    throw 'abort() at ' + stackTrace() + extra;
+    throw "abort() at " + stackTrace() + extra;
   }
-  Module['abort'] = Module.abort = abort;
+  Module["abort"] = Module.abort = abort;
 
   // {{PRE_RUN_ADDITIONS}}
 
-  if (Module['preInit']) {
-    if (typeof Module['preInit'] == 'function') Module['preInit'] = [Module['preInit']];
-    while (Module['preInit'].length > 0) {
-      Module['preInit'].pop()();
+  if (Module["preInit"]) {
+    if (typeof Module["preInit"] == "function")
+      Module["preInit"] = [Module["preInit"]];
+    while (Module["preInit"].length > 0) {
+      Module["preInit"].pop()();
     }
   }
 
   // shouldRunNow refers to calling main(), not run().
   var shouldRunNow = true;
-  if (Module['noInitialRun']) {
+  if (Module["noInitialRun"]) {
     shouldRunNow = false;
   }
 
